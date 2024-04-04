@@ -1,12 +1,11 @@
 import { Navigate } from 'react-router-dom';
+import { useAuth } from './AuthProvider';
 
-const isAuthenticated = () => {
-  // Check if user is authenticated here
-  return true;
+const PrivateRoute = ({ element }) => {
+  const { currentUser } = useAuth();
+  console.log("Current auth state: ", currentUser)
+
+  return currentUser ? element : <Navigate to="/login" replace />;
 };
-
-const PrivateRoute = ({ element }) => (
-  isAuthenticated() ? element : <Navigate to="/login" replace />
-);
 
 export default PrivateRoute;
