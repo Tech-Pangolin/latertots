@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import HomePage from './components/Pages/HomePage';
 import LoginPage from './components/Pages/LoginPage';
 import PrivateRoute from './components/PrivateRoute';
+import UserRegistrationPage from './components/Pages/UserRegistrationPage';
 
 function App() {
   return (
@@ -9,6 +10,7 @@ function App() {
       <Routes>
         <Route path="/home" element={ <PrivateRoute element={ <HomePage /> }/> } />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<PrivateRoute element={ <UserRegistrationPage /> }/>} />
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </Router>
