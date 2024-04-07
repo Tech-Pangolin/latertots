@@ -1,5 +1,5 @@
 import React from 'react';
-import {ui, uiConfig} from '../config/firebaseUI';
+import {ui, uiConfig} from '../../config/firebaseUI';
 import 'firebaseui/dist/firebaseui.css';
 
 function LoginPage() {

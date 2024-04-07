@@ -1,6 +1,7 @@
 import React from 'react';
-import { db } from '../config/firestore';
+import { db } from '../../config/firestore';
 import { collection, addDoc } from 'firebase/firestore';
+import UserForm from '../Shared/UserForm';
 
 function HomePage() {
   // const addData = async () => {
@@ -21,6 +22,7 @@ function HomePage() {
     <div>
       <h1>Home Page</h1>
       <p>Welcome to the home page!</p>
+      <UserForm />
     </div>
   );
 }
