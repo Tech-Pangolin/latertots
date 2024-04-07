@@ -1,6 +1,6 @@
 import { db } from "../../config/firestore";
 import React from "react";
-import { get, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { collection, addDoc, doc } from "firebase/firestore";
 
 const UserForm = () => {
@@ -14,6 +14,9 @@ const UserForm = () => {
     try {
       const docRef = await addDoc(collection(db, 'Users'), data);
       console.log('Document written with ID: ', docRef.id);
+
+      // Navigate back to the homepage on success
+      window.location.href = '/';
     }
     catch (e) {
       console.error('Error adding document: ', e);
