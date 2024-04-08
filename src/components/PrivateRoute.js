@@ -3,7 +3,6 @@ import { useAuth } from './AuthProvider';
 
 const PrivateRoute = ({ element }) => {
   const { currentUser } = useAuth();
-  console.log("Current auth state: ", currentUser)
 
   return currentUser ? element : <Navigate to="/login" replace />;
 };
