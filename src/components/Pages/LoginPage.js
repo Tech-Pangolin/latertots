@@ -1,17 +1,15 @@
 import React from 'react';
 import 'firebaseui/dist/firebaseui.css';
 import { signInWithGoogle, signInWithEmail } from '../AuthProvider';
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+
 
 function LoginPage() {
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const onSubmit = async (data) => {
     try {
-      await signInWithEmail(email, password);
+      await signInWithEmail(data.email, data.password);
       // Redirect to "/" if sign-in is successful
       window.location.href = "/";
     } catch (error) {
@@ -23,21 +21,21 @@ function LoginPage() {
     <div>
       <h1>Login Page</h1>
       
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <input
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          {...register("email", { required: true })}
           placeholder="Email"
-          required
         />
+        {errors.email && <span>Email is required</span>}
+        
         <input
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          {...register("password", { required: true })}
           placeholder="Password"
-          required
         />
+        {errors.password && <span>Password is required</span>}
+        
         <button type="submit">Log in</button>
       </form>
 
@@ -46,4 +44,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;
+  export default LoginPage;
