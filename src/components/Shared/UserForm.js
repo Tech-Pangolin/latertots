@@ -2,14 +2,19 @@ import { db } from "../../config/firestore";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { collection, addDoc, doc } from "firebase/firestore";
+import { useAuth } from "../AuthProvider";
 
 const UserForm = () => {
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
+  const { currentUser } = useAuth();
+
+  console.log(currentUser);
 
   const onSubmit = async (data) => {
     // Hardcode a user role for now
     const userRoleRef = await doc(db, 'Roles', 'parent-user');
     data.Role = userRoleRef;
+    data.Email = currentUser.email;
 
     try {
       const docRef = await addDoc(collection(db, 'Users'), data);
@@ -24,7 +29,7 @@ const UserForm = () => {
   };
 
   // Log form state as it is filled out
-  // console.log(watch());
+   console.log(watch());
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -37,7 +42,9 @@ const UserForm = () => {
         <label htmlFor="Email">Email</label>
         <input
           type="Email"
-          {...register("Email", { required: "Email is required" })}
+          value={currentUser.email}
+          disabled
+          {...register("Email")}
         />
         {errors.Email && <p>{errors.Email.message}</p>}
       </div>
