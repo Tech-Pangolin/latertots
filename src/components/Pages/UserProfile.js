@@ -5,6 +5,7 @@ import MuiButton from '@mui/material/Button';
 import { fetchAllCurrentUsersChildren, fetchAllCurrentUsersContacts, fetchCurrentUser } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import HeaderBar from '../Shared/HeaderBar';
+import ChildCard from '../Shared/ChildCard';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
@@ -53,16 +54,7 @@ const UserProfile = () => {
               Add Child
             </MuiButton>
             <div style={{ display: 'flex' }}>
-              {children.map((child) => (
-                <div key={child.id} style={{ marginRight: '10px' }}>
-                  <p>Name: {child.Name}</p>
-                  <p>DOB: {child.DOB}</p>
-                  <p>Gender: {child.Gender}</p>
-                  <p>Allergies: {child.Allergies}</p>
-                  <p>Medications: {child.Medications}</p>
-                  <p>Notes: {child.Notes}</p>
-                </div>
-              ))}
+              {children.map((child) => ( <ChildCard child={child} /> ))}
             </div>
           </MuiGrid>
 
@@ -75,6 +67,7 @@ const UserProfile = () => {
             <ContactsTable contacts={contacts} />
           </MuiGrid>
         </MuiGrid>
+        
       </div>
     </>
   );
