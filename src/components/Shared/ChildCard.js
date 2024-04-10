@@ -18,7 +18,7 @@ function ChildCard({ child }) {
   
 
   return (
-    <Card sx={{ maxWidth: 275 }}>
+    <Card sx={{ maxWidth: 275, mx: '20px' }}>
       <div style={{ position: 'relative' }}>
         <CardMedia
           component="img"
