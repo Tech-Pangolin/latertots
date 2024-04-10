@@ -1,24 +1,32 @@
 import { db } from "../../config/firestore";
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { collection, addDoc, doc } from "firebase/firestore";
 import { useAuth } from "../AuthProvider";
+import { uploadProfilePhoto, fetchCurrentUser } from "../../Helpers/firebase";
 
 const UserForm = () => {
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
-  const { currentUser } = useAuth();
+  const { currentUser: { email } } = useAuth();
+  const [authUserId, setAuthUserId] = React.useState(null);
 
-  console.log(currentUser);
+  useEffect(() => { 
+    fetchCurrentUser(email).then((resp) => setAuthUserId(resp.id));
+  }, [email]);
+
+  console.log(email);
 
   const onSubmit = async (data) => {
     // Hardcode a user role for now
     const userRoleRef = await doc(db, 'Roles', 'parent-user');
     data.Role = userRoleRef;
-    data.Email = currentUser.email;
+    data.Email = email;
+    const userImage = data.Image[0];
+    delete data.Image;
 
     try {
-      const docRef = await addDoc(collection(db, 'Users'), data);
-      console.log('Document written with ID: ', docRef.id);
+      await addDoc(collection(db, 'Users'), data);
+      await uploadProfilePhoto(authUserId, userImage)
 
       // Navigate back to the homepage on success
       window.location.href = '/';
@@ -42,7 +50,7 @@ const UserForm = () => {
         <label htmlFor="Email">Email</label>
         <input
           type="Email"
-          value={currentUser.email}
+          value={email}
           disabled
           {...register("Email")}
         />
@@ -87,6 +95,11 @@ const UserForm = () => {
           {...register("Zip", { required: "Zip is required" })}
         />
         {errors.Zip && <p>{errors.Zip.message}</p>}
+      </div>
+      <div>
+        <label htmlFor="Image">Image</label>
+        <input type="file" {...register("Image")} />
+        {errors.Image && <p>{errors.Image.message}</p>}
       </div>
       <button type="submit">Create User</button>
     </form>

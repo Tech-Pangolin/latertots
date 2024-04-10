@@ -1,5 +1,7 @@
 import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc } from "@firebase/firestore";
 import { db } from "../config/firestore";
+import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
+import { storage } from "../config/firebase";
 
 /**
  * Fetches the role of a user based on the provided role reference.
@@ -155,3 +157,34 @@ export const fetchAllCurrentUsersContacts = async (email) => {
     throw error;
   }
 }
+
+/**
+ * Uploads a photo to Firebase Storage and associates it with the current user.
+ * 
+ * @param {string} userId - The ID of the current user.
+ * @param {File} file - The photo file to upload.
+ * @returns {Promise<string>} - A promise that resolves to the download URL of the uploaded photo.
+ * @throws {Error} - If there is an error uploading the photo.
+ */
+export const uploadProfilePhoto = async (userId, file) => {
+  console.log("storage", storage)
+  try {
+    // Create a storage reference with the user ID as the path
+    const storageRef = ref(storage, `photos/${userId}/${file.name}`);
+    
+    // Upload the file to Firebase Storage
+    const snapshot = await uploadBytes(storageRef, file);
+    
+    // Get the download URL of the uploaded photo
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    // Associate the photo with the current user
+    const userRef = doc(collection(db, "Users"), userId);
+    await updateDoc(userRef, { Photo: downloadURL });
+    
+    return downloadURL;
+  } catch (error) {
+    console.error("Error uploading photo:", error);
+    throw error;
+  }
+};
