@@ -1,21 +1,26 @@
-import React from 'react';
-import { fetchAllCurrentUsersChildren, fetchCurrentUser } from '../../Helpers/firebase';
-import { useAuth } from '../AuthProvider';
-import HeaderBar from '../Shared/HeaderBar';
+import ContactsTable from '../Shared/ContactsTable';
+import React, { useState, useEffect } from 'react';
 import MuiGrid from '@mui/material/Grid';
 import MuiButton from '@mui/material/Button';
+import { fetchAllCurrentUsersChildren, fetchAllCurrentUsersContacts, fetchCurrentUser } from '../../Helpers/firebase';
+import { useAuth } from '../AuthProvider';
+import HeaderBar from '../Shared/HeaderBar';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
-  const [user, setUser] = React.useState(null);
-  const [children, setChildren] = React.useState([]);
+  const [user, setUser] = useState(null);
+  const [children, setChildren] = useState([]);
+  const [contacts, setContacts] = useState([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchCurrentUser(currentUser.email).then((resp) => {
       setUser(resp);
     });
     fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
       setChildren(resp);
+    });
+    fetchAllCurrentUsersContacts(currentUser.email).then((resp) => {
+      setContacts(resp);
     });
   }, [currentUser.email]);
 
@@ -25,6 +30,7 @@ const UserProfile = () => {
       <div>
         <h1>User Profile</h1>
         <MuiGrid container spacing={2}>
+          {/* User Section */}
           <MuiGrid item xs={12}>
             {user && (
               <div>
@@ -38,6 +44,8 @@ const UserProfile = () => {
               </div>
             )}
           </MuiGrid>
+
+          {/* Children Section */}
           <MuiGrid item xs={12}>
             <h2>Children</h2>
             <MuiButton variant="contained" onClick={() => window.location.href = '/addChild'}>
@@ -55,6 +63,15 @@ const UserProfile = () => {
                 </div>
               ))}
             </div>
+          </MuiGrid>
+
+          {/* Contacts Section */}
+          <MuiGrid item xs={12}>
+            <h2>Contacts</h2>
+            <MuiButton variant="contained" onClick={() => window.location.href = '/addContact'}>
+              Add Contact
+            </MuiButton>
+            <ContactsTable contacts={contacts} />
           </MuiGrid>
         </MuiGrid>
       </div>
