@@ -5,6 +5,7 @@ import PrivateRoute from './components/PrivateRoute';
 import UserRegistrationPage from './components/Pages/UserRegistrationPage';
 import UserProfile from './components/Pages/UserProfile';
 import ChildRegistration from './components/Pages/ChildRegistration';
+import ContactRegistration from './components/Pages/ContactRegistration';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<PrivateRoute element={ <UserRegistrationPage /> }/>} />
         <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
+        <Route path="/addContact" element={ <PrivateRoute element={ <ContactRegistration /> } />} />
         <Route path="/addChild" element={ <PrivateRoute element={ <ChildRegistration /> } />} />
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>

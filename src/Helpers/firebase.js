@@ -79,6 +79,26 @@ export const createChildDocument = async (userId, childData) => {
 };
 
 /**
+ * Creates a document in the Contact collection and associates it with the current user.
+ * 
+ * @param {string} userId - The ID of the current user.
+ * @param {Object} contactData - The data for the contact document.
+ * @returns {Promise<string>} - A promise that resolves to the ID of the created document.
+ * @throws {Error} - If there is an error creating the document.
+ */
+export const createContactDocument = async (userId, contactData) => {
+  try {
+    const docRef = await addDoc(collection(db, "Contacts"), contactData);
+    const userRef = doc(collection(db, "Users"), userId);
+    await updateDoc(userRef, { Contacts: arrayUnion(docRef) });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error creating contact document:", error);
+    throw error;
+  }
+};
+
+/**
  * Queries all the children associated with the current user.
  * 
  * @param {string} email - The email of the current user.
@@ -106,3 +126,32 @@ export const fetchAllCurrentUsersChildren = async (email) => {
     throw error;
   }
 };
+
+/**
+ * Queries all the contacts associated with the current user.
+ * 
+ * @param {string} email - The email of the current user.
+ * @returns {Promise<Array<Object>>} - A promise that resolves to an array of contact objects associated with the current user.
+ * @throws {Error} - If there is an error querying the contacts.
+ */
+export const fetchAllCurrentUsersContacts = async (email) => {
+  try {
+    const q = query(collection(db, "Users"), where("Email", "==", email));
+    const querySnapshot = await getDocs(q);
+    const userDoc = querySnapshot.docs.find(doc => doc.data().Email === email);
+    if (userDoc) {
+      const userRef = doc(collection(db, "Users"), userDoc.id);
+      const userSnapshot = await getDoc(userRef);
+      const contactsRefs = userSnapshot.data().Contacts;
+      const contactsPromises = contactsRefs.map(contactRef => getDoc(contactRef));
+      const contactsSnapshots = await Promise.all(contactsPromises);
+      const contacts = contactsSnapshots.map(contactSnapshot => ({ id: contactSnapshot.id, ...contactSnapshot.data() }));
+      return contacts;
+    } else {
+      throw new Error("No record found with email: " + email);
+    }
+  } catch (error) {
+    console.error("Error querying contacts:", error);
+    throw error;
+  }
+}
