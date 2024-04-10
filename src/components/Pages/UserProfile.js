@@ -41,6 +41,7 @@ const UserProfile = () => {
                 <p>City: {user.City}</p>
                 <p>State: {user.State}</p>
                 <p>Zip: {user.Zip}</p>
+                <img src={user.Photo} alt="User Avatar" />
               </div>
             )}
           </MuiGrid>
