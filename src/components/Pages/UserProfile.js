@@ -64,7 +64,7 @@ const UserProfile = () => {
               </MuiButton>
             </div>
             <div style={{ display: 'flex' }}>
-              {children.map((child) => (<ChildCard child={child} onNameClick={handleNameClick} />))}
+              {children.map((child) => (<ChildCard key={child.id} child={child} onNameClick={handleNameClick} />))}
             </div>
             <ChildInfoDialog selectedChild={selectedChild} open={open} handleClose={handleClose} />
           </MuiGrid>

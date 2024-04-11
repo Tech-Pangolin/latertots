@@ -6,7 +6,6 @@ function UserRegistrationPage() {
   return (
     <div>
       <h1>User Registration</h1>
-      <p>Create a New User</p>
       <UserForm />
     </div>
   );

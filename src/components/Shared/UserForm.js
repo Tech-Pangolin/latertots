@@ -1,20 +1,34 @@
 import { db } from "../../config/firestore";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { collection, addDoc, doc } from "firebase/firestore";
+import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { useAuth } from "../AuthProvider";
 import { uploadProfilePhoto, fetchCurrentUser } from "../../Helpers/firebase";
 
 const UserForm = () => {
-  const { register, handleSubmit, formState: { errors }, watch } = useForm();
+  const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
   const { currentUser: { email } } = useAuth();
   const [authUserId, setAuthUserId] = React.useState(null);
+  const [mode, setMode] = React.useState('create');
 
   useEffect(() => { 
     fetchCurrentUser(email).then((resp) => setAuthUserId(resp.id));
-  }, [email]);
 
-  console.log(email);
+    const fetchData = async () => {
+      if (authUserId) {
+        const userDocRef = doc(db, 'Users', authUserId);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          reset(userDoc.data());
+          setMode('update');
+        } else {
+          console.log("No such user found!");
+        }
+      }
+    };
+    fetchData();
+  }, [email, reset, authUserId]);
 
   const onSubmit = async (data) => {
     // Hardcode a user role for now
@@ -25,8 +39,16 @@ const UserForm = () => {
     delete data.Image;
 
     try {
-      await addDoc(collection(db, 'Users'), data);
-      await uploadProfilePhoto(authUserId, userImage)
+      if (mode === 'create') {
+        await addDoc(collection(db, 'Users'), data);
+      } else if (mode === 'update' && authUserId) {
+        const userRef = doc(db, 'Users', authUserId);
+        await updateDoc(userRef, data);
+      }
+
+      if (userImage) {
+        await uploadProfilePhoto(authUserId, userImage);
+      }
 
       // Navigate back to the homepage on success
       window.location.href = '/';
@@ -101,7 +123,7 @@ const UserForm = () => {
         <input type="file" {...register("Image")} />
         {errors.Image && <p>{errors.Image.message}</p>}
       </div>
-      <button type="submit">Create User</button>
+      <button type="submit">{ mode === 'create' ? "Create" : "Update"} User</button>
     </form>
   );
 };
