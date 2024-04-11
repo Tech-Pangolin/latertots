@@ -1,19 +1,40 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../AuthProvider';
 import { fetchCurrentUser } from '../../Helpers/firebase';
 import { createChildDocument } from '../../Helpers/firebase';
+import { useLocation } from 'react-router-dom';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../config/firestore';
 
 const ChildRegistration = () => {
-  const { register, handleSubmit, formState: {errors} } = useForm();
+  const { register, handleSubmit, formState: {errors}, reset } = useForm();
   const { currentUser } = useAuth();
+
+  // Get the child from the location state
+  // This is passed from the ChildCard component when editing
+  const location = useLocation();
+  const child = location.state?.child || null;
+
+  // Pre-populate the form with the child data if editing
+  useEffect(() => {
+    if (child) {
+      reset(child);
+    }
+  }, [child, reset]);
 
   const onSubmit = async (data) => {
     try {
-      await fetchCurrentUser(currentUser.email).then( async (resp) => {
-        await createChildDocument(resp.id, data);
-        console.log(data)
-      });
+      if (child) {
+        // Update the existing child document
+        const childRef = doc(db, 'Children', child.id);
+        await updateDoc(childRef, data);
+      } else {
+        // Create a new child document
+        await fetchCurrentUser(currentUser.email).then( async (resp) => {
+          await createChildDocument(resp.id, data);
+        });
+      }
 
       // Navigate back to the profile on success
       window.location.href = '/profile';

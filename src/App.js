@@ -18,7 +18,7 @@ function App() {
           <Route path="/register" element={<PrivateRoute element={ <UserRegistrationPage /> }/>} />
           <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
           <Route path="/addContact" element={ <PrivateRoute element={ <ContactRegistration /> } />} />
-          <Route path="/addChild" element={ <PrivateRoute element={ <ChildRegistration /> } />} />
+          <Route path="/addChild/:childId?" element={ <PrivateRoute element={ <ChildRegistration /> } />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </Layout>

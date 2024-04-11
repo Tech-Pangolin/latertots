@@ -3,8 +3,11 @@ import { Card, CardMedia, CardContent, CardActions, IconButton, Typography, Butt
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import { calculateAge } from '../../Helpers/util';
+import { useNavigate } from 'react-router-dom';
 
 function ChildCard({ child, onNameClick }) {
+  const navigate = useNavigate();
+
   const getAvatarImgName = () => {
     switch(child.Gender) {
       case 'male':
@@ -14,6 +17,11 @@ function ChildCard({ child, onNameClick }) {
       default:
         return 'green_avatar.png';
     }
+  }
+
+  const handleEditClick = () => {
+    // Navigate to the child registration page with the child object in the location state
+    navigate(`/addChild/${child.id}`, { state: { child: child } });
   }
   
 
@@ -28,7 +36,7 @@ function ChildCard({ child, onNameClick }) {
           sx={{ objectFit: 'contain' }}
         />
         <div style={{ position: 'absolute', top: 0, right: 0 }}>
-          <IconButton aria-label="favorite">
+          <IconButton aria-label="favorite" onClick={handleEditClick}>
             <EditIcon />
           </IconButton>
         </div>
