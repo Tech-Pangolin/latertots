@@ -4,7 +4,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import { calculateAge } from '../../Helpers/util';
 
-function ChildCard({ child }) {
+function ChildCard({ child, onNameClick }) {
   const getAvatarImgName = () => {
     switch(child.Gender) {
       case 'male':
@@ -34,7 +34,7 @@ function ChildCard({ child }) {
         </div>
       </div>
       <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
+        <Typography gutterBottom variant="h5" component="div" onClick={ () => onNameClick(child) }>
           {child.Name}
         </Typography>
         <Rating name="read-only" value={3} readOnly />

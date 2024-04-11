@@ -6,12 +6,22 @@ import { fetchAllCurrentUsersChildren, fetchAllCurrentUsersContacts, fetchCurren
 import { useAuth } from '../AuthProvider';
 import ChildCard from '../Shared/ChildCard';
 import { Avatar, Typography } from '@mui/material';
+import ChildInfoDialog from '../Shared/ChildInfoDialog';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
   const [user, setUser] = useState(null);
   const [children, setChildren] = useState([]);
   const [contacts, setContacts] = useState([]);
+
+  // Dialog state
+  const [selectedChild, setSelectedChild] = useState(null);
+  const [open, setOpen] = useState(false);
+  const handleNameClick = (child) => {
+    setSelectedChild(child);
+    setOpen(true);
+  };
+  const handleClose = () => setOpen(false);
 
   useEffect(() => {
     fetchCurrentUser(currentUser.email).then((resp) => {
@@ -54,8 +64,9 @@ const UserProfile = () => {
               </MuiButton>
             </div>
             <div style={{ display: 'flex' }}>
-              {children.map((child) => (<ChildCard child={child} />))}
+              {children.map((child) => (<ChildCard child={child} onNameClick={handleNameClick} />))}
             </div>
+            <ChildInfoDialog selectedChild={selectedChild} open={open} handleClose={handleClose} />
           </MuiGrid>
 
 
