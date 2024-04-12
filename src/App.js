@@ -7,6 +7,7 @@ import UserProfile from './components/Pages/UserProfile';
 import ChildRegistration from './components/Pages/ChildRegistration';
 import ContactRegistration from './components/Pages/ContactRegistration';
 import Layout from './components/Layout';
+import Calendar from './components/Shared/Calendar';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<PrivateRoute element={ <UserRegistrationPage /> }/>} />
           <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
+          <Route path="/calendar" element={ <PrivateRoute element={ <Calendar /> } />} />
           <Route path="/addContact" element={ <PrivateRoute element={ <ContactRegistration /> } />} />
           <Route path="/addChild/:childId?" element={ <PrivateRoute element={ <ChildRegistration /> } />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
