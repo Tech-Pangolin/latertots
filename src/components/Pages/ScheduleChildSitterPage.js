@@ -1,68 +1,78 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Grid } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { Draggable } from '@fullcalendar/interaction';
 
 const ScheduleChildSitterPage = () => {
+  const [events, setEvents] = useState([]);  // Initialize state for events
+  const draggableInitialized = useRef(false);
 
   useEffect(() => {
-    /**
-     * useEffect hook to initialize draggable events.
-     * It selects all elements with the class 'draggable-event' and makes them draggable using the Draggable library.
-     * The eventData function is used to retrieve event data from the element's attributes.
-     */
-    let draggableEls = document.getElementsByClassName('draggable-event');
-    Array.from(draggableEls).forEach((el) => {
-      new Draggable(el, {
-        eventData: function(eventEl) {
-          let event = JSON.parse(eventEl.getAttribute('data-event'));
-          return {
-            ...event,
-            duration: event.duration
-          };
-        }
+    if (!draggableInitialized.current) { // Prevent multiple initializations from multiple renders
+      const draggableEls = document.getElementsByClassName('draggable-event');
+      Array.from(draggableEls).forEach(el => {
+        new Draggable(el, {
+          eventData: function(eventEl) {
+            return JSON.parse(eventEl.getAttribute('data-event'));
+          }
+        });
       });
-    });
+      draggableInitialized.current = true;
+    }
   }, []);
 
-  // Function to handle event drop
-  // There have been issues with duplicate calendar events being created when dragging events
   const handleEventDrop = (info) => {
-    console.log(info);
     const droppedEventData = JSON.parse(info.draggedEl.dataset.event);
+    const newEvent = {
+      id: new Date().getTime(),  // TODO: Use a better ID
+      title: droppedEventData.title,
+      start: info.date.toISOString(),
+      end: new Date(info.date).getTime() + (60 * 60 * 1000 * parseInt(droppedEventData.duration.split(':')[0])),
+      allDay: info.allDay,
+      extendedProps: {
+        duration: droppedEventData.duration
+      }
+    };
 
-    // Access the calendar API from the view
-    const calendarApi = info.view.calendar;
+    const isDuplicate = events.some(event =>
+      event.start === newEvent.start &&
+      event.title === newEvent.title &&
+      event.extendedProps.duration === newEvent.extendedProps.duration
+    );
 
-    // Retrieve all events from the calendar
-    const allEvents = calendarApi.getEvents();
-
-    // Check if an identical event already exists
-    const isDuplicateEvent = allEvents.some(event => {
-        const eventStart = event.startStr.slice(0, 10);  // Format 'YYYY-MM-DD'
-        // Compare other properties as well for a more specific match
-        return event.title === droppedEventData.title &&
-               eventStart === info.dateStr &&
-               (event.extendedProps.duration === droppedEventData.duration);
-    });
-
-    // Only create a new event if no identical event exists
-    if (!isDuplicateEvent) {
-        calendarApi.addEvent({
-            title: droppedEventData.title,
-            start: info.date,
-            allDay: info.allDay, // or use your specific setting based on droppedEventData
-            extendedProps: {
-                duration: droppedEventData.duration // Additional properties
-            }
-        });
-        console.log('Event added:', droppedEventData.title);
+    if (!isDuplicate) {
+      setEvents(prevEvents => [...prevEvents, newEvent]);
+      console.log('Event added:', newEvent.title);
     } else {
-        console.log('Event not added: A duplicate event already exists on this day.');
+      console.log('Event not added: Duplicate detected');
     }
-  }
+  };
+
+  const handleEventResize = (resizeInfo) => {
+    const { event } = resizeInfo;
+
+    // Calculate the new duration in hours
+    const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
+    
+    const newEvents = events.map((evt) => {
+        if (evt.id.toString() === event.id.toString()) { 
+            return {
+                ...evt,
+                end: event.end.toISOString(),  // Use ISO string for FullCalendar compatibility
+                extendedProps: {
+                    ...evt.extendedProps,
+                    duration: `${durationHours.toFixed(2)}:00`  // Updated duration, formatted as a string
+                }
+            };
+        }
+        return evt;
+    });
+    
+    setEvents(newEvents);
+};
 
 
   return (
@@ -70,39 +80,37 @@ const ScheduleChildSitterPage = () => {
       <Grid item xs={2} className="sidebar">
         <style>
           {`
-          .draggable-event {
-            padding: 10px;
-            margin: 5px;
-            background-color: #f9f9f9;
-            border: 1px solid #ccc;
-            cursor: pointer;
-        }        
+            .draggable-event {
+              padding: 10px;
+              margin: 5px;
+              background-color: #f9f9f9;
+              border: 1px solid #ccc;
+              cursor: pointer;
+            }
           `}
         </style>
-        <div className='draggable-event fc-event' draggable={true} data-event='{"title":"Event 1", "duration":"02:00"}'>
-            Drag Event 1
+        <div className='draggable-event' draggable={true} data-event='{"title":"Event 1", "duration":"02:00"}'>
+          Drag Event 1
         </div>
-        <div className='draggable-event fc-event' draggable={true} data-event='{"title":"Event 2", "duration":"03:00"}'>
-            Drag Event 2
+        <div className='draggable-event' draggable={true} data-event='{"title":"Event 2", "duration":"03:00"}'>
+          Drag Event 2
         </div>
       </Grid>
       <Grid item xs={10} className="main">
         <FullCalendar
-          plugins={[dayGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
             right: ''
           }}
           showNonCurrentDates={false}
-          events={[
-            { title: 'Meeting', start: '2024-04-12T10:30:00', end: '2024-04-12T12:30:00' },
-            { title: 'Lunch Break', start: '2024-04-13T12:00:00', end: '2024-04-13T13:00:00' }
-          ]}
-          editable={true} // Enable draggable events
+          editable={true}
           droppable={true}
+          events={events}
           drop={handleEventDrop}
+          eventResize={handleEventResize}
         />
       </Grid>
     </Grid>
