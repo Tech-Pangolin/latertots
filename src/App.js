@@ -8,6 +8,7 @@ import ChildRegistration from './components/Pages/ChildRegistration';
 import ContactRegistration from './components/Pages/ContactRegistration';
 import Layout from './components/Layout';
 import Calendar from './components/Shared/Calendar';
+import ScheduleChildSitterPage from './components/Pages/ScheduleChildSitterPage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<PrivateRoute element={ <UserRegistrationPage /> }/>} />
           <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
+          <Route path="/schedule" element={ <PrivateRoute element={ <ScheduleChildSitterPage /> } />} />
           <Route path="/calendar" element={ <PrivateRoute element={ <Calendar /> } />} />
           <Route path="/addContact" element={ <PrivateRoute element={ <ContactRegistration /> } />} />
           <Route path="/addChild/:childId?" element={ <PrivateRoute element={ <ChildRegistration /> } />} />
