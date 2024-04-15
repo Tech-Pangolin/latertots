@@ -16,14 +16,14 @@ const ScheduleChildSitterPage = () => {
   const [children, setChildren] = useState([]);
   const { currentUser: { email } } = useAuth();
 
-
+  // Fetch children data and prepare draggables flag
   useEffect(() => {
-    // Fetch children data
     fetchAllCurrentUsersChildren(email).then((resp) => {
       setChildren(resp);
     }).then(() => { draggablesLoaded.current = true; });
   }, [email]);
 
+  // Initialize draggable events
   useEffect(() => {
     if (!draggableInitialized.current && draggablesLoaded.current) { // Prevent multiple initializations from multiple renders
       const draggableEls = document.getElementsByClassName('draggable-event');
@@ -70,6 +70,11 @@ const ScheduleChildSitterPage = () => {
 
     // Calculate the new duration in hours
     const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
+
+    if (durationHours < 1) {
+      resizeInfo.revert();  // Prevent events from being resized to less than 1 hour
+      return;
+    };
 
     const newEvents = events.map((evt) => {
       if (evt.id.toString() === event.id.toString()) {
