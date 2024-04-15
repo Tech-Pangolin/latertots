@@ -5,13 +5,27 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { Draggable } from '@fullcalendar/interaction';
+import { fetchAllCurrentUsersChildren } from '../../Helpers/firebase';
+import { useAuth } from '../AuthProvider';
+import DraggableChildEvent from '../Shared/DraggableChildEvent';
 
 const ScheduleChildSitterPage = () => {
-  const [events, setEvents] = useState([]);  // Initialize state for events
+  const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
   const draggableInitialized = useRef(false);
+  const draggablesLoaded = useRef(false);
+  const [children, setChildren] = useState([]);
+  const { currentUser: {email} } = useAuth();
+
 
   useEffect(() => {
-    if (!draggableInitialized.current) { // Prevent multiple initializations from multiple renders
+    // Fetch children data
+    fetchAllCurrentUsersChildren(email).then((resp) => {
+      setChildren(resp);
+    }).then(() => { draggablesLoaded.current = true; });
+  }, [email]);
+
+  useEffect(() => {
+    if (!draggableInitialized.current && draggablesLoaded.current) { // Prevent multiple initializations from multiple renders
       const draggableEls = document.getElementsByClassName('draggable-event');
       Array.from(draggableEls).forEach(el => {
         new Draggable(el, {
@@ -22,7 +36,7 @@ const ScheduleChildSitterPage = () => {
       });
       draggableInitialized.current = true;
     }
-  }, []);
+  }, [children]);
 
   const handleEventDrop = (info) => {
     const droppedEventData = JSON.parse(info.draggedEl.dataset.event);
@@ -89,12 +103,10 @@ const ScheduleChildSitterPage = () => {
             }
           `}
         </style>
-        <div className='draggable-event' draggable={true} data-event='{"title":"Event 1", "duration":"02:00"}'>
-          Drag Event 1
+        <div className='draggable-event' draggable={true} data-event='{"title":"Event 1", "duration":"01:00"}'>
+          Draggable Example Event
         </div>
-        <div className='draggable-event' draggable={true} data-event='{"title":"Event 2", "duration":"03:00"}'>
-          Drag Event 2
-        </div>
+        {children.map(child => <DraggableChildEvent key={child.id} child={child} />)}
       </Grid>
       <Grid item xs={10} className="main">
         <FullCalendar
