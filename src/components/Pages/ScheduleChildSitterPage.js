@@ -14,7 +14,7 @@ const ScheduleChildSitterPage = () => {
   const draggableInitialized = useRef(false);
   const draggablesLoaded = useRef(false);
   const [children, setChildren] = useState([]);
-  const { currentUser: {email} } = useAuth();
+  const { currentUser: { email } } = useAuth();
 
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const ScheduleChildSitterPage = () => {
       const draggableEls = document.getElementsByClassName('draggable-event');
       Array.from(draggableEls).forEach(el => {
         new Draggable(el, {
-          eventData: function(eventEl) {
+          eventData: function (eventEl) {
             return JSON.parse(eventEl.getAttribute('data-event'));
           }
         });
@@ -70,23 +70,23 @@ const ScheduleChildSitterPage = () => {
 
     // Calculate the new duration in hours
     const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
-    
+
     const newEvents = events.map((evt) => {
-        if (evt.id.toString() === event.id.toString()) { 
-            return {
-                ...evt,
-                end: event.end.toISOString(),  // Use ISO string for FullCalendar compatibility
-                extendedProps: {
-                    ...evt.extendedProps,
-                    duration: `${durationHours.toFixed(2)}:00`  // Updated duration, formatted as a string
-                }
-            };
-        }
-        return evt;
+      if (evt.id.toString() === event.id.toString()) {
+        return {
+          ...evt,
+          end: event.end.toISOString(),  // Use ISO string for FullCalendar compatibility
+          extendedProps: {
+            ...evt.extendedProps,
+            duration: `${durationHours.toFixed(2)}:00`  // Updated duration, formatted as a string
+          }
+        };
+      }
+      return evt;
     });
-    
+
     setEvents(newEvents);
-};
+  };
 
 
   return (
