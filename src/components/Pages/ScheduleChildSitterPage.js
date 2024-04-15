@@ -8,6 +8,7 @@ import { Draggable } from '@fullcalendar/interaction';
 import { fetchAllCurrentUsersChildren } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import DraggableChildEvent from '../Shared/DraggableChildEvent';
+import StyledCalendarEvent from '../Shared/StyledCalendarEvent';
 
 const ScheduleChildSitterPage = () => {
   const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
@@ -93,6 +94,12 @@ const ScheduleChildSitterPage = () => {
     setEvents(newEvents);
   };
 
+  function renderEventContent(eventInfo) {
+    const { event } = eventInfo;
+    const backgroundColor = event.extendedProps.status === 'confirmed' ? 'green' : 'orange';
+    return <StyledCalendarEvent event={event} backgroundColor={backgroundColor} />;
+}
+
 
   return (
     <Grid container className="schedule-child-sitter-page">
@@ -126,6 +133,7 @@ const ScheduleChildSitterPage = () => {
           editable={true}
           droppable={true}
           events={events}
+          eventContent={renderEventContent}
           drop={handleEventDrop}
           eventResize={handleEventResize}
         />

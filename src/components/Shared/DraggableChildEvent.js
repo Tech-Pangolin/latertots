@@ -4,7 +4,11 @@ const DraggableChildEvent = ({child}) => {
   const generateDataEventValue = (child) => {
     return JSON.stringify({
       title: child.Name,
-      duration: "01:00"
+      duration: "01:00",
+      extendedProps: {
+        childId: child.id,
+        status: 'pending',
+      }
     });
   };
 
