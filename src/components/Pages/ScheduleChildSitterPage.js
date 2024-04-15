@@ -5,24 +5,32 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { Draggable } from '@fullcalendar/interaction';
-import { fetchAllCurrentUsersChildren } from '../../Helpers/firebase';
+import { createReservationDocument, fetchAllCurrentUsersChildren, fetchCurrentUser } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import DraggableChildEvent from '../Shared/DraggableChildEvent';
 import StyledCalendarEvent from '../Shared/StyledCalendarEvent';
+import { v4 as uuidv4 } from 'uuid';
 
 const ScheduleChildSitterPage = () => {
   const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
   const draggableInitialized = useRef(false);
   const draggablesLoaded = useRef(false);
   const [children, setChildren] = useState([]);
-  const { currentUser: { email } } = useAuth();
+  const { currentUser } = useAuth();
+  const [currentUserData, setCurrentUserData] = useState({});
+  
+  useEffect(() => {
+    fetchCurrentUser(currentUser.email).then((resp) => {
+      setCurrentUserData(resp);
+    });
+  }, [currentUser]);
 
   // Fetch children data and prepare draggables flag
   useEffect(() => {
-    fetchAllCurrentUsersChildren(email).then((resp) => {
+    fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
       setChildren(resp);
     }).then(() => { draggablesLoaded.current = true; });
-  }, [email]);
+  }, [currentUser.email]);
 
   // Initialize draggable events
   useEffect(() => {
@@ -42,13 +50,15 @@ const ScheduleChildSitterPage = () => {
   const handleEventDrop = (info) => {
     const droppedEventData = JSON.parse(info.draggedEl.dataset.event);
     const newEvent = {
-      id: new Date().getTime(),  // TODO: Use a better ID
+      id: uuidv4(), 
       title: droppedEventData.title,
       start: info.date.toISOString(),
-      end: new Date(info.date).getTime() + (60 * 60 * 1000 * parseInt(droppedEventData.duration.split(':')[0])),
+      end: new Date(new Date(info.date).getTime() + (60 * 60 * 1000 * parseInt(droppedEventData.duration.split(':')[0]))).toISOString(),
       allDay: info.allDay,
       extendedProps: {
-        duration: droppedEventData.duration
+        duration: droppedEventData.duration,
+        status: 'pending',
+        childId: droppedEventData.extendedProps.childId
       }
     };
 
@@ -94,11 +104,19 @@ const ScheduleChildSitterPage = () => {
     setEvents(newEvents);
   };
 
-  function renderEventContent(eventInfo) {
+  const renderEventContent = (eventInfo) => {
     const { event } = eventInfo;
     const backgroundColor = event.extendedProps.status === 'confirmed' ? 'green' : 'orange';
     return <StyledCalendarEvent event={event} backgroundColor={backgroundColor} />;
-}
+  }
+
+  const handleScheduleSave = (events) => {
+    events.forEach(async event => {
+      // Save each event to the database
+      await createReservationDocument(currentUserData.id, event)
+    });
+    console.log('Schedule saved:', events);
+  }
 
 
   return (
@@ -127,7 +145,13 @@ const ScheduleChildSitterPage = () => {
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: ''
+            right: 'saveButton'
+          }}
+          customButtons={{
+            saveButton: {
+              text: 'Save Schedule',
+              click: () => handleScheduleSave(events)
+            }
           }}
           showNonCurrentDates={false}
           editable={true}
