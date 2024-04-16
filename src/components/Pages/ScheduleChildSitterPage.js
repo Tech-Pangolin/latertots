@@ -5,11 +5,12 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { Draggable } from '@fullcalendar/interaction';
-import { createReservationDocument, fetchAllCurrentUsersChildren, fetchCurrentUser } from '../../Helpers/firebase';
+import { createReservationDocument, fetchAllCurrentUsersChildren, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import DraggableChildEvent from '../Shared/DraggableChildEvent';
 import StyledCalendarEvent from '../Shared/StyledCalendarEvent';
 import { v4 as uuidv4 } from 'uuid';
+import { set } from 'react-hook-form';
 
 const ScheduleChildSitterPage = () => {
   const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
@@ -24,6 +25,13 @@ const ScheduleChildSitterPage = () => {
       setCurrentUserData(resp);
     });
   }, [currentUser]);
+
+  useEffect(() => {
+    fetchUserReservations(currentUserData.id).then((resp) => {
+      setEvents(resp);
+    });
+  }, [currentUserData.id]);
+
 
   // Fetch children data and prepare draggables flag
   useEffect(() => {
