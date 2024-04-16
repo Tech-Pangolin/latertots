@@ -5,12 +5,11 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { Draggable } from '@fullcalendar/interaction';
-import { createReservationDocument, fetchAllCurrentUsersChildren, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
+import { fetchAllCurrentUsersChildren, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import DraggableChildEvent from '../Shared/DraggableChildEvent';
-import StyledCalendarEvent from '../Shared/StyledCalendarEvent';
 import { v4 as uuidv4 } from 'uuid';
-import { set } from 'react-hook-form';
+import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 
 const ScheduleChildSitterPage = () => {
   const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
@@ -31,7 +30,6 @@ const ScheduleChildSitterPage = () => {
       setEvents(resp);
     });
   }, [currentUserData.id]);
-
 
   // Fetch children data and prepare draggables flag
   useEffect(() => {
@@ -55,7 +53,18 @@ const ScheduleChildSitterPage = () => {
     }
   }, [children]);
 
-  const handleEventDrop = (info) => {
+  useEffect(() => {
+    console.log('Events:', events);
+  }, [events]);
+
+  const businessHours = {
+    daysOfWeek: [1, 2, 3, 4, 5], // Monday - Friday
+    startTime: '07:00', 
+    endTime: '19:00', 
+    overlap: false
+  };
+
+  const handleDrop = (info) => {
     const droppedEventData = JSON.parse(info.draggedEl.dataset.event);
     const newEvent = {
       id: uuidv4(), 
@@ -69,6 +78,8 @@ const ScheduleChildSitterPage = () => {
         childId: droppedEventData.extendedProps.childId
       }
     };
+
+    console.log('New event:', info);
 
     const isDuplicate = events.some(event =>
       event.start === newEvent.start &&
@@ -112,19 +123,31 @@ const ScheduleChildSitterPage = () => {
     setEvents(newEvents);
   };
 
-  const renderEventContent = (eventInfo) => {
-    const { event } = eventInfo;
-    const backgroundColor = event.extendedProps.status === 'confirmed' ? 'green' : 'orange';
-    return <StyledCalendarEvent event={event} backgroundColor={backgroundColor} />;
-  }
+  const handleEventMove = (info) => {
+    const { event } = info;
 
-  const handleScheduleSave = (events) => {
-    events.forEach(async event => {
-      // Save each event to the database
-      await createReservationDocument(currentUserData.id, event)
+    const newEvents = events.map((evt) => {
+      if (evt.id.toString() === event.id.toString()) {
+        return {
+          ...evt,
+          start: event.start.toISOString(), 
+          end: event.end.toISOString()
+        };
+      }
+      return evt;
     });
-    console.log('Schedule saved:', events);
+
+    setEvents(newEvents);
+};
+
+// Enforce rules for where events can be dropped or resized
+const eventAllow = (dropInfo, draggedEvent) => {
+  if (!checkAgainstBusinessHours(dropInfo, businessHours) || !checkFutureStartTime(dropInfo)) {
+    return false;
   }
+  // Additional validation conditions
+  return true;
+};
 
 
   return (
@@ -148,6 +171,7 @@ const ScheduleChildSitterPage = () => {
       </Grid>
       <Grid item xs={10} className="main">
         <FullCalendar
+          // TODO: Specify a timezone prop and tie into admin settings
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           headerToolbar={{
@@ -158,16 +182,21 @@ const ScheduleChildSitterPage = () => {
           customButtons={{
             saveButton: {
               text: 'Save Schedule',
-              click: () => handleScheduleSave(events)
+              click: () => handleScheduleSave(events, currentUserData)
             }
           }}
+          businessHours={businessHours}
           showNonCurrentDates={false}
           editable={true}
           droppable={true}
           events={events}
+          eventAllow={eventAllow}
           eventContent={renderEventContent}
-          drop={handleEventDrop}
+          drop={handleDrop}
+          eventDrop={handleEventMove}
           eventResize={handleEventResize}
+          nowIndicator={true}
+          allDaySlot={false}
         />
       </Grid>
     </Grid>
