@@ -1,5 +1,5 @@
 import React from 'react';
-import { createReservationDocument } from './firebase';
+import { createReservationDocument, updateReservationDocument } from './firebase';
 import  StyledCalendarEvent from '../components/Shared/StyledCalendarEvent';
 
 
@@ -25,14 +25,45 @@ export function checkFutureStartTime(event) {
 
 export const renderEventContent = (eventInfo) => {
   const { event } = eventInfo;
-  const backgroundColor = event.extendedProps.status === 'confirmed' ? 'green' : 'orange';
+  let backgroundColor;
+  switch (event.extendedProps.status) {
+    case 'confirmed':
+      backgroundColor = 'green';
+      break;
+    case 'pending':
+      backgroundColor = 'orange';
+      break;
+    default:
+      backgroundColor = 'gray';
+      break;
+  }
   return <StyledCalendarEvent event={event} backgroundColor={backgroundColor} />;
 }
 
-export const handleScheduleSave = (events, currentUserData) => {
-  events.forEach(async event => {
-    // Save each event to the database
-    await createReservationDocument(currentUserData.id, event)
-  });
-  console.log('Schedule saved:', events);
+export const handleScheduleSave = async (events, currentUserData) => {
+  for (const event of events) {
+    // Check if reservation already exists
+    const reservationExists = await checkReservationExists(currentUserData.id, event);
+    
+    if (reservationExists) {
+      // Update existing reservation
+      await updateReservationDocument(event);
+    } else {
+      // Create new reservation
+      await createReservationDocument(currentUserData.id, event);
+    }
+  }
+  
+  alert('Schedule saved successfully!');
+}
+
+async function checkReservationExists(userId, event) {
+  // New reservations are given a uuidv4 before being saved to the database, including "-" and lowercase letters
+  // Firebase will automatically assign a unique ID when the document is created. It includes uppercase letters and no special characters
+
+  if (event.id.includes('-') || event.id.toLowerCase() === event.id) {
+    return false;
+  } else {
+    return true;
+  }
 }

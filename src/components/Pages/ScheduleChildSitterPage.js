@@ -5,7 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { Draggable } from '@fullcalendar/interaction';
-import { fetchAllCurrentUsersChildren, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
+import { deleteReservationDocument, fetchAllCurrentUsersChildren, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import DraggableChildEvent from '../Shared/DraggableChildEvent';
 import { v4 as uuidv4 } from 'uuid';
@@ -149,6 +149,12 @@ const eventAllow = (dropInfo, draggedEvent) => {
   return true;
 };
 
+const handleEventClick = ({ event }) => {
+  if (window.confirm(`Are you sure you want to delete the event: ${event.title}?`)) {
+    deleteReservationDocument(event.id);
+    setEvents((prevEvents) => prevEvents.filter(e => e.id !== event.id));
+  }
+};
 
   return (
     <Grid container className="schedule-child-sitter-page">
@@ -192,6 +198,7 @@ const eventAllow = (dropInfo, draggedEvent) => {
           events={events}
           eventAllow={eventAllow}
           eventContent={renderEventContent}
+          eventClick={handleEventClick}
           drop={handleDrop}
           eventDrop={handleEventMove}
           eventResize={handleEventResize}

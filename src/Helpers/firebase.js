@@ -1,4 +1,4 @@
-import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc } from "@firebase/firestore";
+import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, deleteDoc } from "@firebase/firestore";
 import { db } from "../config/firestore";
 import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
@@ -189,6 +189,33 @@ export const uploadProfilePhoto = async (userId, file) => {
   }
 };
 
+/**
+ * Fetches all reservations where the User property reference matches the current User and the extendedProps.status property is either "pending" or "confirmed".
+ * 
+ * @param {string} userId - The ID of the current user.
+ * @returns {Promise<Array<Object>>} - A promise that resolves to an array of reservation objects.
+ * @throws {Error} - If there is an error fetching the reservations.
+ */
+export const fetchUserReservations = async (userId) => {
+  // Handle case when user ID is not yet available
+  if (!userId) {
+    return [];
+  }
+
+  try {
+    const q = query(collection(db, "Reservations"),
+      where("User", "==", doc(collection(db, "Users"), userId)) //,
+      //where("extendedProps.status", "in", ["pending", "confirmed"])
+    );
+    const querySnapshot = await getDocs(q);
+    const reservations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return reservations;
+  } catch (error) {
+    console.error("Error fetching reservations:", error);
+    throw error;
+  }
+};
+
 
 /**
  * Creates a document in the Reservations collection and associates it with the current user.
@@ -219,28 +246,48 @@ export const createReservationDocument = async (userId, reservationData) => {
 };
 
 /**
- * Fetches all reservations where the User property reference matches the current User and the extendedProps.status property is either "pending" or "confirmed".
+ * Updates a reservation document in the Reservations collection.
  * 
  * @param {string} userId - The ID of the current user.
- * @returns {Promise<Array<Object>>} - A promise that resolves to an array of reservation objects.
- * @throws {Error} - If there is an error fetching the reservations.
+ * @param {Object} reservationData - The updated data for the reservation document.
+ * @returns {Promise<void>} - A promise that resolves when the document is successfully updated.
+ * @throws {Error} - If there is an error updating the document.
  */
-export const fetchUserReservations = async (userId) => {
-  // Handle case when user ID is not yet available
-  if (!userId) {
-    return [];
-  }
-
+export const updateReservationDocument = async (reservationData) => {
   try {
-    const q = query(collection(db, "Reservations"),
-      where("User", "==", doc(collection(db, "Users"), userId)),
-      where("extendedProps.status", "in", ["pending", "confirmed"])
-    );
-    const querySnapshot = await getDocs(q);
-    const reservations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    return reservations;
+    const { id, ...dataWithoutId } = reservationData; // Remove the ID from the data
+    const reservationRef = doc(collection(db, "Reservations"), id);
+    await updateDoc(reservationRef, { ...dataWithoutId});
   } catch (error) {
-    console.error("Error fetching reservations:", error);
+    console.error("Error updating reservation document:", error);
+    throw error;
+  }
+};
+
+/**
+ * Deletes a reservation document from the Reservations collection.
+ * 
+ * @param {string} reservationId - The ID of the reservation document to delete.
+ * @returns {Promise<void>} - A promise that resolves when the document is successfully deleted.
+ * @returns {null} - If the reservation document does not exist.
+ * @throws {Error} - If there is an error deleting the document.
+ */
+export const deleteReservationDocument = async (reservationId) => {
+  try {
+    const reservationRef = doc(collection(db, "Reservations"), reservationId);
+    const reservationSnapshot = await getDoc(reservationRef);
+    if (!reservationSnapshot.exists()) {
+      return null;
+    }
+
+    const status = reservationSnapshot.data().extendedProps.status;
+    if (status === 'pending' || status === 'confirmed') {
+      await deleteDoc(reservationRef);
+    } else {
+      throw new Error("Cannot delete reservation with status: " + status);
+    }
+  } catch (error) {
+    console.error("Error deleting reservation document:", error);
     throw error;
   }
 };
