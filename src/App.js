@@ -9,6 +9,7 @@ import ContactRegistration from './components/Pages/ContactRegistration';
 import Layout from './components/Layout';
 import Calendar from './components/Shared/Calendar';
 import ScheduleChildSitterPage from './components/Pages/ScheduleChildSitterPage';
+import AdminDashboard from './components/Pages/AdminDashboard';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/calendar" element={ <PrivateRoute element={ <Calendar /> } />} />
           <Route path="/addContact" element={ <PrivateRoute element={ <ContactRegistration /> } />} />
           <Route path="/addChild/:childId?" element={ <PrivateRoute element={ <ChildRegistration /> } />} />
+          <Route path="/admin" element={ <PrivateRoute element={ <AdminDashboard /> } />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </Layout>
