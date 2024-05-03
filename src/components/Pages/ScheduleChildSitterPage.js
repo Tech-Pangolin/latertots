@@ -5,7 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { Draggable } from '@fullcalendar/interaction';
-import { deleteReservationDocument, fetchAllCurrentUsersChildren, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
+import { checkReservationAllowability, deleteReservationDocument, fetchAllCurrentUsersChildren, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import DraggableChildEvent from '../Shared/DraggableChildEvent';
 import { v4 as uuidv4 } from 'uuid';
@@ -27,6 +27,15 @@ const ScheduleChildSitterPage = () => {
 
   useEffect(() => {
     fetchUserReservations(currentUserData.id).then((resp) => {
+      let formattedEvents = [];
+      resp.forEach((event) => {
+        event.start = event.start.toDate().toISOString();
+        event.end = event.end.toDate().toISOString();
+        formattedEvents.push(event);
+      })
+      return formattedEvents;
+    }
+    ).then((resp) => {
       setEvents(resp);
     });
   }, [currentUserData.id]);
@@ -70,7 +79,7 @@ const ScheduleChildSitterPage = () => {
       id: uuidv4(), 
       title: droppedEventData.title,
       start: info.date.toISOString(),
-      end: new Date(new Date(info.date).getTime() + (60 * 60 * 1000 * parseInt(droppedEventData.duration.split(':')[0]))).toISOString(),
+      end:  new Date(new Date(info.date).getTime() + (60 * 60 * 1000 * parseInt(droppedEventData.duration.split(':')[0]))).toISOString(),
       allDay: info.allDay,
       extendedProps: {
         duration: droppedEventData.duration,
@@ -78,8 +87,6 @@ const ScheduleChildSitterPage = () => {
         childId: droppedEventData.extendedProps.childId
       }
     };
-
-    console.log('New event:', info);
 
     const isDuplicate = events.some(event =>
       event.start === newEvent.start &&
@@ -89,11 +96,25 @@ const ScheduleChildSitterPage = () => {
 
     if (!isDuplicate) {
       setEvents(prevEvents => [...prevEvents, newEvent]);
-      console.log('Event added:', newEvent.title);
     } else {
-      console.log('Event not added: Duplicate detected');
+      console.warn('Event not added: Duplicate detected');
     }
   };
+
+  const handleEventReceive = async (info) => {
+    let overlap = await checkReservationAllowability(info.event);
+
+    if (!overlap.allow) {
+      // revert the event from FullCalendar
+      info.revert();
+      // remove from events state
+      setEvents((prevEvents) => prevEvents.filter(e =>{
+        return e.title !== info.event.title && e.start !== info.event.start && e.end !== info.event.end
+      }));
+      // alert the user
+      await alert("This reservation overlaps with too many existing reservations. Please choose another time.")
+    }
+  }
 
   const handleEventResize = (resizeInfo) => {
     const { event } = resizeInfo;
@@ -199,6 +220,7 @@ const handleEventClick = ({ event }) => {
           eventAllow={eventAllow}
           eventContent={renderEventContent}
           eventClick={handleEventClick}
+          eventReceive={handleEventReceive}
           drop={handleDrop}
           eventDrop={handleEventMove}
           eventResize={handleEventResize}

@@ -43,7 +43,7 @@ export const renderEventContent = (eventInfo) => {
 export const handleScheduleSave = async (events, currentUserData) => {
   for (const event of events) {
     // Check if reservation already exists
-    const reservationExists = await checkReservationExists(currentUserData.id, event);
+    const reservationExists = await checkReservationExists(event);
     
     if (reservationExists) {
       // Update existing reservation
@@ -57,7 +57,7 @@ export const handleScheduleSave = async (events, currentUserData) => {
   alert('Schedule saved successfully!');
 }
 
-async function checkReservationExists(userId, event) {
+async function checkReservationExists(event) {
   // New reservations are given a uuidv4 before being saved to the database, including "-" and lowercase letters
   // Firebase will automatically assign a unique ID when the document is created. It includes uppercase letters and no special characters
 
