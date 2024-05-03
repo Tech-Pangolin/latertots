@@ -15,7 +15,7 @@ const HeaderBar = () => {
 
         <Button color="inherit" component={Link} to="/" >Home</Button>
         <Button color="inherit" component={Link} to="/profile">Profile</Button>
-        <Button color="inherit" component={Link} to="/calendar">Schedule</Button>
+        <Button color="inherit" component={Link} to="/schedule">Schedule</Button>
 
         {/* Add this to push the next elements to the right */}
         <Box sx={{ flexGrow: 1 }} />  
