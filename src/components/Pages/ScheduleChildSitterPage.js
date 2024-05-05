@@ -101,8 +101,10 @@ const ScheduleChildSitterPage = () => {
     }
   };
 
+  // The eventReceive callback is triggered when a new event is created in FullCalendar.
+  // Only now can we remove the event if it overlaps with too many existing reservations.
   const handleEventReceive = async (info) => {
-    let overlap = await checkReservationAllowability(info.event);
+    const overlap = await checkReservationAllowability(info.event, events);
 
     if (!overlap.allow) {
       // revert the event from FullCalendar
@@ -122,8 +124,14 @@ const ScheduleChildSitterPage = () => {
     // Calculate the new duration in hours
     const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
 
+    const overlap = checkReservationAllowability(event, events, true);
     if (durationHours < 1) {
-      resizeInfo.revert();  // Prevent events from being resized to less than 1 hour
+      resizeInfo.revert();
+      alert('Reservations must be at least 1 hour long.');
+      return;
+    } else if (!overlap.allow) {
+      resizeInfo.revert();
+      alert(overlap.message);
       return;
     };
 
@@ -146,6 +154,14 @@ const ScheduleChildSitterPage = () => {
 
   const handleEventMove = (info) => {
     const { event } = info;
+    const overlap = checkReservationAllowability(event, events, true);
+    console.log('Overlap:', overlap)
+
+    if (!overlap.allow) {
+      info.revert();
+      alert(overlap.message);
+      return;
+    }
 
     const newEvents = events.map((evt) => {
       if (evt.id.toString() === event.id.toString()) {
