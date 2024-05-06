@@ -187,7 +187,10 @@ const eventAllow = (dropInfo, draggedEvent) => {
 };
 
 const handleEventClick = ({ event }) => {
-  if (window.confirm(`Are you sure you want to delete the event: ${event.title}?`)) {
+  // Only allow deletion of children reservations that belong to the current user
+  const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
+
+  if (belongsToCurrentUser && window.confirm(`Are you sure you want to delete the event: ${event.title}?`)) {
     deleteReservationDocument(event.id);
     setEvents((prevEvents) => prevEvents.filter(e => e.id !== event.id));
   }
