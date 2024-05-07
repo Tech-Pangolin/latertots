@@ -10,6 +10,8 @@ import { useAuth } from '../AuthProvider';
 import DraggableChildEvent from '../Shared/DraggableChildEvent';
 import { v4 as uuidv4 } from 'uuid';
 import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
+import ReservationFormModal from '../Shared/ReservationFormModal';
+import { set } from 'react-hook-form';
 
 const ScheduleChildSitterPage = () => {
   const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
@@ -18,6 +20,7 @@ const ScheduleChildSitterPage = () => {
   const [children, setChildren] = useState([]);
   const { currentUser } = useAuth();
   const [currentUserData, setCurrentUserData] = useState({});
+  const [modalOpenState, setModalOpenState] = useState(false);
   
   useEffect(() => {
     fetchCurrentUser(currentUser.email).then((resp) => {
@@ -223,12 +226,16 @@ const handleEventClick = ({ event }) => {
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: 'saveButton'
+            right: 'newReservationForm saveButton'
           }}
           customButtons={{
             saveButton: {
               text: 'Save Schedule',
               click: () => handleScheduleSave(events, currentUserData)
+            },
+            newReservationForm: {
+              text: 'New Reservation',
+              click: () => setModalOpenState(true)
             }
           }}
           businessHours={businessHours}
@@ -247,6 +254,11 @@ const handleEventClick = ({ event }) => {
           allDaySlot={false}
         />
       </Grid>
+      <ReservationFormModal 
+        modalOpenState={modalOpenState} 
+        setModalOpenState={setModalOpenState} 
+        children={children}
+      />
     </Grid>
   );
 };
