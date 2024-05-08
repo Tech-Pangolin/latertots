@@ -223,11 +223,10 @@ export const fetchUserReservations = async (userId) => {
  * @param {Date} newReservation.start - The start date of the new reservation.
  * @param {Date} newReservation.end - The end date of the new reservation.
  * @param {Array<Object>} unsavedEvents - An array of unsaved events from the client-side.
- * @param {boolean} isNotCreate - A flag indicating if the reservation is being resized.
  * @returns {Promise<Object>} - A promise that resolves to an object containing the allowability status and additional information.
  * @throws {Error} - If there is an error checking the reservation allowability.
  */
-export function checkReservationAllowability(newReservation, unsavedEvents = [], isNotCreate = false) {
+export function checkReservationAllowability(newReservation, unsavedEvents = []) {
   // const reservationsRef = collection(db, "Reservations");
   // const overlapQuery = query(reservationsRef,
   //   where("end", ">", Timestamp.fromDate(new Date(newReservation.start))),
@@ -236,7 +235,7 @@ export function checkReservationAllowability(newReservation, unsavedEvents = [],
   // const querySnapshot = await getDocs(overlapQuery);
 
   // Loop through unsaved events from client-side
-  let overlapCount = 0;
+  let overlappingEvents = [];
   unsavedEvents.forEach(event => {
     if (newReservation.id && event.id === newReservation.id) {
       return;
@@ -244,14 +243,14 @@ export function checkReservationAllowability(newReservation, unsavedEvents = [],
 
     if (new Date(event.end) > new Date(newReservation.start) &&
         new Date(event.start) < new Date(newReservation.end)) {
-      overlapCount++;
+      overlappingEvents.push(event);
     }
   });
 
-  if (overlapCount < 5 || (isNotCreate && overlapCount <= 5)) {
-    return { allow: true, size: overlapCount };
+  if (overlappingEvents.length < 5 ) {
+    return { allow: true, size: overlappingEvents.length };
   } else {
-    return { allow: false, size: overlapCount, message: "No more than 5 reservations are allowed at a time." };
+    return { allow: false, size: overlappingEvents.length, message: "No more than 5 reservations are allowed at a time." };
   }
 }
 

@@ -34,7 +34,7 @@ const ReservationFormModal = ({modalOpenState = false, setModalOpenState, childr
   };
 
   useEffect(() => { 
-    const hasNewEvent = events.some(event => event.id.includes('-'))
+    const hasNewEvent = events.some(event => event.id.includes('-') && event.extendedProps.fromForm)
 
     if (hasNewEvent) {
       handleScheduleSave(events, currentUserData)
@@ -52,7 +52,8 @@ const ReservationFormModal = ({modalOpenState = false, setModalOpenState, childr
       extendedProps: {
         duration: (new Date(formData.date + 'T' + formData.end).toISOString() - new Date(formData.date + 'T' + formData.start).toISOString())/3600_000,
         status: 'pending',
-        childId: formData.selectedChild.id
+        childId: formData.selectedChild.id,
+        fromForm: true
       }
     }
     // Handle form submission logic here

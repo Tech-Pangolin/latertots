@@ -87,7 +87,8 @@ const ScheduleChildSitterPage = () => {
       extendedProps: {
         duration: droppedEventData.duration,
         status: 'pending',
-        childId: droppedEventData.extendedProps.childId
+        childId: droppedEventData.extendedProps.childId,
+        fromForm: false
       }
     };
 
@@ -127,7 +128,7 @@ const ScheduleChildSitterPage = () => {
     // Calculate the new duration in hours
     const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
 
-    const overlap = checkReservationAllowability(event, events, true);
+    const overlap = checkReservationAllowability(event, events);
     if (durationHours < 1) {
       resizeInfo.revert();
       alert('Reservations must be at least 1 hour long.');
@@ -157,8 +158,7 @@ const ScheduleChildSitterPage = () => {
 
   const handleEventMove = (info) => {
     const { event } = info;
-    const overlap = checkReservationAllowability(event, events, true);
-    console.log('Overlap:', overlap)
+    const overlap = checkReservationAllowability(event, events);
 
     if (!overlap.allow) {
       info.revert();
@@ -177,7 +177,16 @@ const ScheduleChildSitterPage = () => {
       return evt;
     });
 
-    setEvents(newEvents);
+    // Validate the new event state
+    let allowSave = false;
+    if (checkAgainstBusinessHours(event) && checkFutureStartTime(event)) {
+      allowSave = checkReservationAllowability(event);
+    }
+
+    // Update the events state if the new event is valid
+    if (allowSave) {
+      setEvents(newEvents);
+    } 
 };
 
 // Enforce rules for where events can be dropped or resized
