@@ -16,6 +16,7 @@ const ReservationFormModal = ({modalOpenState = false, setModalOpenState, childr
   const [formData, setFormData] = useState(initialState);
 
   const handleClose = () => {
+    setFormData(initialState);
     setModalOpenState(false);
   };
 
@@ -61,7 +62,6 @@ const ReservationFormModal = ({modalOpenState = false, setModalOpenState, childr
     }
     if (allowSave) {
       setEvents(prevEvents => [...prevEvents, newEvent]);
-      setFormData(initialState);
       handleClose();
     } else {
       alert('Could not save event. Please check the time and try again. Note that only 5 reservations can exist at once.');
