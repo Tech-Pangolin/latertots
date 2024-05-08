@@ -181,8 +181,8 @@ const ScheduleChildSitterPage = () => {
 };
 
 // Enforce rules for where events can be dropped or resized
-const eventAllow = (dropInfo, draggedEvent) => {
-  if (!checkAgainstBusinessHours(dropInfo, businessHours) || !checkFutureStartTime(dropInfo)) {
+const eventAllow = (dropInfo) => {
+  if (!checkAgainstBusinessHours(dropInfo) || !checkFutureStartTime(dropInfo)) {
     return false;
   }
   // Additional validation conditions
@@ -258,6 +258,10 @@ const handleEventClick = ({ event }) => {
         modalOpenState={modalOpenState} 
         setModalOpenState={setModalOpenState} 
         children={children}
+        setEvents={setEvents}
+        events={events}
+        handleScheduleSave={handleScheduleSave}
+        currentUserData={currentUserData}
       />
     </Grid>
   );

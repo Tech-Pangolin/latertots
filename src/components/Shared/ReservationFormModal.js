@@ -1,33 +1,72 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogTitle, DialogContent, MenuItem } from '@mui/material';
-import { getCurrentDate, getCurrentTime } from '../../Helpers/calendar';
+import { checkAgainstBusinessHours, checkFutureStartTime, getCurrentDate, getCurrentTime } from '../../Helpers/calendar';
+import { v4 as uuidv4 } from 'uuid';
+import { checkReservationAllowability } from '../../Helpers/firebase';
 
 
 // Remember to create state for the open/closed state of the modal and the form data
-const ReservationFormModal = ({modalOpenState = false, setModalOpenState, children}) => {
-  const [formData, setFormData] = useState({
-    childId: '',
+const ReservationFormModal = ({modalOpenState = false, setModalOpenState, children, setEvents, events, handleScheduleSave, currentUserData}) => {
+  const initialState = {
+    selectedChild: {id: '', name: 'Select a child'},
     date: `${getCurrentDate()}`,
     start: `${getCurrentTime()}`,
     end: `${getCurrentTime()}`
-  });
+  }
+  const [formData, setFormData] = useState(initialState);
 
   const handleClose = () => {
     setModalOpenState(false);
   };
 
+  const childrenOptions = [
+    {id: '', name: "Select a child"},
+     ...children.map( child => Object.fromEntries([["id", child.id], ["name", child.Name]]) )
+  ];
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.name === 'selectedChild') {
+      setFormData({ ...formData, 'selectedChild': childrenOptions.find(child => child.id === e.target.value)});
+    } else {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    }
   };
 
-  const handleSubmit = (e) => {
+  useEffect(() => { 
+    const hasNewEvent = events.some(event => event.id.includes('-'))
+
+    if (hasNewEvent) {
+      handleScheduleSave(events, currentUserData)
+    }
+  }, [events]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const newEvent = {
+      id: uuidv4(), 
+      title: formData.selectedChild.name,
+      start: new Date(formData.date + 'T' + formData.start).toISOString(),
+      end:  new Date(formData.date + 'T' + formData.end).toISOString(),
+      allDay: false,
+      extendedProps: {
+        duration: (new Date(formData.date + 'T' + formData.end).toISOString() - new Date(formData.date + 'T' + formData.start).toISOString())/3600_000,
+        status: 'pending',
+        childId: formData.selectedChild.id
+      }
+    }
     // Handle form submission logic here
-    console.log(formData);
-    handleClose();
+    let allowSave = false;
+    if (checkAgainstBusinessHours(newEvent) && checkFutureStartTime(newEvent)) {
+      allowSave = checkReservationAllowability(newEvent);
+    }
+    if (allowSave) {
+      setEvents(prevEvents => [...prevEvents, newEvent]);
+      setFormData(initialState);
+      handleClose();
+    } else {
+      alert('Could not save event. Please check the time and try again. Note that only 5 reservations can exist at once.');
+    }
   };
-
-  console.log(children)
 
   return (
     <Dialog open={modalOpenState}  aria-labelledby="form-dialog-title">
@@ -35,16 +74,16 @@ const ReservationFormModal = ({modalOpenState = false, setModalOpenState, childr
         <DialogContent>
           <form onSubmit={handleSubmit}>
             <TextField
-              name="childId"
+              name="selectedChild"
               label="Name"
               select
-              value={formData.childId}
+              value={formData.selectedChild.id}
               onChange={handleChange}
               required
               fullWidth
               style={{ marginTop: '1rem' }}
             >
-              { children.map((child) => <MenuItem key={child.id} value={child.id}> {child.Name} </MenuItem>) }
+              { childrenOptions.map((child) => <MenuItem key={child.id} value={child.id}> {child.name} </MenuItem>) }
             </TextField>
             <TextField
               name="date"

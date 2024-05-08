@@ -3,7 +3,13 @@ import { createReservationDocument, updateReservationDocument } from './firebase
 import  StyledCalendarEvent from '../components/Shared/StyledCalendarEvent';
 
 
-export function checkAgainstBusinessHours(event, businessHours) {
+export function checkAgainstBusinessHours(event) {
+  const businessHours = {
+    daysOfWeek: [1, 2, 3, 4, 5], // Monday - Friday
+    startTime: '07:00', 
+    endTime: '19:00', 
+    overlap: false
+  };
   // Convert times to comparable formats if necessary
   const start = new Date(event.start).getHours() + new Date(event.start).getMinutes() / 60;
   const end = new Date(event.end).getHours() + new Date(event.end).getMinutes() / 60;
@@ -44,7 +50,6 @@ export const handleScheduleSave = async (events, currentUserData) => {
   for (const event of events) {
     // Check if reservation already exists
     const reservationExists = await checkReservationExists(event);
-    
     if (reservationExists) {
       // Update existing reservation
       await updateReservationDocument(event);
