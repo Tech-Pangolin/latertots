@@ -227,14 +227,6 @@ export const fetchUserReservations = async (userId) => {
  * @throws {Error} - If there is an error checking the reservation allowability.
  */
 export function checkReservationAllowability(newReservation, unsavedEvents = []) {
-  // const reservationsRef = collection(db, "Reservations");
-  // const overlapQuery = query(reservationsRef,
-  //   where("end", ">", Timestamp.fromDate(new Date(newReservation.start))),
-  //   where("start", "<", Timestamp.fromDate(new Date(newReservation.end)))
-  // );
-  // const querySnapshot = await getDocs(overlapQuery);
-
-  // Loop through unsaved events from client-side
   let overlappingEvents = [];
   unsavedEvents.forEach(event => {
     if (newReservation.id && event.id === newReservation.id) {
@@ -247,10 +239,29 @@ export function checkReservationAllowability(newReservation, unsavedEvents = [])
     }
   });
 
-  if (overlappingEvents.length < 5 ) {
-    return { allow: true, size: overlappingEvents.length };
+  let times = [];
+  overlappingEvents.forEach(event => {
+    times.push({ time: new Date(event.start), type: 'start' });
+    times.push({ time: new Date(event.end), type: 'end' });
+  });
+
+  times.sort((a, b) => a.time - b.time || (a.type === 'end' ? -1 : 1));
+
+  let maxOverlap = 0;
+  let currentOverlap = 0;
+  times.forEach(time => {
+    if (time.type === 'start') {
+      currentOverlap++;
+      maxOverlap = Math.max(maxOverlap, currentOverlap);
+    } else {
+      currentOverlap--;
+    }
+  });
+
+  if ( maxOverlap < 5 ) {
+    return { allow: true, size: maxOverlap };
   } else {
-    return { allow: false, size: overlappingEvents.length, message: "No more than 5 reservations are allowed at a time." };
+    return { allow: false, size: maxOverlap, message: "No more than 5 reservations are allowed at a time." };
   }
 }
 

@@ -129,6 +129,9 @@ const ScheduleChildSitterPage = () => {
     const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
 
     const overlap = checkReservationAllowability(event, events);
+    console.log("overlap", overlap)
+
+    
     if (durationHours < 1) {
       resizeInfo.revert();
       alert('Reservations must be at least 1 hour long.');
