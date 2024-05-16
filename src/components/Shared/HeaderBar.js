@@ -9,21 +9,18 @@ const HeaderBar = () => {
   return (
     <AppBar position="static">
       <Toolbar>
-        <Typography variant="h6" component="div" sx={{ marginRight: '15px'}}>
-          LaterTots
-        </Typography>
-
-        <Button color="inherit" component={Link} to="/" >Home</Button>
-        <Button color="inherit" component={Link} to="/profile">Profile</Button>
-        <Button color="inherit" component={Link} to="/schedule">Schedule</Button>
+        <img src="./assets/img/logo.png" className="img-fluid" style={{width:'100px'}}/>
+        <Button color="inherit" component={Link} to="/" className='nav-link' >Home</Button>
+        <Button color="inherit" component={Link} to="/profile" className='nav-link'>Profile</Button>
+        <Button color="inherit" component={Link} to="/schedule" className='nav-link'>Schedule</Button>
 
         {/* Add this to push the next elements to the right */}
         <Box sx={{ flexGrow: 1 }} />  
         
         {currentUser ? (
-          <Button color="inherit" onClick={logout}>Logout</Button>
+          <Button color="inherit" onClick={logout} className='nav-link'>Logout</Button>
         ) : (
-          <Button color="inherit" component={Link} to="/login">Login</Button>
+          <Button color="inherit" component={Link} to="/login" className='nav-link'>Login</Button>
         )}
       </Toolbar>
     </AppBar>

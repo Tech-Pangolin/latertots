@@ -7,47 +7,54 @@ import { uploadProfilePhoto, fetchCurrentUser } from "../../Helpers/firebase";
 
 const UserForm = () => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
-  const { currentUser: { email } } = useAuth();
+  const { currentUser } = useAuth();
+  console.log(currentUser?.email ?? '')
+  const [email,setEmail] = currentUser?.email ?? '';
+  // const email = "";
   const [authUserId, setAuthUserId] = React.useState(null);
   const [mode, setMode] = React.useState('create');
 
-  useEffect(() => { 
-    fetchCurrentUser(email).then((resp) => setAuthUserId(resp.id));
+  useEffect(() => {
+    if (email) {
+      fetchCurrentUser(email).then((resp) => setAuthUserId(resp.id)).catch((e) => console.error(e));
 
-    const fetchData = async () => {
-      if (authUserId) {
-        const userDocRef = doc(db, 'Users', authUserId);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          reset(userDoc.data());
-          setMode('update');
-        } else {
-          console.log("No such user found!");
+      const fetchData = async () => {
+        if (authUserId) {
+          const userDocRef = doc(db, 'Users', authUserId);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
+            reset(userDoc.data());
+            setMode('update');
+          } else {
+            console.log("No such user found!");
+          }
         }
-      }
-    };
-    fetchData();
+      };
+      fetchData();
+    }
   }, [email, reset, authUserId]);
 
   const onSubmit = async (data) => {
     // Hardcode a user role for now
     const userRoleRef = await doc(db, 'Roles', 'parent-user');
     data.Role = userRoleRef;
-    data.Email = email;
+    // data.Email = email;
     const userImage = data.Image[0];
     delete data.Image;
 
     try {
+      console.log(mode,data)
+      let docRef;
       if (mode === 'create') {
-        await addDoc(collection(db, 'Users'), data);
+        docRef =await addDoc(collection(db, 'Users'), data);
       } else if (mode === 'update' && authUserId) {
         const userRef = doc(db, 'Users', authUserId);
         await updateDoc(userRef, data);
       }
 
       if (userImage) {
-        await uploadProfilePhoto(authUserId, userImage);
+        await uploadProfilePhoto(authUserId?? docRef.id, userImage);
       }
 
       // Navigate back to the homepage on success
@@ -59,72 +66,81 @@ const UserForm = () => {
   };
 
   // Log form state as it is filled out
-   console.log(watch());
+  console.log(watch());
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div>
-        <label htmlFor="Name">Name</label>
-        <input type="text" {...register("Name", { required: "Name is required" })} />
-        {errors.Name && <p>{errors.Name.message}</p>}
+    <div className="container">
+      <div className="row">
+        <form onSubmit={handleSubmit(onSubmit)} className="col-12 col-md-6">
+          <div className="mb-3">
+            <label htmlFor="Name" className="form-label">Name</label>
+            <input type="text" className="form-control" {...register("Name", { required: "Name is required" })} />
+            {errors.Name && <div className="">{errors.Name.message}</div>}
+          </div>
+          <div className="mb-3">
+            <label htmlFor="Email" className="form-label">Email</label>
+            <input
+              className="form-control"
+              type="Email"
+              disabled={mode === 'update'}
+              {...register("Email")}
+            />
+            {errors.Email && <p>{errors.Email.message}</p>}
+          </div>
+          <div className="mb-3">
+            <label htmlFor="CellNumber"  className="form-label">Cell #</label>
+            <input
+            className="form-control"
+              type="text"
+              {...register("CellNumber", { required: "Cell is required" })}
+            />
+            {errors.CellNumber && <p>{errors.CellNumber.message}</p>}
+          </div>
+          <div className="mb-3">
+            <label htmlFor="StreetAddress" className="form-label">Street Address</label>
+            <input
+             className="form-control"
+              type="text"
+              {...register("StreetAddress", { required: "Street Address is required" })}
+            />
+            {errors.StreetAddress && <p>{errors.StreetAddress.message}</p>}
+          </div>
+          <div className="mb-3">
+            <label htmlFor="City" className="form-label">City</label>
+            <input
+              className="form-control"
+              type="text"
+              {...register("City", { required: "City is required" })}
+            />
+            {errors.City && <p>{errors.City.message}</p>}
+          </div>
+          <div className="mb-3">
+            <label htmlFor="State" className="form-label">State</label>
+            <input
+              className="form-control"
+              type="text"
+              {...register("State", { required: "State is required" })}
+            />
+            {errors.State && <p>{errors.State.message}</p>}
+          </div>
+          <div className="mb-3">
+            <label htmlFor="Zip" className="form-label">Zip</label>
+            <input
+              className="form-control"
+              type="text"
+              {...register("Zip", { required: "Zip is required" })}
+            />
+            {errors.Zip && <p>{errors.Zip.message}</p>}
+          </div>
+          <div>
+            <label htmlFor="Image">Image</label>
+            <input type="file" {...register("Image")} className="form-control"/>
+            {errors.Image && <p>{errors.Image.message}</p>}
+          </div>
+          <button type="submit" className="btn btn-primary mt-5">{mode === 'create' ? "Create" : "Update"} User</button>
+        </form>
       </div>
-      <div>
-        <label htmlFor="Email">Email</label>
-        <input
-          type="Email"
-          value={email}
-          disabled
-          {...register("Email")}
-        />
-        {errors.Email && <p>{errors.Email.message}</p>}
-      </div>
-      <div>
-        <label htmlFor="CellNumber">Cell #</label>
-        <input
-          type="text"
-          {...register("CellNumber", { required: "Cell is required" })}
-        />
-        {errors.CellNumber && <p>{errors.CellNumber.message}</p>}
-      </div>
-      <div>
-        <label htmlFor="StreetAddress">Street Address</label>
-        <input
-          type="text"
-          {...register("StreetAddress", { required: "Street Address is required" })}
-        />
-        {errors.StreetAddress && <p>{errors.StreetAddress.message}</p>}
-      </div>
-      <div>
-        <label htmlFor="City">City</label>
-        <input
-          type="text"
-          {...register("City", { required: "City is required" })}
-        />
-        {errors.City && <p>{errors.City.message}</p>}
-      </div>
-      <div>
-        <label htmlFor="State">State</label>
-        <input
-          type="text"
-          {...register("State", { required: "State is required" })}
-        />
-        {errors.State && <p>{errors.State.message}</p>}
-      </div>
-      <div>
-        <label htmlFor="Zip">Zip</label>
-        <input
-          type="text"
-          {...register("Zip", { required: "Zip is required" })}
-        />
-        {errors.Zip && <p>{errors.Zip.message}</p>}
-      </div>
-      <div>
-        <label htmlFor="Image">Image</label>
-        <input type="file" {...register("Image")} />
-        {errors.Image && <p>{errors.Image.message}</p>}
-      </div>
-      <button type="submit">{ mode === 'create' ? "Create" : "Update"} User</button>
-    </form>
+    </div>
   );
 };
 

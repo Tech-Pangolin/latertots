@@ -20,7 +20,7 @@ function App() {
           <Route path="/" element={ <IntroPage /> } />
           <Route path="/home" element={ <PrivateRoute element={ <HomePage /> }/> } />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<PrivateRoute element={ <UserRegistrationPage /> }/>} />
+          <Route path="/register" element={ <UserRegistrationPage />} />
           <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
           <Route path="/schedule" element={ <PrivateRoute element={ <ScheduleChildSitterPage /> } />} />
           <Route path="/calendar" element={ <PrivateRoute element={ <Calendar /> } />} />
