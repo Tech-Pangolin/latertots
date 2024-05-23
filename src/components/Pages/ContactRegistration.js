@@ -8,7 +8,7 @@ function ContactRegistration() {
   const { currentUser: { email } } = useAuth();
   const [authUserId, setAuthUserId] = React.useState(null);
 
-  useEffect(() => { 
+  useEffect(() => {
     fetchCurrentUser(email).then((resp) => setAuthUserId(resp.id));
   }, [email]);
 
@@ -24,33 +24,34 @@ function ContactRegistration() {
   };
 
   return (
-    <>
-    <h1>Contact Registration</h1>
+    <div className="container">
+      <h1>Contact Registration</h1>
+      <div className="row">
+      <form onSubmit={handleSubmit(onSubmit)} className='col-6'>
+        <label htmlFor="Name" class="form-label">Name:</label>
+        <input type="text" id="Name" {...register('Name', { required: true })} class="form-control" />
 
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <label htmlFor="Name">Name:</label>
-      <input type="text" id="Name" {...register('Name', {required: true}) } />
+        <label htmlFor="Phone" class="form-label">Phone:</label>
+        <input type="tel" id="Phone" {...register('Phone')} class="form-control" />
 
-      <label htmlFor="Phone">Phone:</label>
-      <input type="tel" id="Phone" {...register('Phone')} />
+        <label htmlFor="Email" class="form-label">Email:</label>
+        <input type="Email" id="Email" {...register('Email')} class="form-control" />
 
-      <label htmlFor="Email">Email:</label>
-      <input type="Email" id="Email" {...register('Email')} />
+        <label htmlFor="Relation" class="form-label">Relation:</label>
+        <select id="Relation" {...register('Relation', { required: true })} class="form-control">
+          <option value="Parent">Parent</option>
+          <option value="Family">Family</option>
+          <option value="Guardian">Legal Guardian</option>
+          <option value="Friend">Family Friend</option>
+          <option value="Doctor">Doctor</option>
+          <option value="Professional Caregiver">Professional Caregiver</option>
+          <option value="Other">Other</option>
+        </select>
 
-      <label htmlFor="Relation">Relation:</label>
-      <select id="Relation" {...register('Relation', {required: true})}>
-        <option value="Parent">Parent</option>
-        <option value="Family">Family</option>
-        <option value="Guardian">Legal Guardian</option>
-        <option value="Friend">Family Friend</option>
-        <option value="Doctor">Doctor</option>
-        <option value="Professional Caregiver">Professional Caregiver</option>
-        <option value="Other">Other</option>
-      </select>
-
-      <button type="submit">Submit</button>
-    </form>
-    </>
+        <button type="submit" className="btn btn-primary mt-5">Submit</button>
+      </form>
+      </div>
+    </div>
   );
 }
 

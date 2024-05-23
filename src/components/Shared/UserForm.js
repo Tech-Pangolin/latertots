@@ -8,7 +8,7 @@ import { uploadProfilePhoto, fetchCurrentUser } from "../../Helpers/firebase";
 const UserForm = () => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
   const { currentUser } = useAuth();
-  console.log(currentUser?.email ?? '')
+  console.log(currentUser)
   const [email,setEmail] = currentUser?.email ?? '';
   // const email = "";
   const [authUserId, setAuthUserId] = React.useState(null);
@@ -22,7 +22,7 @@ const UserForm = () => {
         if (authUserId) {
           const userDocRef = doc(db, 'Users', authUserId);
           const userDoc = await getDoc(userDocRef);
-
+          console.log(userDoc)
           if (userDoc.exists()) {
             reset(userDoc.data());
             setMode('update');

@@ -116,6 +116,9 @@ export const fetchAllCurrentUsersChildren = async (email) => {
       const userRef = doc(collection(db, "Users"), userDoc.id);
       const userSnapshot = await getDoc(userRef);
       const childrenRefs = userSnapshot.data().Children;
+      if (!childrenRefs) {
+        return [];
+      }
       const childrenPromises = childrenRefs.map(childRef => getDoc(childRef));
       const childrenSnapshots = await Promise.all(childrenPromises);
       const children = childrenSnapshots.map(childSnapshot => ({ id: childSnapshot.id, ...childSnapshot.data() }));
@@ -145,6 +148,9 @@ export const fetchAllCurrentUsersContacts = async (email) => {
       const userRef = doc(collection(db, "Users"), userDoc.id);
       const userSnapshot = await getDoc(userRef);
       const contactsRefs = userSnapshot.data().Contacts;
+      if (!contactsRefs) {
+        return [];
+      }
       const contactsPromises = contactsRefs.map(contactRef => getDoc(contactRef));
       const contactsSnapshots = await Promise.all(contactsPromises);
       const contacts = contactsSnapshots.map(contactSnapshot => ({ id: contactSnapshot.id, ...contactSnapshot.data() }));
@@ -154,7 +160,7 @@ export const fetchAllCurrentUsersContacts = async (email) => {
     }
   } catch (error) {
     console.error("Error querying contacts:", error);
-    throw error;
+   return []
   }
 }
 
