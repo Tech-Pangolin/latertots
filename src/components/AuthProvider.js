@@ -8,7 +8,7 @@ export const signInWithGoogle = async () => {
   try {
     await signInWithPopup(auth, new GoogleAuthProvider());
     // Redirect to "/" if sign-in is successful
-    window.location.href = "/";
+    window.location.href = "/profile";
   } catch (error) {
     console.error("Error signing in with Google: ", error.message);
   }
@@ -17,6 +17,7 @@ export const signInWithGoogle = async () => {
 export const signInWithEmail = async (email, password) => {
   try {
     await signInWithEmailAndPassword(auth, email, password);
+    window.location.href = "/profile";
   } catch (error) {
     console.error("Error signing in with email and password: ", error.message);
   }
