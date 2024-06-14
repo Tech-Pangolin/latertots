@@ -82,7 +82,7 @@ const ScheduleChildSitterPage = () => {
       id: uuidv4(), 
       title: droppedEventData.title,
       start: info.date.toISOString(),
-      end:  new Date(new Date(info.date).getTime() + (60 * 60 * 1000 * parseInt(droppedEventData.duration.split(':')[0]))).toISOString(),
+      end:  new Date(new Date(info.date).getTime() + (2 * 60 * 60 * 1000 * parseInt(droppedEventData.duration.split(':')[0]))).toISOString(),
       allDay: info.allDay,
       extendedProps: {
         duration: droppedEventData.duration,
@@ -132,9 +132,9 @@ const ScheduleChildSitterPage = () => {
     console.log("overlap", overlap)
 
     
-    if (durationHours < 1) {
+    if (durationHours < 2) {
       resizeInfo.revert();
-      alert('Reservations must be at least 1 hour long.');
+      alert('Reservations must be at least 2 hours long.');
       return;
     } else if (!overlap.allow) {
       resizeInfo.revert();
