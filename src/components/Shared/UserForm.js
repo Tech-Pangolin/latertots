@@ -1,21 +1,24 @@
 import { db } from "../../config/firestore";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { collection, addDoc, doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { useAuth } from "../AuthProvider";
 import { uploadProfilePhoto, fetchCurrentUser } from "../../Helpers/firebase";
+import { create } from "@mui/material/styles/createTransitions";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { firebaseAuth } from "../../config/firebaseAuth";
 
 const UserForm = () => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
   const { currentUser } = useAuth();
-  console.log(currentUser)
+  console.log("CurrentUser: ", currentUser)
   const [email,setEmail] = currentUser?.email ?? '';
   // const email = "";
   const [authUserId, setAuthUserId] = React.useState(null);
   const [mode, setMode] = React.useState('create');
 
   useEffect(() => {
-    if (email) {
+    if (email && email !== '') {
       fetchCurrentUser(email).then((resp) => setAuthUserId(resp.id)).catch((e) => console.error(e));
 
       const fetchData = async () => {
@@ -40,25 +43,49 @@ const UserForm = () => {
     const userRoleRef = await doc(db, 'Roles', 'parent-user');
     data.Role = userRoleRef;
     // data.Email = email;
-    const userImage = data.Image[0];
+    //const userImage = data.Image[0];
     delete data.Image;
+
+    const dataWithoutPassword = {...data};
+    delete dataWithoutPassword.Password;
+
 
     try {
       console.log(mode,data)
       let docRef;
       if (mode === 'create') {
-        docRef =await addDoc(collection(db, 'Users'), data);
+        // TODO: check if email already exists
+        const userCredential = await createUserWithEmailAndPassword(firebaseAuth, data.Email, data.Password);
+        const user = userCredential.user;
+        // An empty document will be created in the Users collection by the Firebase Auth trigger
+
+        // Poll for the user document to be created by the Firebase Auth trigger
+        // Limit 10 retries
+        let userDocRef;
+        for (let i = 0; i < 10; i++) {
+          userDocRef = doc(db, 'Users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            break;
+          }
+          // Increase delay between retries
+          await new Promise(r => setTimeout(r, 1000 * i));
+        }
+
+        await updateDoc(userDocRef, dataWithoutPassword);
+        console.log("user created")
       } else if (mode === 'update' && authUserId) {
         const userRef = doc(db, 'Users', authUserId);
         await updateDoc(userRef, data);
       }
 
-      if (userImage) {
-        await uploadProfilePhoto(authUserId?? docRef.id, userImage);
-      }
+      // TODO: Add user image upload
+      // if (userImage) {
+      //   await uploadProfilePhoto(authUserId?? docRef.id, userImage);
+      // }
 
       // Navigate back to the homepage on success
-      window.location.href = '/';
+      //window.location.href = '/';
     }
     catch (e) {
       console.error('Error adding document: ', e);
@@ -66,7 +93,7 @@ const UserForm = () => {
   };
 
   // Log form state as it is filled out
-  console.log(watch());
+  // console.log(watch());
 
   return (
     <div className="container">
@@ -86,6 +113,16 @@ const UserForm = () => {
               {...register("Email")}
             />
             {errors.Email && <p>{errors.Email.message}</p>}
+          </div>
+          <div className="mb-3">
+            <label htmlFor="Password" className="form-label">Password</label>
+            <input
+              className="form-control"
+              type="Password"
+              {...register("Password", { required: "Password is required" })}
+              disabled={mode === 'update'}
+            />
+            {errors.Password && <p>{errors.Password.message}</p>}
           </div>
           <div className="mb-3">
             <label htmlFor="CellNumber"  className="form-label">Cell #</label>
