@@ -2,6 +2,7 @@ import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDo
 import { db } from "../config/firestore";
 import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 /**
  * Fetches the role of a user based on the provided role reference.
@@ -176,7 +177,7 @@ export const uploadProfilePhoto = async (userId, file) => {
   console.log("storage", storage)
   try {
     // Create a storage reference with the user ID as the path
-    const storageRef = ref(storage, `photos/${userId}/${file.name}`);
+    const storageRef = ref(storage, `profile-photos/${userId}`);
 
     // Upload the file to Firebase Storage
     const snapshot = await uploadBytes(storageRef, file);
@@ -355,4 +356,41 @@ export const deleteReservationDocument = async (reservationId) => {
     console.error("Error deleting reservation document:", error);
     throw error;
   }
+};
+
+
+/**
+ * Creates a new user and authenticates using the provided email and password.
+ * 
+ * @param {Object} firebaseAuth - The Firebase authentication object.
+ * @param {string} email - The email of the user.
+ * @param {string} password - The password of the user.
+ * @returns {Promise<Object>} A promise that resolves to the authenticated user object.
+ */
+export const createUserAndAuthenticate = async (firebaseAuth, email, password) => {
+  const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+  return userCredential.user;
+};
+
+
+/**
+ * Polls for the existence of a user document in the Firebase Firestore database.
+ * 
+ * @param {import('firebase/firestore').Firestore} db - The Firestore database instance.
+ * @param {string} userId - The ID of the user document to poll for.
+ * @param {number} [retries=10] - The maximum number of retries to poll for the user document.
+ * @returns {Promise<import('firebase/firestore').DocumentReference>} - A promise that resolves to the user document reference if found.
+ * @throws {Error} - Throws an error if the user document is not found after the maximum retries.
+ */
+export const pollForUserDocument = async (db, userId, retries = 10) => {
+  let userDocRef;
+  for (let i = 0; i < retries; i++) {
+      userDocRef = doc(db, 'Users', userId);
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+          return userDocRef;
+      }
+      await new Promise(r => setTimeout(r, 1000 * i));
+  }
+  throw new Error('User document not found after maximum retries.');
 };

@@ -1,14 +1,10 @@
 import { db } from "../../config/firestore";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { collection, addDoc, doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useAuth } from "../AuthProvider";
-import { uploadProfilePhoto, fetchCurrentUser } from "../../Helpers/firebase";
-import { create } from "@mui/material/styles/createTransitions";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { uploadProfilePhoto, fetchCurrentUser, createUserAndAuthenticate, pollForUserDocument } from "../../Helpers/firebase";
 import { firebaseAuth } from "../../config/firebaseAuth";
-import { storage } from "../../config/cloudStorage";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const UserForm = () => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
@@ -56,41 +52,22 @@ const UserForm = () => {
     try {
       console.info('Mode:', mode);
       console.info('Data:', data);
-  
-      let docRef;
+      
       if (mode === 'create') {
-          // TODO: check if email already exists
-          const userCredential = await createUserWithEmailAndPassword(firebaseAuth, data.Email, data.Password);
-          const user = userCredential.user;
+          const user = await createUserAndAuthenticate(firebaseAuth, data.Email, data.Password);
           // An empty document will be created in the Users collection by the Firebase Auth trigger
 
           // Poll for the user document to be created by the Firebase Auth trigger
           // Limit 10 retries
-          let userDocRef;
-          for (let i = 0; i < 10; i++) {
-              userDocRef = doc(db, 'Users', user.uid);
-              const userDoc = await getDoc(userDocRef);
-              if (userDoc.exists()) {
-                  setEmail(data.Email);
-                  break;
-              }
-              // console.log(`User document not found, retrying... (${i + 1}/10)`);
-              // Increase delay between retries
-              await new Promise(r => setTimeout(r, 1000 * i));
+          let userDocRef = await pollForUserDocument(db, user.uid, 10);
+          if (userDocRef) {
+              setEmail(data.Email);
           }
           
           // Upload the profile photo if one was provided
-          let photoURL = '';
-          if (userImage) {
-              // Get a reference to the location where the photo will be stored
-              const storageRef = ref(storage, `profile-photos/${user.uid}`);
-              // Upload the photo file to that location
-              await uploadBytes(storageRef, userImage);
-              // Get the download URL for the file at that location
-              photoURL = await getDownloadURL(storageRef);
-              // Update the user's profile with the photo URL
-              dataWithoutPassword.PhotoURL = photoURL;
-          }
+          let photoURL = await uploadProfilePhoto(userImage, user.uid);
+          // Add the photoURL to the user document data
+          dataWithoutPassword.PhotoURL = photoURL;
   
           await updateDoc(userDocRef, dataWithoutPassword);
 
@@ -104,14 +81,11 @@ const UserForm = () => {
           console.log('User document updated.');
       }
   } catch (e) {
-      console.error('Error adding document: ', e.message);
+      console.error('Error adding/updating document: ', e.message);
       console.error('Stack Trace:', e.stack);
   }
   
   };
-
-  // Log form state as it is filled out
-  // console.log(watch());
 
   return (
     <div className="container">
