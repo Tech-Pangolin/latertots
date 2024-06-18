@@ -16,7 +16,10 @@ const UserForm = () => {
 
   useEffect(() => {
     if (email && email !== '') {
-      fetchCurrentUser(email).then((resp) => setAuthUserId(resp.id)).catch((e) => console.error(e));
+      fetchCurrentUser(email, currentUser?.uid).then((resp) => {
+        console.log("Fetched new current user: ", resp); 
+        setAuthUserId(resp.id)
+      }).catch((e) => console.error(e));
 
       const fetchData = async () => {
         if (authUserId) {
@@ -52,24 +55,34 @@ const UserForm = () => {
     try {
       console.info('Mode:', mode);
       console.info('Data:', data);
-      
+
       if (mode === 'create') {
+          console.log('Creating user...');
           const user = await createUserAndAuthenticate(firebaseAuth, data.Email, data.Password);
+          console.log('User created:', user);
           // An empty document will be created in the Users collection by the Firebase Auth trigger
 
           // Poll for the user document to be created by the Firebase Auth trigger
           // Limit 10 retries
+          console.log('Polling for user document...');
           let userDocRef = await pollForUserDocument(db, user.uid, 10);
+          console.log('User document found:', await getDoc(userDocRef));
+          console.log('Setting email for logged in user:', data.Email)
           if (userDocRef) {
               setEmail(data.Email);
           }
+          console.log('Email set')
+
           
           // Upload the profile photo if one was provided
-          let photoURL = await uploadProfilePhoto(userImage, user.uid);
+          console.log('Uploading profile photo...');
+          let photoURL = await uploadProfilePhoto(user.uid, userImage);
+          console.log('Photo URL:', photoURL);
           // Add the photoURL to the user document data
           dataWithoutPassword.PhotoURL = photoURL;
-  
+          console.log('Updating user document:', dataWithoutPassword);
           await updateDoc(userDocRef, dataWithoutPassword);
+          console.log('User document updated.');
 
           // Navigate back to the homepage on success
           window.location.href = '/profile';

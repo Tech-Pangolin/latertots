@@ -42,15 +42,48 @@ export const fetchAllUsers = async () => {
  * @returns {Promise<Object|null>} - A promise that resolves to the user object if found, or null if not found.
  * @throws {Error} - If there is an error fetching the current user.
  */
-export const fetchCurrentUser = async (email) => {
+export const fetchCurrentUser = async (email, uid) => {
+  const maxRetries = 10;
   try {
-    const q = query(collection(db, "Users"), where("Email", "==", email));
-    const querySnapshot = await getDocs(q);
-    const userDoc = querySnapshot.docs.find(doc => doc.data().Email === email);
-    if (userDoc) {
+    let userDocRef;
+    let userDoc;
+
+    // Poll for the user document if the UID is provided
+    if (uid) {
+      console.log("Polling for user document with UID:", uid);
+      userDocRef = await pollForUserDocument(db, uid, maxRetries);
+      userDoc = await getDoc(userDocRef);
+    }
+
+    // Poll for user document by email if not found by UID
+    if (!userDoc || !userDoc.exists()) {
+      console.log("Querying for user document with email:", email);
+      for (let i = 0; i < maxRetries; i++) {
+        const q = query(collection(db, "Users"), where("Email", "==", email));
+        const querySnapshot = await getDocs(q);
+        const userDocSnapshot = querySnapshot.docs.find(doc => doc.data().Email === email);
+
+        if (userDocSnapshot) {
+          userDocRef = userDocSnapshot.ref;
+          userDoc = userDocSnapshot;
+          break;
+        }
+
+        console.log(`User document not found with email, retrying... (${i + 1}/${maxRetries})`);
+        await new Promise(r => setTimeout(r, 1000 * i));
+      }
+    }
+
+    if (userDoc && userDoc.exists()) {
+      console.log("User document found:", userDoc.data());
       const user = { id: userDoc.id, ...userDoc.data() };
       const roleRef = user.Role;
-      user.Role = await fetchUserRole(roleRef);
+      if (roleRef) {
+        console.log("Fetching user role:", roleRef);
+        user.Role = await fetchUserRole(roleRef);
+      } else {
+        console.log("Role reference not yet set.")
+      }
       return user;
     } else {
       throw new Error("No record found with email: " + email);
@@ -174,8 +207,11 @@ export const fetchAllCurrentUsersContacts = async (email) => {
  * @throws {Error} - If there is an error uploading the photo.
  */
 export const uploadProfilePhoto = async (userId, file) => {
-  console.log("storage", storage)
   try {
+    if (!(file instanceof File)) {
+      throw new Error(`Invalid file type: ${typeof file}. Please provide a valid File object.`);
+    }
+
     // Create a storage reference with the user ID as the path
     const storageRef = ref(storage, `profile-photos/${userId}`);
 
@@ -192,7 +228,6 @@ export const uploadProfilePhoto = async (userId, file) => {
     return downloadURL;
   } catch (error) {
     console.error("Error uploading photo:", error);
-    throw error;
   }
 };
 
@@ -365,7 +400,7 @@ export const deleteReservationDocument = async (reservationId) => {
  * @param {Object} firebaseAuth - The Firebase authentication object.
  * @param {string} email - The email of the user.
  * @param {string} password - The password of the user.
- * @returns {Promise<Object>} A promise that resolves to the authenticated user object.
+ * @returns {Promise<User>} A promise that resolves to the authenticated user object.
  */
 export const createUserAndAuthenticate = async (firebaseAuth, email, password) => {
   const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
@@ -390,6 +425,7 @@ export const pollForUserDocument = async (db, userId, retries = 10) => {
       if (userDoc.exists()) {
           return userDocRef;
       }
+      console.log(`User document not found, retrying... (${i + 1}/10)`);
       await new Promise(r => setTimeout(r, 1000 * i));
   }
   throw new Error('User document not found after maximum retries.');
