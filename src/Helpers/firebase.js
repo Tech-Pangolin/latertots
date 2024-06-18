@@ -3,6 +3,7 @@ import { db } from "../config/firestore";
 import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { logger } from "./logger";
 
 /**
  * Fetches the role of a user based on the provided role reference.
@@ -30,7 +31,7 @@ export const fetchAllUsers = async () => {
     }
     return users;
   } catch (error) {
-    console.error("Error fetching users:", error);
+    logger.error("Error fetching users:", error);
     return [];
   }
 };
@@ -50,14 +51,14 @@ export const fetchCurrentUser = async (email, uid) => {
 
     // Poll for the user document if the UID is provided
     if (uid) {
-      console.log("Polling for user document with UID:", uid);
+      logger.info("Polling for user document with UID:", uid);
       userDocRef = await pollForUserDocument(db, uid, maxRetries);
       userDoc = await getDoc(userDocRef);
     }
 
     // Poll for user document by email if not found by UID
     if (!userDoc || !userDoc.exists()) {
-      console.log("Querying for user document with email:", email);
+      logger.info("Querying for user document with email:", email);
       for (let i = 0; i < maxRetries; i++) {
         const q = query(collection(db, "Users"), where("Email", "==", email));
         const querySnapshot = await getDocs(q);
@@ -69,27 +70,27 @@ export const fetchCurrentUser = async (email, uid) => {
           break;
         }
 
-        console.log(`User document not found with email, retrying... (${i + 1}/${maxRetries})`);
+        logger.info(`User document not found with email, retrying... (${i + 1}/${maxRetries})`);
         await new Promise(r => setTimeout(r, 1000 * i));
       }
     }
 
     if (userDoc && userDoc.exists()) {
-      console.log("User document found:", userDoc.data());
+      logger.info("User document found:", userDoc.data());
       const user = { id: userDoc.id, ...userDoc.data() };
       const roleRef = user.Role;
       if (roleRef) {
-        console.log("Fetching user role:", roleRef);
+        logger.info("Fetching user role:", roleRef);
         user.Role = await fetchUserRole(roleRef);
       } else {
-        console.log("Role reference not yet set.")
+        logger.warn("Role reference not yet set.")
       }
       return user;
     } else {
       throw new Error("No record found with email: " + email);
     }
   } catch (error) {
-    console.error("Error fetching current user:", error);
+    logger.error("Error fetching current user:", error);
     return null;
   }
 };

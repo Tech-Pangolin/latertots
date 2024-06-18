@@ -5,11 +5,12 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useAuth } from "../AuthProvider";
 import { uploadProfilePhoto, fetchCurrentUser, createUserAndAuthenticate, pollForUserDocument } from "../../Helpers/firebase";
 import { firebaseAuth } from "../../config/firebaseAuth";
+import { logger } from "../../Helpers/logger";
 
 const UserForm = () => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
   const { currentUser } = useAuth();
-  console.log("CurrentUser: ", currentUser)
+  logger.info("CurrentUser: ", currentUser)
   const [email, setEmail] = React.useState(currentUser?.email ?? '');
   const [authUserId, setAuthUserId] = React.useState(null);
   const [mode, setMode] = React.useState('create');
@@ -17,20 +18,20 @@ const UserForm = () => {
   useEffect(() => {
     if (email && email !== '') {
       fetchCurrentUser(email, currentUser?.uid).then((resp) => {
-        console.log("Fetched new current user: ", resp); 
+        logger.info("Fetched new current user: ", resp); 
         setAuthUserId(resp.id)
-      }).catch((e) => console.error(e));
+      }).catch((e) => logger.error(e));
 
       const fetchData = async () => {
         if (authUserId) {
           const userDocRef = doc(db, 'Users', authUserId);
           const userDoc = await getDoc(userDocRef);
-          console.log(userDoc)
+          logger.info(userDoc)
           if (userDoc.exists()) {
             reset(userDoc.data());
             setMode('update');
           } else {
-            console.log("No such user found!");
+            logger.info("No such user found!");
           }
         }
       };
@@ -53,49 +54,49 @@ const UserForm = () => {
 
 
     try {
-      console.info('Mode:', mode);
-      console.info('Data:', data);
+      logger.info('Mode:', mode);
+      logger.info('Data:', data);
 
       if (mode === 'create') {
-          console.log('Creating user...');
+          logger.info('Creating user...');
           const user = await createUserAndAuthenticate(firebaseAuth, data.Email, data.Password);
-          console.log('User created:', user);
+          logger.info('User created:', user);
           // An empty document will be created in the Users collection by the Firebase Auth trigger
 
           // Poll for the user document to be created by the Firebase Auth trigger
           // Limit 10 retries
-          console.log('Polling for user document...');
+          logger.info('Polling for user document...');
           let userDocRef = await pollForUserDocument(db, user.uid, 10);
-          console.log('User document found:', await getDoc(userDocRef));
-          console.log('Setting email for logged in user:', data.Email)
+          logger.info('User document found:', await getDoc(userDocRef));
+          logger.info('Setting email for logged in user:', data.Email)
           if (userDocRef) {
               setEmail(data.Email);
           }
-          console.log('Email set')
+          logger.info('Email set')
 
           
           // Upload the profile photo if one was provided
-          console.log('Uploading profile photo...');
+          logger.info('Uploading profile photo...');
           let photoURL = await uploadProfilePhoto(user.uid, userImage);
-          console.log('Photo URL:', photoURL);
+          logger.info('Photo URL:', photoURL);
           // Add the photoURL to the user document data
           dataWithoutPassword.PhotoURL = photoURL;
-          console.log('Updating user document:', dataWithoutPassword);
+          logger.info('Updating user document:', dataWithoutPassword);
           await updateDoc(userDocRef, dataWithoutPassword);
-          console.log('User document updated.');
+          logger.info('User document updated.');
 
           // Navigate back to the homepage on success
           window.location.href = '/profile';
 
       } else if (mode === 'update' && authUserId) {
-          console.log('Updating user...');
+          logger.info('Updating user...');
           const userRef = doc(db, 'Users', authUserId);
           await updateDoc(userRef, data);
-          console.log('User document updated.');
+          logger.info('User document updated.');
       }
   } catch (e) {
-      console.error('Error adding/updating document: ', e.message);
-      console.error('Stack Trace:', e.stack);
+      logger.error('Error adding/updating document: ', e.message);
+      logger.error('Stack Trace:', e.stack);
   }
   
   };

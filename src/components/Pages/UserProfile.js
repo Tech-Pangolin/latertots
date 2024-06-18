@@ -8,6 +8,7 @@ import ChildCard from '../Shared/ChildCard';
 import { Avatar, Typography } from '@mui/material';
 import ChildInfoDialog from '../Shared/ChildInfoDialog';
 import UserForm from '../Shared/UserForm';
+import { logger } from '../../Helpers/logger';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
@@ -25,17 +26,17 @@ const UserProfile = () => {
   const handleClose = () => setOpen(false);
 
   useEffect(() => {
-    console.log(currentUser)
+    logger.info(currentUser)
     fetchCurrentUser(currentUser.email).then((resp) => {
       setUser(resp)
-      console.log("user",resp)
-    }).catch((e) => console.error(e));
+      logger.info("user",resp)
+    }).catch((e) => logger.error(e));
     fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
       setChildren(resp);
-    }).catch((e) => console.error(e));
+    }).catch((e) => logger.error(e));
     fetchAllCurrentUsersContacts(currentUser.email).then((resp) => {
       setContacts(resp);
-    }).catch((e) => console.error(e));
+    }).catch((e) => logger.error(e));
   }, [currentUser.email]);
 
   return (
