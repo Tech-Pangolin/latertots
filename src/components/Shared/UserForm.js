@@ -7,7 +7,7 @@ import { uploadProfilePhoto, fetchCurrentUser, createUserAndAuthenticate, pollFo
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger } from "../../Helpers/logger";
 
-const UserForm = () => {
+const UserForm = ({ reloadUserData }) => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
   const { currentUser } = useAuth();
   logger.info("CurrentUser: ", currentUser)
@@ -90,9 +90,20 @@ const UserForm = () => {
 
       } else if (mode === 'update' && authUserId) {
           logger.info('Updating user...');
-          const userRef = doc(db, 'Users', authUserId);
-          await updateDoc(userRef, data);
+          const userDocRef = doc(db, 'Users', authUserId);
+          logger.info('data before photo update:', dataWithoutPassword)
+          if (userImage) {
+              logger.info('Uploading profile photo...');
+              let photoURL = await uploadProfilePhoto(authUserId, userImage);
+              logger.info('Photo URL:', photoURL);
+              // Add the photoURL to the user document data
+              dataWithoutPassword.PhotoURL = photoURL;
+          }
+          logger.info('Updating user document:', dataWithoutPassword);
+          await updateDoc(userDocRef, dataWithoutPassword);
           logger.info('User document updated.');
+
+          reloadUserData[1](!reloadUserData[0]);
       }
   } catch (e) {
       logger.error('Error adding/updating document: ', e.message);
@@ -120,16 +131,20 @@ const UserForm = () => {
             />
             {errors.Email && <p>{errors.Email.message}</p>}
           </div>
-          <div className="mb-3">
-            <label htmlFor="Password" className="form-label">Password</label>
-            <input
-              className="form-control"
-              type="Password"
-              {...register("Password", { required: "Password is required" })}
-              disabled={mode === 'update'}
-            />
-            {errors.Password && <p>{errors.Password.message}</p>}
-          </div>
+
+          {mode === 'create' && (
+            <div className="mb-3">
+              <label htmlFor="Password" className="form-label">Password</label>
+              <input
+                className="form-control"
+                type="Password"
+                {...register("Password", { required: "Password is required" })}
+                disabled={mode === 'update'}
+              />
+              {errors.Password && <p>{errors.Password.message}</p>}
+            </div>
+          )}
+
           <div className="mb-3">
             <label htmlFor="CellNumber"  className="form-label">Cell #</label>
             <input

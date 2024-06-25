@@ -15,6 +15,7 @@ const UserProfile = () => {
   const [user, setUser] = useState(null);
   const [children, setChildren] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [reloadUserDataToggle, setReloadUserDataToggle] = useState(false);
 
   // Dialog state
   const [selectedChild, setSelectedChild] = useState(null);
@@ -37,7 +38,7 @@ const UserProfile = () => {
     fetchAllCurrentUsersContacts(currentUser.email).then((resp) => {
       setContacts(resp);
     }).catch((e) => logger.error(e));
-  }, [currentUser.email]);
+  }, [currentUser.email, reloadUserDataToggle]);
 
   return (
     <div className="container rounded bg-white mt-5 mb-5">
@@ -53,7 +54,7 @@ const UserProfile = () => {
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h4 className="text-right">Profile Settings</h4>
             </div>
-            <UserForm />
+            <UserForm reloadUserData={[reloadUserDataToggle, setReloadUserDataToggle]}/>
             {/* <div className="row mt-2">
               <div className="col-md-6"><label className="labels">Name</label><input type="text" className="form-control" placeholder="first name" value="" /></div>
               <div className="col-md-6"><label className="labels">Surname</label><input type="text" className="form-control" value="" placeholder="surname" /></div>
