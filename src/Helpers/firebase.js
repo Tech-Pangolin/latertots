@@ -200,7 +200,7 @@ export const fetchAllCurrentUsersContacts = async (email) => {
 }
 
 /**
- * Uploads a photo to Firebase Storage and associates it with the current user.
+ * Uploads a photo to Firebase Storage, referencing the current user.
  * 
  * @param {string} userId - The ID of the current user.
  * @param {File} file - The photo file to upload.
@@ -221,10 +221,6 @@ export const uploadProfilePhoto = async (userId, file) => {
 
     // Get the download URL of the uploaded photo
     const downloadURL = await getDownloadURL(snapshot.ref);
-
-    // Associate the photo with the current user
-    const userRef = doc(collection(db, "Users"), userId);
-    await updateDoc(userRef, { Photo: downloadURL });
 
     return downloadURL;
   } catch (error) {

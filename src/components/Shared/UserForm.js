@@ -5,7 +5,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useAuth } from "../AuthProvider";
 import { uploadProfilePhoto, fetchCurrentUser, createUserAndAuthenticate, pollForUserDocument } from "../../Helpers/firebase";
 import { firebaseAuth } from "../../config/firebaseAuth";
-import { logger } from "../../Helpers/logger";
+import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
 
 const UserForm = ({ reloadUserData }) => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
@@ -14,6 +14,8 @@ const UserForm = ({ reloadUserData }) => {
   const [email, setEmail] = React.useState(currentUser?.email ?? '');
   const [authUserId, setAuthUserId] = React.useState(null);
   const [mode, setMode] = React.useState('create');
+
+  // setLogLevel(LOG_LEVELS.DEBUG);
 
   useEffect(() => {
     if (email && email !== '') {
@@ -47,6 +49,7 @@ const UserForm = ({ reloadUserData }) => {
     // Remove the image from the data object
     const userImage = data.Image[0];
     delete data.Image;
+    delete data.Photo;
 
     // Remove the password from the data object
     const dataWithoutPassword = {...data};
@@ -94,10 +97,8 @@ const UserForm = ({ reloadUserData }) => {
           logger.info('data before photo update:', dataWithoutPassword)
           if (userImage) {
               logger.info('Uploading profile photo...');
-              let photoURL = await uploadProfilePhoto(authUserId, userImage);
-              logger.info('Photo URL:', photoURL);
-              // Add the photoURL to the user document data
-              dataWithoutPassword.PhotoURL = photoURL;
+              dataWithoutPassword.PhotoURL = await uploadProfilePhoto(authUserId, userImage);
+              logger.info('Photo URL:', dataWithoutPassword.PhotoURL);
           }
           logger.info('Updating user document:', dataWithoutPassword);
           await updateDoc(userDocRef, dataWithoutPassword);
