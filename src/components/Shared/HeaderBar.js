@@ -33,7 +33,7 @@ const HeaderBar = () => {
         <nav id="navbar" className="navbar">
           <ul>
             <li><a className="nav-link scrollto active" href="/">Home</a></li>
-            <li><a className="nav-link scrollto" href="#about">About</a></li>
+            <li><a className="nav-link scrollto" href="/about">About</a></li>
             <li><a className="nav-link scrollto" href="#about">Events</a></li>
             <li><a className="nav-link scrollto" href="#features">Pricing</a></li>
             {!currentUser ? <li><a className="nav-link scrollto" href="/register">Registration</a></li>:<li><a className="nav-link scrollto" href="/profile">Profile</a></li>}

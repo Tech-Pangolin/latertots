@@ -15,7 +15,10 @@ body {
   font-style: normal;
   color: #444444;
 }
+body p, body li{
+  font-family: "Poetsen One", sans-serif!important;
 
+}
 a {
   color: #1acc8d;
   text-decoration: none;
@@ -1649,4 +1652,15 @@ section {
   #footer .footer-top .footer-info {
     margin: -20px 0 30px 0;
   }
+}
+
+.section-title h2::after {
+  background:#ED54C5;
+
+}
+li{
+  font-weight: normal;
+}
+.section-title p {
+  font-weight: normal;
 }
