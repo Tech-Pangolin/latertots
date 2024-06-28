@@ -11,6 +11,7 @@ import Layout from './components/Layout';
 import Calendar from './components/Shared/Calendar';
 import ScheduleChildSitterPage from './components/Pages/ScheduleChildSitterPage';
 import AdminDashboard from './components/Pages/AdminDashboard';
+import AboutPage from './components/Pages/AboutPage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/" element={ <IntroPage /> } />
           <Route path="/home" element={ <PrivateRoute element={ <HomePage /> }/> } />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/register" element={ <UserRegistrationPage />} />
           <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
           <Route path="/schedule" element={ <PrivateRoute element={ <ScheduleChildSitterPage /> } />} />
