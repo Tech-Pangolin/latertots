@@ -6,6 +6,7 @@ import { useAuth } from "../AuthProvider";
 import { uploadProfilePhoto, fetchCurrentUser, createUserAndAuthenticate, pollForUserDocument } from "../../Helpers/firebase";
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
+import ChangePasswordForm from "../ChangePasswordForm";
 
 const UserForm = ({ reloadUserData }) => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
@@ -15,7 +16,7 @@ const UserForm = ({ reloadUserData }) => {
   const [authUserId, setAuthUserId] = React.useState(null);
   const [mode, setMode] = React.useState('create');
 
-  // setLogLevel(LOG_LEVELS.DEBUG);
+   setLogLevel(LOG_LEVELS.DEBUG);
 
   useEffect(() => {
     if (email && email !== '') {
@@ -203,6 +204,12 @@ const UserForm = ({ reloadUserData }) => {
           <button type="submit" className="btn btn-primary mt-5">{mode === 'create' ? "Create" : "Update"} User</button>
         </form>
       </div>
+      { mode === 'update' && (
+        <div className="row">
+          <h5 className="mt-5">Change Password</h5>
+          <ChangePasswordForm reloadUserData={reloadUserData} />
+        </div>
+      )}
     </div>
   );
 };
