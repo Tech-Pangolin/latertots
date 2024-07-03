@@ -1,23 +1,24 @@
-import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { useAuth } from '../AuthProvider';
 import { getAuth, signOut } from "firebase/auth";
 
 const HeaderBar = () => {
   const { currentUser, logout } = useAuth();
-
-  useEffect(() => { console.log(currentUser)}, [currentUser]);
-
+    const location = useLocation();
+ 
+  const [activeLink, setActiveLink] = useState(null);
   const signOut = async () => {
     const auth = getAuth();
     try {
       await auth.signOut(auth);
-     // window.location.href = '/';
+      window.location.href = '/';
     } catch (error) {
       console.error("Error signing out: ", error);
     }
   }
+
 
 
   return (
@@ -32,14 +33,14 @@ const HeaderBar = () => {
 
         <nav id="navbar" className="navbar">
           <ul>
-            <li><a className="nav-link scrollto active" href="/">Home</a></li>
-            <li><a className="nav-link scrollto" href="/about">About</a></li>
-            <li><a className="nav-link scrollto" href="#about">Events</a></li>
-            <li><a className="nav-link scrollto" href="#features">Pricing</a></li>
-            {!currentUser ? <li><a className="nav-link scrollto" href="/register">Registration</a></li>:<li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
+            <li><a className={`nav-link scrollto ${location.pathname==='/'?'active':''}` } href="/" >Home</a></li>
+            <li><a className={`nav-link scrollto ${location.pathname==='/about'?'active':''}` } href="/about">About</a></li>
+            <li><a className={`nav-link scrollto ${location.pathname==='/events'?'active':''}` } href="/events">Events</a></li>
+            <li><a className={`nav-link scrollto ${location.pathname==='/pricing'?'active':''}` } href="pricing">Pricing</a></li>
+            {!currentUser ? <li><a className={`nav-link scrollto ${location.pathname==='/register'?'active':''}` } href="/register">Registration</a></li>:<li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
             {/* <li><a className="nav-link scrollto" href="#team">Contact Us</a></li> */}
-            {!currentUser ? '': (<li><a className="nav-link scrollto" href="/schedule">My Schedule</a></li>)}
-            {!currentUser ? (<li><a className="nav-link scrollto" href="/login">Login</a></li>) : (
+            {!currentUser ? '': (<li><a className={`nav-link scrollto ${location.pathname==='/schedule'?'active':''}` } href="/schedule">My Schedule</a></li>)}
+            {!currentUser ? (<li><a className={`nav-link scrollto ${location.pathname==='/login'?'active':''}` } href="/login">Login</a></li>) : (
               <li><a className="nav-link scrollto" onClick={signOut}>Logout</a></li>
             )}
           </ul>

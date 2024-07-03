@@ -12,6 +12,8 @@ import Calendar from './components/Shared/Calendar';
 import ScheduleChildSitterPage from './components/Pages/ScheduleChildSitterPage';
 import AdminDashboard from './components/Pages/AdminDashboard';
 import AboutPage from './components/Pages/AboutPage';
+import EventPage from './components/Pages/EventPage';
+import PricingPage from './components/Pages/PricingPage';
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
           <Route path="/home" element={ <PrivateRoute element={ <HomePage /> }/> } />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/events" element={<EventPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/register" element={ <UserRegistrationPage />} />
           <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
           <Route path="/schedule" element={ <PrivateRoute element={ <ScheduleChildSitterPage /> } />} />
