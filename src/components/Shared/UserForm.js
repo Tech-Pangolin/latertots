@@ -1,28 +1,38 @@
 import { db } from "../../config/firestore";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { useAuth } from "../AuthProvider";
 import { uploadProfilePhoto, fetchCurrentUser, createUserAndAuthenticate, pollForUserDocument } from "../../Helpers/firebase";
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
 import ChangePasswordForm from "../ChangePasswordForm";
+import { auth } from "firebaseui";
 
 const UserForm = ({ reloadUserData }) => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
   const { currentUser } = useAuth();
-  logger.info("CurrentUser: ", currentUser)
+  // logger.info("CurrentUser: ", currentUser)
   const [email, setEmail] = React.useState(currentUser?.email ?? '');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [authUserId, setAuthUserId] = React.useState(null);
   const [mode, setMode] = React.useState('create');
+  const [hasAccount, setHasAccount] = React.useState(false);
+  const [userRef, setUserRef] = React.useState(null);
+  const [error, setError] = React.useState(null);
 
-   setLogLevel(LOG_LEVELS.DEBUG);
+  setLogLevel(LOG_LEVELS.DEBUG);
 
   useEffect(() => {
+
     if (email && email !== '') {
+      console.log(email)
       fetchCurrentUser(email, currentUser?.uid).then((resp) => {
-        logger.info("Fetched new current user: ", resp); 
+        logger.info("Fetched new current user: ", resp);
         setAuthUserId(resp.id)
+        setHasAccount(true);
       }).catch((e) => logger.error(e));
 
       const fetchData = async () => {
@@ -40,7 +50,26 @@ const UserForm = ({ reloadUserData }) => {
       };
       fetchData();
     }
-  }, [email, reset, authUserId]);
+  }, [ reset, authUserId]);
+
+  const createUser = async (e) => {
+    e.preventDefault();
+    // Handle form submission logic here
+    try{
+      if(password === confirm){
+      const user = await createUserAndAuthenticate(firebaseAuth, email, password);
+      setHasAccount(true);
+      setUserRef(user);
+      } else {
+        setPasswordMismatch(true);
+      }
+    } catch(e){
+      console.log(e.message)
+      setError(e.message)
+    }
+     
+  };
+
 
   const onSubmit = async (data) => {
     // Hardcode a user role for now
@@ -53,71 +82,69 @@ const UserForm = ({ reloadUserData }) => {
     delete data.Photo;
 
     // Remove the password from the data object
-    const dataWithoutPassword = {...data};
+    const dataWithoutPassword = { ...data };
     delete dataWithoutPassword.Password;
 
-
+    console.log(mode)
     try {
-      logger.info('Mode:', mode);
       logger.info('Data:', data);
-
-      if (mode === 'create') {
-          logger.info('Creating user...');
-          const user = await createUserAndAuthenticate(firebaseAuth, data.Email, data.Password);
-          logger.info('User created:', user);
-          // An empty document will be created in the Users collection by the Firebase Auth trigger
-
-          // Poll for the user document to be created by the Firebase Auth trigger
-          // Limit 10 retries
-          logger.info('Polling for user document...');
-          let userDocRef = await pollForUserDocument(db, user.uid, 10);
-          logger.info('User document found:', await getDoc(userDocRef));
-          logger.info('Setting email for logged in user:', data.Email)
-          if (userDocRef) {
-              setEmail(data.Email);
-          }
-          logger.info('Email set')
-
-          
-          // Upload the profile photo if one was provided
-          logger.info('Uploading profile photo...');
-          let photoURL = await uploadProfilePhoto(user.uid, userImage);
-          logger.info('Photo URL:', photoURL);
-          // Add the photoURL to the user document data
-          dataWithoutPassword.PhotoURL = photoURL;
-          logger.info('Updating user document:', dataWithoutPassword);
+      if (mode === 'update') {
+       
+        const userDocRef = doc(db, 'Users', userRef.uid);
+   let photoURL = await uploadProfilePhoto(userRef.uid, userImage);
+        //     // Add the photoURL to the user document data
+         dataWithoutPassword.PhotoURL = photoURL;
           await updateDoc(userDocRef, dataWithoutPassword);
-          logger.info('User document updated.');
-
-          // Navigate back to the homepage on success
-          window.location.href = '/profile';
-
-      } else if (mode === 'update' && authUserId) {
-          logger.info('Updating user...');
-          const userDocRef = doc(db, 'Users', authUserId);
-          logger.info('data before photo update:', dataWithoutPassword)
-          if (userImage) {
-              logger.info('Uploading profile photo...');
-              dataWithoutPassword.PhotoURL = await uploadProfilePhoto(authUserId, userImage);
-              logger.info('Photo URL:', dataWithoutPassword.PhotoURL);
-          }
-          logger.info('Updating user document:', dataWithoutPassword);
-          await updateDoc(userDocRef, dataWithoutPassword);
-          logger.info('User document updated.');
-
-          reloadUserData[1](!reloadUserData[0]);
+        // Navigate back to the homepage on success
+         window.location.href = '/profile';
       }
-  } catch (e) {
+    } catch (e) {
       logger.error('Error adding/updating document: ', e.message);
       logger.error('Stack Trace:', e.stack);
-  }
-  
+    }
+
   };
 
   return (
     <div className="container">
       <div className="row">
-        <form onSubmit={handleSubmit(onSubmit)} className="col-12 col-md-6">
+        {!hasAccount && <form onSubmit={createUser}>
+          <div>
+            <label htmlFor="email" className="form-label">Email:</label>
+            <input className="form-control"
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="form-label">Password:</label>
+            <input className="form-control"
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="confirm" className="form-label">Confirm Password:</label>
+            <input className="form-control"
+              type="password"
+              id="confirm"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+            />
+          </div>
+          {passwordMismatch && <p>Passwords do not match</p>}
+          {error && <p>{error}</p>}
+          <button type="submit" className="btn btn-primary mt-5">Next</button>
+        </form>}
+        {hasAccount && (
+        <form onSubmit={handleSubmit(onSubmit)} className="col-12 col-md-8">
           <div className="mb-3">
             <label htmlFor="Name" className="form-label">Name</label>
             <input type="text" className="form-control" {...register("Name", { required: "Name is required" })} />
@@ -134,7 +161,7 @@ const UserForm = ({ reloadUserData }) => {
             {errors.Email && <p>{errors.Email.message}</p>}
           </div>
 
-          {mode === 'create' && (
+          {/* {mode === 'create' && (
             <div className="mb-3">
               <label htmlFor="Password" className="form-label">Password</label>
               <input
@@ -145,12 +172,12 @@ const UserForm = ({ reloadUserData }) => {
               />
               {errors.Password && <p>{errors.Password.message}</p>}
             </div>
-          )}
+          )} */}
 
           <div className="mb-3">
-            <label htmlFor="CellNumber"  className="form-label">Cell #</label>
+            <label htmlFor="CellNumber" className="form-label">Cell #</label>
             <input
-            className="form-control"
+              className="form-control"
               type="text"
               {...register("CellNumber", { required: "Cell is required" })}
             />
@@ -159,7 +186,7 @@ const UserForm = ({ reloadUserData }) => {
           <div className="mb-3">
             <label htmlFor="StreetAddress" className="form-label">Street Address</label>
             <input
-             className="form-control"
+              className="form-control"
               type="text"
               {...register("StreetAddress", { required: "Street Address is required" })}
             />
@@ -194,22 +221,22 @@ const UserForm = ({ reloadUserData }) => {
           </div>
           <div>
             <label htmlFor="Image">Image</label>
-            <input 
-              type="file" 
-              {...register("Image")} 
+            <input
+              type="file"
+              {...register("Image")}
               className="form-control"
             />
             {errors.Image && <p>{errors.Image.message}</p>}
           </div>
           <button type="submit" className="btn btn-primary mt-5">{mode === 'create' ? "Create" : "Update"} User</button>
-        </form>
+        </form>)}
       </div>
-      { mode === 'update' && (
+      {/* {mode === 'update' && (
         <div className="row">
           <h5 className="mt-5">Change Password</h5>
           <ChangePasswordForm reloadUserData={reloadUserData} />
         </div>
-      )}
+      )} */}
     </div>
   );
 };
