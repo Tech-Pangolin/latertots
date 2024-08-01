@@ -21,7 +21,7 @@ const AdminUsers = () => {
         <th scope="row">{user.Name || '--'}</th>
         <td>{user.Email || '--'}</td>
         <td>{user.CellNumber || '--'}</td>
-        <td><a href="#" className="btn btn-sm btn-primary">View Profile</a></td>
+        {/* <td><a href="#" className="btn btn-sm btn-primary">View Profile</a></td> */}
       </tr>
     )
   }
@@ -40,7 +40,7 @@ const AdminUsers = () => {
                       <th scope="col">Name</th>
                       <th scope="col">Email</th>
                       <th scope="col">Phone</th>
-                      <th scope="col"></th>
+                      {/* <th scope="col"></th> */}  {/* Add the 'View Profile' button later */}
                     </tr>
                   </thead>
                   <tbody>
@@ -48,7 +48,7 @@ const AdminUsers = () => {
                   </tbody>
                 </table>
               </div>
-              <a href="#" className="btn btn-block btn-light">View all</a>
+              {/* <a href="#" className="btn btn-block btn-light">View all</a> */}
             </div>
           </div>
         </div>
