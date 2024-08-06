@@ -1,19 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useSelector } from 'react-redux';
-import { Draggable } from '@fullcalendar/interaction';
-import { checkReservationAllowability, deleteReservationDocument, fetchAllCurrentUsersChildren, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
+import { checkReservationAllowability, deleteReservationDocument, fetchAllCurrentUsersChildren, fetchAllReservationsByMonth, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
-import DraggableChildEvent from '../Shared/DraggableChildEvent';
-import { v4 as uuidv4 } from 'uuid';
 import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
-import ReservationFormModal from '../Shared/ReservationFormModal';
 
 const DashboardCalendar = () => {
   const businessHours = useSelector(state => state.settings.businessHours);
+  const [reservations, setReservations] = useState([]);
+
+  useEffect(() => {
+    console.log('reservations:', reservations);
+  }, [reservations]);
+
+  const getReservationsByCurrentViewMonth = (month, year) => {
+    fetchAllReservationsByMonth(month, year)
+      .then((resp) => {
+        setReservations(resp);
+      })
+      .catch((error) => {
+        console.error('Error fetching reservations:', error);
+      });
+  }
+
+  const getViewDates = (args) => {
+    const date = new Date(args.startStr);
+    getReservationsByCurrentViewMonth(date.getMonth(), date.getFullYear());
+  };
 
   return (
     <>
@@ -27,6 +43,7 @@ const DashboardCalendar = () => {
         }}
         businessHours={businessHours}
         showNonCurrentDates={false}
+        datesSet={getViewDates}
         // events={events}
         // eventAllow={eventAllow}
         // eventContent={renderEventContent}

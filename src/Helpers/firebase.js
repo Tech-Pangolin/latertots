@@ -255,6 +255,24 @@ export const fetchUserReservations = async (userId) => {
   }
 };
 
+export const fetchAllReservationsByMonth = async (monthNumber, year) => {
+  // 'start' property is a Firestore Timestamp
+  const currentYear = new Date().getFullYear();
+
+  try {
+    const q = query(collection(db, "Reservations"),
+      where("start", ">=", new Date(year, monthNumber, 1)),
+      where("start", "<", new Date(year, monthNumber + 1, 1))
+    );
+    const querySnapshot = await getDocs(q);
+    const reservations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return reservations;
+  } catch (error) {
+    console.error("Error fetching reservations:", error);
+    throw error;
+  }
+};
+
 /**
  * Checks if a new reservation overlaps with existing reservations and determines if it is allowable.
  * 
