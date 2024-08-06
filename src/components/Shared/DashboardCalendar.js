@@ -3,6 +3,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { useSelector } from 'react-redux';
 import { Draggable } from '@fullcalendar/interaction';
 import { checkReservationAllowability, deleteReservationDocument, fetchAllCurrentUsersChildren, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
@@ -12,12 +13,7 @@ import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, chec
 import ReservationFormModal from '../Shared/ReservationFormModal';
 
 const DashboardCalendar = () => {
-  const businessHours = {
-    daysOfWeek: [1, 2, 3, 4, 5], // Monday - Friday
-    startTime: '07:00',
-    endTime: '19:00',
-    overlap: false
-  };
+  const businessHours = useSelector(state => state.settings.businessHours);
 
   return (
     <>
@@ -31,8 +27,6 @@ const DashboardCalendar = () => {
         }}
         businessHours={businessHours}
         showNonCurrentDates={false}
-        editable={true}
-        droppable={true}
         // events={events}
         // eventAllow={eventAllow}
         // eventContent={renderEventContent}
@@ -41,7 +35,6 @@ const DashboardCalendar = () => {
         // drop={handleDrop}
         // eventDrop={handleEventMove}
         // eventResize={handleEventResize}
-        nowIndicator={true}
         allDaySlot={false}
       />
     </>
