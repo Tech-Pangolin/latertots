@@ -1,6 +1,6 @@
 import React from 'react';
 import { Avatar, Chip } from '@mui/material';
-import { darken, lighten, readableColor, rgb } from 'polished';
+import { darken, lighten, margin, readableColor, rgb } from 'polished';
 
 const ChipBadge = ({ text, color, num }) => {
   const defaultBackgroundColor = rgb(237, 84, 197);
@@ -8,6 +8,7 @@ const ChipBadge = ({ text, color, num }) => {
   const chipStyle = {
     backgroundColor: color || defaultBackgroundColor,
     color: readableColor(color || defaultBackgroundColor, 'black', 'white'),
+    margin: '2px'
   }
 
   const badgeStyle = {
