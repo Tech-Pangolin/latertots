@@ -38,7 +38,7 @@ function EventPage() {
             </svg> */}
 
         </section>
-            <section id="about" className="about mx-5">
+            <section id="about" className="about container">
                 <div class="section-title" dataAos="fade-up">
                     <h2>Events</h2>
                     <p sx={{ color: '#3B38DA' }}>Our Events</p>

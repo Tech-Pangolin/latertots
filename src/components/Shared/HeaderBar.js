@@ -27,14 +27,17 @@ const HeaderBar = () => {
       <div className="container d-flex align-items-center justify-content-between">
 
         <div className="logo">
-        <h1><a href="index.html"><span>LaterTots</span></a></h1>
-          {/* <a href="index.html"><img src="./assets/img/logo.png" alt="" className="img-fluid" /></a> */}
-        </div>
+        <h1><a href="index.html">
+         
+          <img src="./assets/img/submark.png" alt="" className="img-fluid" /> 
+          
+          {/* <span className='ml-5'>LaterTots</span> */}
+        </a></h1></div>
 
         <nav id="navbar" className="navbar">
           <ul>
             <li><a className={`nav-link scrollto ${location.pathname==='/'?'active':''}` } href="/" >Home</a></li>
-            <li><a className={`nav-link scrollto ${location.pathname==='/about'?'active':''}` } href="/about">About</a></li>
+            <li><a className={`nav-link scrollto ${location.pathname==='/teamtots'?'active':''}` } href="/teamtots">Team Tots</a></li>
             <li><a className={`nav-link scrollto ${location.pathname==='/events'?'active':''}` } href="/events">Events</a></li>
             <li><a className={`nav-link scrollto ${location.pathname==='/pricing'?'active':''}` } href="pricing">Pricing</a></li>
             {!currentUser ? <li><a className={`nav-link scrollto ${location.pathname==='/register'?'active':''}` } href="/register">Registration</a></li>:<li><a className="nav-link scrollto" href="/profile">Profile</a></li>}

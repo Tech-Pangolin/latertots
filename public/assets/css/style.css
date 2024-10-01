@@ -467,11 +467,11 @@ a {
   border-radius: 50px;
   transition: 0.5s;
   color: #fff;
-  background: #5E78F5;
+  background: #EF7811;
 }
 
 #hero .btn-get-started:hover {
-  background: #17b57d;
+  background: #41A8C5;
 }
 
 #hero .animated {
@@ -703,8 +703,12 @@ section {
 /*--------------------------------------------------------------
 # About
 --------------------------------------------------------------*/
+
+#about{
+  background: url(../img/wpattern.png)
+}
 .about {
-  padding: 40px 0 0 0;
+  padding: 40px;
 }
 
 .about .icon-boxes h3 {
