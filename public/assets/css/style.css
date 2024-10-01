@@ -421,7 +421,8 @@ a {
 --------------------------------------------------------------*/
 #hero {
   width: 100%;
-  background: url("../img/kids2.jpg") ;
+  background: linear-gradient(rgba(0, 0, 0, 0.5),
+  rgba(0, 0, 0, 0.5)), url("../img/kids2.jpg") ;
   background-size: cover;
   position: relative;
   padding: 120px 0 0 0;
@@ -497,7 +498,11 @@ a {
   }
 
   #hero .hero-img img {
-    max-width: 50%;
+    max-width: 75%;
+  }
+
+  .hero-text{
+        margin:0px 400px
   }
 
   #hero h1 {
@@ -515,7 +520,10 @@ a {
 
 @media (max-width: 575px) {
   #hero .hero-img img {
-    width: 80%;
+    width: 75%;
+  }
+  .hero-text{
+    margin:0px 400px
   }
 }
 

@@ -23,7 +23,7 @@ const HeaderBar = () => {
 
   return (
 
-    <header id="header" className="fixed-top d-flex align-items-center position-relative" style={{ background: '#ED54C5' }}>
+    <header id="header" className="fixed-top d-flex align-items-center position-relative" style={{ background: '#E61378' }}>
       <div className="container d-flex align-items-center justify-content-between">
 
         <div className="logo">

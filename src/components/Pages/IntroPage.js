@@ -53,19 +53,19 @@ function IntroPage() {
   </header> */}
             {/* HERO SECTION */}
             <section id="hero">
-                <div className="container">
+                <div className="container-fluid">
                     <div className="row justify-content-between">
-                        <div className="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
+                        <div className="col-sm-12 col-lg-7 pt-5 pt-lg-0 order-1 order-lg-2 order-sm-2 d-flex align-items-center d-none d-sm-block">
                             <div dataAos="zoom-out">
-                                <h1>Welcome to LaterTots</h1>
-                                {/* <h2>We are team of talented designers making websites with Bootstrap</h2> */}
-                                <div className="text-center text-lg-start">
+                                <h1 >Welcome to LaterTots</h1>
+                                <h2>Where every child finds their happy place away. Discover a world of flexible, fun, and secure child care that fits your busy life.</h2>
+                                <div className="text-center text-lg-start mb-5">
                                     <a href="/register" className="btn-get-started scrollto">Get Started</a>
                                 </div>
                             </div>
                         </div>
-                        <div className="col-lg-4 order-1 order-lg-2 hero-img" dataAos="zoom-out" dataAosDelay="300">
-                            <img src="./assets/img/logo.png" className="img-fluid animated" alt="" />
+                        <div className="col-sm-12 col-lg-4 order-2 order-lg-1 order-sm-1 hero-img" dataAos="zoom-out" dataAosDelay="300">
+                            <img src="./assets/img/lt-logo.png" className="img-fluid animated" style={{ width: '75%' }} alt="" />
                         </div>
                     </div>
                 </div>
@@ -89,16 +89,36 @@ function IntroPage() {
             {/* END HERO SECTION */}
             <main>
                 <section id="about" className="about">
-                    <div className="container-fluid">
-
-                        <div className="row">
-                            <div className="col-xl-5 col-lg-6 video-box d-flex justify-content-center align-items-stretch" dataAos="fade-right">
-                                <a href="https://www.youtube.com/watch?v=StpBR2W8G5A" className="glightbox play-btn mb-4"></a>
+                    <div className="container">
+                        <div class="row content">
+                            <div class="col-md-4 order-1 order-md-2" dataAos="fade-left">
+                                <img src="assets/img/bluehand.png" class="img-fluid" alt="" />
                             </div>
+                            <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch px-lg-5" dataAos="fade-left">
+                            <h2 style={{color:'#41A8C5'}}>What is Later Tots?</h2>
+                                <p>
+                                Later Tots is more than just a drop-in child care service—it's a passion project born from the desire to support Tot-Tenders who need a few hours to themselves, whether for running errands, enjoying some leisure time, or simply taking a well-deserved break. We know how challenging it can be to find trustworthy, flexible child care that fits your schedule, especially when you don't need full or part-time care. That's where Later Tots comes in.
+                                </p>
+                                <p>
+                                Our drop-in/short-term child care program is designed for children aged 3 months to 6 years, offering a safe, fun, and secure environment where they can thrive. We’re all about creating a space where kids can play, learn, and stay happy while their caregivers enjoy peace of mind. Our flexible scheduling allows you to drop in whenever you need to, making us your go-to option for those rare or random times when childcare is hard to find.
+
+                                </p>
+                                <p>
+                                At Later Tots, we truly believe that every child deserves a place where they feel at home, even when they're away. That’s why we’re proud to be your tot’s happy place away—where they can drop, play, and stay.
+
+                                </p>
+                            </div>
+                        </div>
+                        <div className="row">
+                            {/* <div className="col-xl-5 col-lg-6 video-box d-flex justify-content-center align-items-stretch" dataAos="fade-right">
+                                <a href="https://www.youtube.com/watch?v=StpBR2W8G5A" className="glightbox play-btn mb-4"></a>
+                            </div> */}
 
                             <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch justify-content-center py-5 px-lg-5" dataAos="fade-left">
-                                <h3>We love the kids!</h3>
-                                <p>Esse voluptas cumque vel exercitationem. Reiciendis est hic accusamus. Non ipsam et sed minima temporibus laudantium. Soluta voluptate sed facere corporis dolores excepturi. Libero laboriosam sint et id nulla tenetur. Suscipit aut voluptate.</p>
+                                <h3>Welcome to LaterTots</h3>
+                                <p>Where every child finds their happy place away. Discover a world of flexible, fun, and secure child care that fits your busy life.
+                                </p>
+
 
                                 <div className="icon-box" dataAos="zoom-in" dataAosDelay="100">
                                     <div className="icon"><i className="bx bx-fingerprint"></i></div>
