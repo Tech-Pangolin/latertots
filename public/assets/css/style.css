@@ -423,6 +423,7 @@ a {
   width: 100%;
   background: linear-gradient(rgba(0, 0, 0, 0.5),
   rgba(0, 0, 0, 0.5)), url("../img/kids2.jpg") ;
+  /* background: url("../img/littlegirlcolors.jpg") ; */
   background-size: cover;
   position: relative;
   padding: 120px 0 0 0;
@@ -1526,11 +1527,11 @@ section {
 
 #footer .footer-top .footer-info {
   margin-bottom: 15px;
-  background: #010246;
+  /* background: #010246; */
   color: #fff;
-  border-top: 4px solid #1acc8d;
+  /* border-top: 4px solid #1acc8d; */
   text-align: center;
-  padding: 30px 20px;
+  /* padding: 30px 20px; */
 }
 
 #footer .footer-top .footer-info h3 {

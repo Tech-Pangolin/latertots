@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import HeaderBar from './Shared/HeaderBar';
+import FooterBar from './Shared/FooterBar';
 
 
 const Layout = ({ children }) => {
@@ -11,7 +12,7 @@ const Layout = ({ children }) => {
       <main>
         {children}  {/* This is where the routed components will be rendered */}
       </main>
-      {/* Add a footer here if needed */}
+    <FooterBar />
     {/* </Box> */}
     </>
     
