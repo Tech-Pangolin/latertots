@@ -1677,3 +1677,17 @@ li{
 .section-title p {
   font-weight: normal;
 }
+
+/* 
+Events 
+*/
+.packages-title{
+  margin-left: 30px;
+}
+.pricing h4{
+  color: #41A8C5;
+}
+
+.pricing .btn-buy{
+  background-color: #EF7811;
+}

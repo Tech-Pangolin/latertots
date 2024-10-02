@@ -38,7 +38,7 @@ const HeaderBar = () => {
           <ul>
             <li><a className={`nav-link scrollto ${location.pathname==='/'?'active':''}` } href="/" >Home</a></li>
             <li><a className={`nav-link scrollto ${location.pathname==='/teamtots'?'active':''}` } href="/teamtots">Team Tots</a></li>
-            <li><a className={`nav-link scrollto ${location.pathname==='/events'?'active':''}` } href="/events">Events</a></li>
+            <li><a className={`nav-link scrollto ${location.pathname==='/events'?'active':''}` } href="/events">Drop-In Fun</a></li>
             <li><a className={`nav-link scrollto ${location.pathname==='/pricing'?'active':''}` } href="pricing">Pricing</a></li>
             {!currentUser ? <li><a className={`nav-link scrollto ${location.pathname==='/register'?'active':''}` } href="/register">Registration</a></li>:<li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
             {/* <li><a className="nav-link scrollto" href="#team">Contact Us</a></li> */}
