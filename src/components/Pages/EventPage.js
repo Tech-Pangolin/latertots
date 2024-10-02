@@ -75,7 +75,7 @@ function EventPage() {
 
         <div class="row" dataAos="fade-left">
 
-          <div class="col-lg-4 col-md-12">
+          <div class="col-lg-4 col-md-12 mt-3">
             <div class="box" dataAos="zoom-in" dataAosDelay="100">
               <h3>Express Tot Party <br/>(1 hour 30 minutes)</h3>
               <h4><sup>$</sup>200 <br/><span>(weekday discount: $170)</span></h4>
@@ -89,7 +89,7 @@ function EventPage() {
               </div>
             </div>
           </div>
-          <div class="col-lg-4 col-md-12">
+          <div class="col-lg-4 col-md-12 mt-3">
             <div class="box" dataAos="zoom-in" dataAosDelay="100">
               <h3>Tot's Celebration Bash <br/>(2 hours)</h3>
               <h4><sup>$</sup>280</h4>
@@ -104,7 +104,7 @@ function EventPage() {
               </div>
             </div>
           </div>
-          <div class="col-lg-4 col-md-12">
+          <div class="col-lg-4 col-md-12 mt-3">
             <div class="box" dataAos="zoom-in" dataAosDelay="100">
               <h3>Tot's Ultimate Party <br/>(2 hours 30 minutes)</h3>
               <h4><sup>$</sup>350</h4>

@@ -25,7 +25,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/teamtots" element={<AboutPage />} />
           <Route path="/events" element={<EventPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/activities" element={<PricingPage />} />
           <Route path="/register" element={ <UserRegistrationPage />} />
           <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
           <Route path="/schedule" element={ <PrivateRoute element={ <ScheduleChildSitterPage /> } />} />

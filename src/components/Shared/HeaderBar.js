@@ -8,7 +8,7 @@ const HeaderBar = () => {
   const { currentUser, logout } = useAuth();
     const location = useLocation();
  
-  const [activeLink, setActiveLink] = useState(null);
+  const [mobileMenu, setMobileMenu] = useState(false);
   const signOut = async () => {
     const auth = getAuth();
     try {
@@ -18,13 +18,15 @@ const HeaderBar = () => {
       console.error("Error signing out: ", error);
     }
   }
-
+  const handleMobileMenu = () => {
+    setMobileMenu(!mobileMenu);
+  }
 
 
   return (
 
     <header id="header" className="fixed-top d-flex align-items-center position-relative" style={{ background: '#E61378' }}>
-      <div className="container d-flex align-items-center justify-content-between">
+      <div className="container d-flex align-items-center justify-content-between ">
 
         <div className="logo">
         <h1><a href="index.html">
@@ -34,12 +36,12 @@ const HeaderBar = () => {
           {/* <span className='ml-5'>LaterTots</span> */}
         </a></h1></div>
 
-        <nav id="navbar" className="navbar">
+        <nav id="navbar" className={`navbar ${mobileMenu? 'navbar-mobile':''}`}>
           <ul>
             <li><a className={`nav-link scrollto ${location.pathname==='/'?'active':''}` } href="/" >Home</a></li>
             <li><a className={`nav-link scrollto ${location.pathname==='/teamtots'?'active':''}` } href="/teamtots">Team Tots</a></li>
             <li><a className={`nav-link scrollto ${location.pathname==='/events'?'active':''}` } href="/events">Drop-In Fun</a></li>
-            <li><a className={`nav-link scrollto ${location.pathname==='/pricing'?'active':''}` } href="pricing">Pricing</a></li>
+            <li><a className={`nav-link scrollto ${location.pathname==='/activities'?'active':''}` } href="/activities">Tot-tivities</a></li>
             {!currentUser ? <li><a className={`nav-link scrollto ${location.pathname==='/register'?'active':''}` } href="/register">Registration</a></li>:<li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
             {/* <li><a className="nav-link scrollto" href="#team">Contact Us</a></li> */}
             {!currentUser ? '': (<li><a className={`nav-link scrollto ${location.pathname==='/schedule'?'active':''}` } href="/schedule">My Schedule</a></li>)}
@@ -47,7 +49,7 @@ const HeaderBar = () => {
               <li><a className="nav-link scrollto" onClick={signOut}>Logout</a></li>
             )}
           </ul>
-          <i className="bi bi-list mobile-nav-toggle"></i>
+          <i className="bi bi-list mobile-nav-toggle" onClick={handleMobileMenu}></i>
         </nav>
 
       </div>
