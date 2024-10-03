@@ -592,6 +592,19 @@ a {
   }
 }
 
+/*  
+# TotTivities
+*/
+.totTivities {
+  background: url("../img/aboutkids.jpg") center center no-repeat;
+  background-size: cover;
+  /* padding: 60px 0; */
+  height: 500px;
+  width: 100%;
+  /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
+  position: relative;
+}
+
 /*--------------------------------------------------------------
 # Sections General
 --------------------------------------------------------------*/
