@@ -14,6 +14,7 @@ import AdminDashboard from './components/Pages/AdminDashboard';
 import AboutPage from './components/Pages/AboutPage';
 import EventPage from './components/Pages/EventPage';
 import PricingPage from './components/Pages/PricingPage';
+import DealsPage from './components/Pages/DealsPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/teamtots" element={<AboutPage />} />
           <Route path="/events" element={<EventPage />} />
           <Route path="/activities" element={<PricingPage />} />
+          <Route path="/deals" element={<DealsPage />} />
           <Route path="/register" element={ <UserRegistrationPage />} />
           <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
           <Route path="/schedule" element={ <PrivateRoute element={ <ScheduleChildSitterPage /> } />} />

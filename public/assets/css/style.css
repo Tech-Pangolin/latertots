@@ -198,9 +198,9 @@ a {
   align-items: center;
   justify-content: space-between;
   padding: 10px 0 10px 30px;
-  font-size: 15px;
-  font-weight: 500;
-  font-family: "Poppins", sans-serif;
+  font-size: 18px;
+  font-weight: 500;  
+  font-family: "Manjari", sans-serif;
   color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
   transition: 0.3s;
@@ -644,6 +644,39 @@ img.slide-in  {
   position: relative;
 }
 
+/*
+Team Tots
+*/
+.teamTots{
+  background: url("../img/about/teacher.jpg") center center no-repeat;
+  background-size: cover;
+  /* padding: 60px 0; */
+  height: 500px;
+  width: 100%;
+  /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
+  position: relative;
+}
+/*  
+# Deals
+*/
+.deals {
+  background: url("../img/deals/piggybank.jpg") center center no-repeat;
+  background-size: cover;
+  /* padding: 60px 0; */
+  height: 500px;
+  width: 100%;
+  /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
+  position: relative;
+}
+
+
+.page-img{
+  border-radius:50%;
+}
+
+.events-title{
+  padding-bottom: 20px!important;
+}
 /*--------------------------------------------------------------
 # Sections General
 --------------------------------------------------------------*/
@@ -990,7 +1023,7 @@ section {
 .counts .count-box p {
   padding: 0;
   margin: 0;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Manjari", sans-serif;
   font-size: 14px;
 }
 
@@ -1254,13 +1287,14 @@ section {
   font-weight: 600;
   color: #777777;
   background: #f8f8f8;
+  font-family: 'Manjari', sans-serif;
 }
 
 .pricing h4 {
   font-size: 36px;
   color: #1acc8d;
   font-weight: 600;
-  font-family: "Poppins", sans-serif;
+  font-family: "Snack", sans-serif;
   margin-bottom: 20px;
 }
 
@@ -1314,9 +1348,10 @@ section {
   border-radius: 50px;
   color: #fff;
   transition: none;
-  font-size: 14px;
+  letter-spacing: 1px;
+  font-size: 16px;
   font-weight: 400;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Snack", sans-serif;
   font-weight: 600;
   transition: 0.3s;
 }
