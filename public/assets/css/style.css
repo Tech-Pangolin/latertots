@@ -9,14 +9,23 @@
 /*--------------------------------------------------------------
 # General
 --------------------------------------------------------------*/
+@font-face {
+  font-family: 'Snack';
+  src: url(../fonts/snack_omeal/Snack\ Omeal.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Manjari';
+  src: url(../fonts/manjari-2/Manjari-Bold.ttf) format('truetype');
+}
+
 body {
-  font-family: "Poetsen One", sans-serif;
+  font-family: "Snack", sans-serif;
   font-weight: 400;
   font-style: normal;
   color: #444444;
 }
 body p, body li{
-  font-family: "Poetsen One", sans-serif!important;
+  font-family: "Manjari", sans-serif;
 
 }
 a {
@@ -39,7 +48,7 @@ h4,
 h5,
 h6,
 a {
-  font-family: "Poetsen One", sans-serif!important;
+  font-family: "Snack", sans-serif;
 }
 
 /*--------------------------------------------------------------
@@ -421,8 +430,8 @@ a {
 --------------------------------------------------------------*/
 #hero {
   width: 100%;
-  background: linear-gradient(rgba(0, 0, 0, 0.5),
-  rgba(0, 0, 0, 0.5)), url("../img/kids2.jpg") ;
+  background: linear-gradient(rgba(0, 0, 0, 0.6),
+  rgba(0, 0, 0, 0.5)), url("../img/cpattern.png") ;
   /* background: url("../img/littlegirlcolors.jpg") ; */
   background-size: cover;
   position: relative;
@@ -440,6 +449,8 @@ a {
 }
 
 #hero h1 {
+  font-family: 'Snack', sans-serif;
+  letter-spacing: 4px;
   margin: 0 0 20px 0;
   font-size: 48px;
   font-weight: 700;
@@ -453,15 +464,17 @@ a {
 }
 
 #hero h2 {
+  font-family: 'Snack', sans-serif;
+  letter-spacing: 1px;
   color: rgba(255, 255, 255, 0.8);
   margin-bottom: 40px;
   font-size: 24px;
 }
 
 #hero .btn-get-started {
-  font-family: "Montserrat", sans-serif;
+  font-family: "Manjari", sans-serif;
   font-weight: 500;
-  font-size: 16px;
+  font-size: 18px;
   letter-spacing: 1px;
   display: inline-block;
   padding: 10px 30px;
@@ -476,7 +489,7 @@ a {
 }
 
 #hero .animated {
-  animation: up-down 2s ease-in-out infinite alternate-reverse both;
+  /* animation: up-down 2s ease-in-out infinite alternate-reverse both; */
 }
 
 @media (min-width: 1024px) {
@@ -519,12 +532,38 @@ a {
   }
 }
 
+/* Image slide right */
+img.slide-in  {
+  animation: 3s slide-right;
+  margin-left: 40%;
+}
+@keyframes slide-right {
+  from {
+    margin-left: -100%;
+  }
+  to {
+    margin-left: 40%;
+  }
+}
+
 @media (max-width: 575px) {
   #hero .hero-img img {
     width: 75%;
   }
   .hero-text{
     margin:0px 400px
+  }
+  img.slide-in  {
+    animation: 3s slide-right-sm;
+    margin-left: 00%;
+  }
+}
+@keyframes slide-right-sm {
+  from {
+    margin-left: -100%;
+  }
+  to {
+    margin-left:0%;
   }
 }
 
@@ -647,8 +686,7 @@ section {
   margin: 0;
   font-size: 36px;
   font-weight: 700;
-  text-transform: uppercase;
-  font-family: "Poppins", sans-serif;
+  font-family: "Snack", sans-serif;
   color: #010483;
 }
 

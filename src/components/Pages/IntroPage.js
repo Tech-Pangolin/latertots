@@ -59,14 +59,14 @@ function IntroPage() {
                             <div dataAos="zoom-out">
                                 
                                 <h1 >Welcome to LaterTots</h1>
-                                <h2>Where every child finds their happy place away. Discover a world of flexible, fun, and secure child care that fits your busy life.</h2>
+                                <h2>Where every child finds their happy place away.<br /> Discover a world of flexible, fun, and secure child care that fits your busy life.</h2>
                                 <div className="text-center text-lg-start mb-5">
                                     <a href="/register" className="btn-get-started scrollto">Get Started</a>
                                 </div>
                             </div>
                         </div>
                         <div className="col-sm-12 col-lg-4 order-2 order-lg-1 order-sm-1 hero-img" dataAos="zoom-out" dataAosDelay="300">
-                            <img src="./assets/img/lt-logo.png" className="img-fluid animated" style={{ width: '75%' }} alt="" />
+                            <img src="./assets/img/brand/Logos/png/primaryLogos/primaryWhite.png" className="img-fluid animated slide-in" style={{width:"75%"}}  alt="" />
                         </div>
                     </div>
                 </div>
@@ -101,7 +101,7 @@ function IntroPage() {
                                     Later Tots is more than just a drop-in child care service—it's a passion project born from the desire to support Tot-Tenders who need a few hours to themselves, whether for running errands, enjoying some leisure time, or simply taking a well-deserved break. We know how challenging it can be to find trustworthy, flexible child care that fits your schedule, especially when you don't need full or part-time care. That's where Later Tots comes in.
                                 </p>
                                 <p>
-                                    Our drop-in/short-term child care program is designed for children aged 3 months to 6 years, offering a safe, fun, and secure environment where they can thrive. We’re all about creating a space where kids can play, learn, and stay happy while their caregivers enjoy peace of mind. Our flexible scheduling allows you to drop in whenever you need to, making us your go-to option for those rare or random times when childcare is hard to find.
+                                    Our drop-in/short-term child care program is designed for children aged 2 months to 6 years, offering a safe, fun, and secure environment where they can thrive. We’re all about creating a space where kids can play, learn, and stay happy while their caregivers enjoy peace of mind. Our flexible scheduling allows you to drop in whenever you need to, making us your go-to option for those rare or random times when childcare is hard to find.
 
                                 </p>
                                 <p>
@@ -114,7 +114,7 @@ function IntroPage() {
                     </div>
                 </section>
                 <section id="contact" class="contact">
-                    <div class="container">
+                    <div class="container px-lg-5">
 
                         <div class="section-title" dataAos="fade-up">
                             <p>Contact Us</p>
