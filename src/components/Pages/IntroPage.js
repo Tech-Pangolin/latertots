@@ -66,7 +66,7 @@ function IntroPage() {
                             </div>
                         </div>
                         <div className="col-sm-12 col-lg-4 order-2 order-lg-1 order-sm-1 hero-img" dataAos="zoom-out" dataAosDelay="300">
-                            <img src="./assets/img/brand/Logos/png/primaryLogos/primaryWhite.png" className="img-fluid animated slide-in" style={{width:"75%"}}  alt="" />
+                            <img src="assets/img/brand/Logos/png/primaryLogos/primaryWhite.png" className="img-fluid animated slide-in" style={{width:"75%"}}  alt="" />
                         </div>
                     </div>
                 </div>

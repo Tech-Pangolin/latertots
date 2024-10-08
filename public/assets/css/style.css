@@ -455,7 +455,7 @@ a {
   font-size: 48px;
   font-weight: 700;
   line-height: 56px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 1);
 }
 
 #hero h1 span {
@@ -466,7 +466,7 @@ a {
 #hero h2 {
   font-family: 'Snack', sans-serif;
   letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255,1);
   margin-bottom: 40px;
   font-size: 24px;
 }
