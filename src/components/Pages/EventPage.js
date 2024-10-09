@@ -30,7 +30,7 @@ function EventPage() {
                 <div className="row content">
                     <div className="col-md-4" dataAos="fade-right">
                         {/* <img src="assets/img/events/smileyhair.jpg" className="img-fluid" alt="" /> */}
-                        <img src="assets/img/littleboyballpit.png" className="img-fluid page-img" alt="" />
+                        <img src="assets/img/momskids.png" className="img-fluid page-img" alt="" />
                         {/* <img src="assets/img/kids3.jpg" className="img-fluid mt-5" alt="" /> */}
                     </div>
                     <div className="col-md-8" dataAos="fade-up">
