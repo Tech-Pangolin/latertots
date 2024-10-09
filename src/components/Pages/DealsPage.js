@@ -2,7 +2,7 @@ import React from 'react';
 
 function DealsPage() {
     return (
-        <>
+        <div className='bg-white'>
             <section id="deals" className="deals" >
                 <div className="container">
                     <div className="row justify-content-center">
@@ -16,7 +16,7 @@ function DealsPage() {
 
 
             </section>
-            <section id="about" className="about mx-5">
+            <section  className="mx-5">
                 <div className="container">
                     <div className="section-title" dataAos="fade-up">
                         <h2>Tot Deals</h2>
@@ -99,7 +99,7 @@ function DealsPage() {
             </section>
 
 
-        </>
+        </div>
     );
 }
 

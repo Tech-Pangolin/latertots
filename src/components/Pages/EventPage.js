@@ -2,7 +2,7 @@ import React from 'react';
 
 function EventPage() {
     return (
-        <>
+        <div className="bg-white">
             <section id="hero" style={{ background: "black", padding: 0 }}>
                 <div className="container">
                     <div className="row justify-content-center">
@@ -110,7 +110,7 @@ function EventPage() {
             </section>
 
 
-        </>
+        </div>
     );
 }
 

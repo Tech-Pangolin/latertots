@@ -20,8 +20,15 @@ function LoginPage() {
   };
 
   return (
-    <div className='container'>
-      <h1>Login Page</h1>
+    <div className='container my-5'>
+      <div className="row">
+        <div className="col-6">
+        <div className="section-title" dataAos="fade-up">
+                        <h2>Login Page</h2>
+                        <p sx={{ color: '#3B38DA' }}>Access your account, manage your schedule, and keep up with your tot’s fun-filled days at Later Tots.</p>
+                    </div>
+      {/* <h1>Login Page</h1>
+      <h4>Access your account, manage your schedule, and keep up with your tot’s fun-filled days at Later Tots.</h4> */}
 
       <form onSubmit={handleSubmit(onSubmit)} > 
         <div className="mb-3">
@@ -60,6 +67,11 @@ function LoginPage() {
                   <span className="ms-2 fs-6">Sign in with Google</span>
                 </button>
       </form>
+      </div>
+      <div className='col-2'>
+        <img src="assets/img/shapes.png" className="page-img"/>
+      </div>
+      </div>
 
       
     </div>

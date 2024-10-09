@@ -106,10 +106,11 @@ const UserForm = ({ reloadUserData }) => {
   };
 
   return (
-    <div className="container">
-      <div className="row">
+    <div className="container" style={{width:'50%'}}>
+      <div className="row justify-content-center">
+        <div className="col">
         {!hasAccount && <form onSubmit={createUser}>
-          <div>
+          <div className="mb-3">
             <label htmlFor="email" className="form-label">Email:</label>
             <input className="form-control"
               type="email"
@@ -119,7 +120,7 @@ const UserForm = ({ reloadUserData }) => {
               required
             />
           </div>
-          <div>
+          <div className="mb-3">
             <label htmlFor="password" className="form-label">Password:</label>
             <input className="form-control"
               type="password"
@@ -140,9 +141,12 @@ const UserForm = ({ reloadUserData }) => {
             />
           </div>
           {passwordMismatch && <p>Passwords do not match</p>}
-          {error && <p>{error}</p>}
-          <button type="submit" className="btn btn-primary mt-5">Next</button>
+          {error && <p className="mt-3">{error}</p>}
+          <div className="d-flex justify-content-center">
+          <button type="submit" className="btn btn-primary my-3 ">Next</button>
+          </div>
         </form>}
+        </div>
         {hasAccount && (
         <form onSubmit={handleSubmit(onSubmit)} className="col-12 col-md-8">
           <div className="mb-3">

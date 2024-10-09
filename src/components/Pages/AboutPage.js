@@ -2,7 +2,7 @@ import React from 'react';
 
 function AboutPage() {
     return (
-        <>
+        <div className='bg-white'>
             <section id="teamTots" className="teamTots" >
                 <div className="container">
                     <div className="row justify-content-center">
@@ -16,11 +16,11 @@ function AboutPage() {
 
             </section>
 
-            <section id="about" className="about container">
-<div className="row mb-5">
-<div className="col-md-12"><h2 className="text-center"><i>"Where Passion Meets Playtime"</i></h2>
-    </div>
-</div>
+            <section className="container">
+                <div className="row mb-5">
+                    <div className="col-md-12"><h2 className="text-center"><i>"Where Passion Meets Playtime"</i></h2>
+                    </div>
+                </div>
 
                 <div className="row content">
                     <div className="col-md-3" dataAos="fade-right">
@@ -29,10 +29,10 @@ function AboutPage() {
                     <div className="col-md-8" dataAos="fade-up">
                         <div dataAos="fade-up">
                             <h3 className='mt-3'>Meet Our Amazing Tot-Tenders</h3>
-                        <p>Our team is made up of trained professionals who are passionate about creating a nurturing environment where children can thrive. Every tot-tender is certified in First Aid and CPR and has undergone thorough background checks, ensuring the highest standards of safety and care for your tots. We are dedicated to making every moment at Later Tots a memorable one. We treat your tots like our own, providing the love and attention they deserve.</p>
- 
+                            <p>Our team is made up of trained professionals who are passionate about creating a nurturing environment where children can thrive. Every tot-tender is certified in First Aid and CPR and has undergone thorough background checks, ensuring the highest standards of safety and care for your tots. We are dedicated to making every moment at Later Tots a memorable one. We treat your tots like our own, providing the love and attention they deserve.</p>
+
                         </div>
-                       
+
                     </div>
                 </div>
 
@@ -58,7 +58,7 @@ function AboutPage() {
             </section>
 
 
-        </>
+        </div>
     );
 }
 

@@ -702,7 +702,7 @@ section {
   letter-spacing: 2px;
   text-transform: uppercase;
   color: #aaaaaa;
-  font-family: "Poppins", sans-serif;
+  font-family: "Snack", sans-serif;
 }
 
 .section-title h2::after {
@@ -1776,4 +1776,25 @@ Events
 
 .pricing .btn-buy{
   background-color: #EF7811;
+}
+
+/*
+Backgrounds
+*/
+
+.bg-color{
+  background: url("../img/cpattern.png");
+}
+.bg-white {
+  background: url("../img/wpattern.png");
+}
+
+/*
+
+Bootstrap Overrides
+
+*/
+
+.form-label{
+  font-family: 'Manjari', sans-serif;
 }
