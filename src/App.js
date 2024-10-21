@@ -15,6 +15,9 @@ import AboutPage from './components/Pages/AboutPage';
 import EventPage from './components/Pages/EventPage';
 import PricingPage from './components/Pages/PricingPage';
 import DealsPage from './components/Pages/DealsPage';
+import TestimonialsPage from './components/Pages/TestimonialsPage';
+import CareersPage from './components/Pages/CareersPage';
+import TotsTidbits from './components/Pages/TotsTidbits';
 
 function App() {
   return (
@@ -27,6 +30,9 @@ function App() {
           <Route path="/teamtots" element={<AboutPage />} />
           <Route path="/events" element={<EventPage />} />
           <Route path="/activities" element={<PricingPage />} />
+          <Route path="/testimonials" element={<TestimonialsPage />} />
+          <Route path="/totstidbits" element={<TotsTidbits />} />
+          <Route path="/careers" element={<CareersPage />} />
           <Route path="/deals" element={<DealsPage />} />
           <Route path="/register" element={ <UserRegistrationPage />} />
           <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
