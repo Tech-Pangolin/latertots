@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
 import { getAuth, signOut } from "firebase/auth";
 
@@ -22,16 +21,30 @@ const HeaderBar = () => {
     setMobileMenu(!mobileMenu);
   }
 
-  const dropdownActive = () =>{
+  const dropdownActiveTeam = () =>{
     const path = location.pathname;
+    console.log(path)
     switch (path) {
       case '/teamtots':
         return 'active'
-        break;
+      case '/testimonials':
+        return 'active'
+      case '/careers':
+        return 'active'
     
       default:
         return ''
-        break;
+    }
+
+  }
+  const dropdownActiveTots = () =>{
+    const path = location.pathname;
+    switch (path) {
+      case '/totstidbits':
+        return 'active'
+    
+      default:
+        return ''
     }
 
   }
@@ -53,20 +66,29 @@ const HeaderBar = () => {
         <nav id="navbar" className={`navbar ${mobileMenu ? 'navbar-mobile' : ''}`}>
           <ul>
             <li><a className={`nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href="/" >Home</a></li>
-            <li class="nav-item dropdown">
-              <a class={`nav-link dropdown-toggle scrollto ${dropdownActive()}}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <li className="nav-item dropdown">
+              <a className={`nav-link dropdown-toggle scrollto ${dropdownActiveTeam()}}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Team Tots
               </a>
-              <ul class="dropdown-menu">
+              <ul className="dropdown-menu">
                 <li><a className={`nav-link scrollto ${location.pathname === '/teamtots' ? 'active' : ''}`} href="/teamtots">Meet</a></li>
-                <li><a class="dropdown-item" href="#">Share</a></li>
-                <li><a class="dropdown-item" href="#">Grow</a></li>
+                <li><a className="dropdown-item" href="/testimonials">Share</a></li>
+                <li><a className="dropdown-item" href="/careers">Grow</a></li>
               </ul>
             </li>
+            <li className="nav-item dropdown">
+              <a className={`nav-link dropdown-toggle scrollto ${dropdownActiveTots()}}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Big Tots
+              </a>
+              <ul className="dropdown-menu">
+                <li><a className={`nav-link scrollto ${location.pathname === '/totstidbits' ? 'active' : ''}`} href="/totstidbits">Tots & Tidbits</a></li>
+                  </ul>
+            </li>
             {/* <li><a className={`nav-link scrollto ${location.pathname === '/teamtots' ? 'active' : ''}`} href="/teamtots">Team Tots</a></li> */}
-            <li><a className={`nav-link scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Drop-In Fun</a></li>
+            <li><a className={`nav-link scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Drop-In Fun</a></li>   
+             <li><a className={`nav-link scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/deals">Tot Deals</a></li>
             <li><a className={`nav-link scrollto ${location.pathname === '/activities' ? 'active' : ''}`} href="/activities">Tot-tivities</a></li>
-            <li><a className={`nav-link scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/deals">Tot Deals</a></li>
+        
             {!currentUser ? <li><a className={`nav-link scrollto ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Become a Tot</a></li> : <li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
             {/* <li><a className="nav-link scrollto" href="#team">Contact Us</a></li> */}
             {!currentUser ? '' : (<li><a className={`nav-link scrollto ${location.pathname === '/schedule' ? 'active' : ''}`} href="/schedule">My Schedule</a></li>)}
