@@ -60,6 +60,7 @@ export const handleScheduleSave = async (events, currentUserData) => {
   }
   
   alert('Schedule saved successfully!');
+  window.location.href = '/profile';
 }
 
 async function checkReservationExists(event) {
