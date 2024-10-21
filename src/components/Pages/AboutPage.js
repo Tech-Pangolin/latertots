@@ -38,7 +38,7 @@ function AboutPage() {
 
                 <div className="row content mt-3">
                     <div className="col-md-4 order-1 order-md-2 mt-5" dataAos="fade-left">
-                        <img src="assets/img/about/diaperchange.jpg" className="img-fluid page-img mt-4" alt="" />
+                        <img src="assets/img/about/amber.png" className="img-fluid page-img mt-4" alt="" />
                     </div>
                     <div className="col-md-8 pt-5 order-2 order-md-1" dataAos="fade-up">
                         <h3>Meet Amber Brown, Owner & Lead Tot-tender</h3>
