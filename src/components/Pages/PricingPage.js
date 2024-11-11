@@ -21,7 +21,7 @@ function AboutPage() {
                     <h2>So much to do!</h2>
                     <p sx={{ color: '#3B38DA' }}>Tot-tivities</p>
                 </div>
-
+                <iframe src="https://calendar.google.com/calendar/embed?src=c_7ecc2f7e23be71866ef2ce105bd4b7cca4eb0cd105af7af6f31d512be21eda4b%40group.calendar.google.com&ctz=America%2FChicago" style={{border:'solid 1px #777'}} width="100%" height="600" frameborder="0" scrolling="no"></iframe>
 
                 <div className="row content">
                     <div className="col-md-4" dataAos="fade-right">

@@ -39,6 +39,7 @@ const HeaderBar = () => {
   }
   const dropdownActiveTots = () =>{
     const path = location.pathname;
+    console.log(path)
     switch (path) {
       case '/totstidbits':
         return 'active'
@@ -67,7 +68,7 @@ const HeaderBar = () => {
           <ul>
             <li><a className={`nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href="/" >Home</a></li>
             <li className="nav-item dropdown">
-              <a className={`nav-link dropdown-toggle scrollto ${dropdownActiveTeam()}}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a className={`nav-link dropdown-toggle scrollto ${dropdownActiveTeam()}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Team Tots
               </a>
               <ul className="dropdown-menu">
@@ -77,7 +78,7 @@ const HeaderBar = () => {
               </ul>
             </li>
             <li className="nav-item dropdown">
-              <a className={`nav-link dropdown-toggle scrollto ${dropdownActiveTots()}}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a className={`nav-link dropdown-toggle scrollto ${dropdownActiveTots()}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Big Tots
               </a>
               <ul className="dropdown-menu">

@@ -1817,6 +1817,14 @@ Events
 }
 
 /*
+Careers
+*/
+.careers ul li
+{
+  font-size:16px
+}
+
+/*
 Backgrounds
 */
 
@@ -1836,3 +1844,5 @@ Bootstrap Overrides
 .form-label{
   font-family: 'Manjari', sans-serif;
 }
+
+
