@@ -33,8 +33,24 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, user => {
-      setCurrentUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          // Force token refresh to ensure latest claims
+          const idTokenResult = await user.getIdTokenResult(true);
+          const claims = idTokenResult.claims;
+
+          // Include custom claims in the user object
+          setCurrentUser({
+            ...user,
+            role: claims.role || 'parent-user', // Default to parent user if no role is set
+          });
+        } catch (error) {
+          console.error("Error getting custom claims: ", error);
+        }
+      } else {
+        setCurrentUser(user);
+      }
       setLoading(false);
     });
 
