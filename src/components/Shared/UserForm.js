@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { useAuth } from "../AuthProvider";
-import { uploadProfilePhoto, fetchCurrentUser, createUserAndAuthenticate, pollForUserDocument } from "../../Helpers/firebase";
+import { FirebaseDbService } from "../../Helpers/firebase";
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
 import ChangePasswordForm from "../ChangePasswordForm";
@@ -22,14 +22,20 @@ const UserForm = ({ reloadUserData }) => {
   const [hasAccount, setHasAccount] = React.useState(false);
   const [userRef, setUserRef] = React.useState(null);
   const [error, setError] = React.useState(null);
+  const [dbService, setDbService] = useState(null);
+
+  useEffect(() => {
+    setDbService(new FirebaseDbService(currentUser));
+  }, [currentUser]);
 
   setLogLevel(LOG_LEVELS.DEBUG);
 
   useEffect(() => {
+    if (!dbService) return;
 
     if (email && email !== '') {
       console.log(email)
-      fetchCurrentUser(email, currentUser?.uid).then((resp) => {
+      dbService.fetchCurrentUser(email, currentUser?.uid).then((resp) => {
         logger.info("Fetched new current user: ", resp);
         setAuthUserId(resp.id)
         setHasAccount(true);
@@ -50,14 +56,14 @@ const UserForm = ({ reloadUserData }) => {
       };
       fetchData();
     }
-  }, [reset, authUserId]);
+  }, [reset, authUserId, dbService]);
 
   const createUser = async (e) => {
     e.preventDefault();
     // Handle form submission logic here
     try {
       if (password === confirm) {
-        const user = await createUserAndAuthenticate(firebaseAuth, email, password);
+        const user = await dbService.createUserAndAuthenticate(firebaseAuth, email, password);
         setHasAccount(true);
         setUserRef(user);
 
@@ -92,7 +98,7 @@ const UserForm = ({ reloadUserData }) => {
       logger.info('Data:', data);
 
       const userDocRef = doc(db, 'Users', userRef.uid);
-      let photoURL = await uploadProfilePhoto(userRef.uid, userImage);
+      let photoURL = await dbService.uploadProfilePhoto(userRef.uid, userImage);
       
       // Add the photoURL to the user document data
       dataWithoutPassword.PhotoURL = photoURL;

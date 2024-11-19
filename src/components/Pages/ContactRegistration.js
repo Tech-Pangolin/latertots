@@ -1,20 +1,28 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../AuthProvider';
-import { createContactDocument, fetchCurrentUser } from '../../Helpers/firebase';
+import { FirebaseDbService } from '../../Helpers/firebase';
 
 function ContactRegistration() {
   const { register, handleSubmit } = useForm();
   const { currentUser: { email } } = useAuth();
   const [authUserId, setAuthUserId] = React.useState(null);
 
+  const { currentUser } = useAuth();
+  const [dbService, setDbService] = useState(null);
+
   useEffect(() => {
-    fetchCurrentUser(email).then((resp) => setAuthUserId(resp.id));
+    setDbService(new FirebaseDbService(currentUser));
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!dbService) return;
+    dbService.fetchCurrentUser(email).then((resp) => setAuthUserId(resp.id));
   }, [email]);
 
   const onSubmit = async (data) => {
     try {
-      await createContactDocument(authUserId, data);
+      await dbService.createContactDocument(authUserId, data);
 
       // Redirect to the user profile page
       window.location.href = '/profile';

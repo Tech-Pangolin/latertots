@@ -1,11 +1,20 @@
-import { fetchAllUsers } from "../../Helpers/firebase";
+import { FirebaseDbService } from "../../Helpers/firebase";
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../AuthProvider";
+import { db } from "../../config/firestore";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState(null);
+  const { currentUser } = useAuth();
+  const [dbService, setDbService] = useState(null);
 
   useEffect(() => {
-    const getUsers = async () => fetchAllUsers()
+    setDbService(new FirebaseDbService(currentUser));
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!dbService) return;
+    const getUsers = async () => dbService.fetchAllUsers()
       .then((data) => {
         setUsers(data);
       }).catch((error) => {
@@ -13,7 +22,7 @@ const AdminUsers = () => {
       });
 
     getUsers();
-  }, [])
+  }, [dbService]);
 
   const formatTableRow = (user) => {
     return (

@@ -1,14 +1,11 @@
 import ContactsTable from '../Shared/ContactsTable';
 import React, { useState, useEffect } from 'react';
-import MuiGrid from '@mui/material/Grid';
-import MuiButton from '@mui/material/Button';
-import { fetchAllCurrentUsersChildren, fetchAllCurrentUsersContacts, fetchCurrentUser } from '../../Helpers/firebase';
+import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import ChildCard from '../Shared/ChildCard';
-import { Avatar, Typography } from '@mui/material';
-import ChildInfoDialog from '../Shared/ChildInfoDialog';
 import UserForm from '../Shared/UserForm';
 import { logger } from '../../Helpers/logger';
+import { db } from '../../config/firestore';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
@@ -16,6 +13,7 @@ const UserProfile = () => {
   const [children, setChildren] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [reloadUserDataToggle, setReloadUserDataToggle] = useState(false);
+  const [dbService, setDbService] = useState(null);
 
   // Dialog state
   const [selectedChild, setSelectedChild] = useState(null);
@@ -27,18 +25,25 @@ const UserProfile = () => {
   const handleClose = () => setOpen(false);
 
   useEffect(() => {
-    logger.info(currentUser)
-    fetchCurrentUser(currentUser.email).then((resp) => {
-      setUser(resp)
-      logger.info("user", resp)
-    }).catch((e) => logger.error(e));
-    fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
-      setChildren(resp);
-    }).catch((e) => logger.error(e));
-    fetchAllCurrentUsersContacts(currentUser.email).then((resp) => {
-      setContacts(resp);
-    }).catch((e) => logger.error(e));
-  }, [currentUser.email, reloadUserDataToggle]);
+    setDbService(new FirebaseDbService(currentUser));
+  }, [currentUser]);
+
+  useEffect(() => {
+    logger.info("currentUser: ",currentUser)
+
+    if (dbService) {
+      dbService.fetchCurrentUser(currentUser.email).then((resp) => {
+        setUser(resp)
+        logger.info("user", resp)
+      }).catch((e) => logger.error(e));
+      dbService.fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
+        setChildren(resp);
+      }).catch((e) => logger.error(e));
+      dbService.fetchAllCurrentUsersContacts(currentUser.email).then((resp) => {
+        setContacts(resp);
+      }).catch((e) => logger.error(e));
+    } 
+  }, [currentUser.email, reloadUserDataToggle, dbService]);
 
   return (
     <div className="container rounded bg-white mt-5 mb-5">

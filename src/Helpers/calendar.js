@@ -1,5 +1,4 @@
 import React from 'react';
-import { createReservationDocument, updateReservationDocument } from './firebase';
 import  StyledCalendarEvent from '../components/Shared/StyledCalendarEvent';
 
 
@@ -46,16 +45,16 @@ export const renderEventContent = (eventInfo) => {
   return <StyledCalendarEvent event={event} backgroundColor={backgroundColor} />;
 }
 
-export const handleScheduleSave = async (events, currentUserData) => {
+export const handleScheduleSave = async (events, currentUserData, dbService) => {
   for (const event of events) {
     // Check if reservation already exists
     const reservationExists = await checkReservationExists(event);
     if (reservationExists) {
       // Update existing reservation
-      await updateReservationDocument(event);
+      await dbService.updateReservationDocument(event);
     } else {
       // Create new reservation
-      await createReservationDocument(currentUserData.id, event);
+      await dbService.createReservationDocument(currentUserData.id, event);
     }
   }
   

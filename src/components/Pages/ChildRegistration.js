@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../AuthProvider';
-import { fetchCurrentUser } from '../../Helpers/firebase';
-import { createChildDocument } from '../../Helpers/firebase';
+import { FirebaseDbService } from '../../Helpers/firebase';
 import { useLocation } from 'react-router-dom';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firestore';
@@ -10,6 +9,11 @@ import { db } from '../../config/firestore';
 const ChildRegistration = () => {
   const { register, handleSubmit, formState: {errors}, reset } = useForm();
   const { currentUser } = useAuth();
+  const [dbService, setDbService] = useState(null);
+
+  useEffect(() => {
+    setDbService(new FirebaseDbService(currentUser));
+  }, [currentUser]);
 
   // Get the child from the location state
   // This is passed from the ChildCard component when editing
@@ -31,8 +35,8 @@ const ChildRegistration = () => {
         await updateDoc(childRef, data);
       } else {
         // Create a new child document
-        await fetchCurrentUser(currentUser.email).then( async (resp) => {
-          await createChildDocument(resp.id, data);
+        await dbService.fetchCurrentUser(currentUser.email).then( async (resp) => {
+          await dbService.createChildDocument(resp.id, data);
         });
       }
 
