@@ -44,7 +44,7 @@ export class FirebaseDbService {
       const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       for (const user of users) {
         const roleRef = user.Role;
-        user.Role = await fetchUserRole(roleRef);
+        user.Role = await this.fetchUserRole(roleRef);
       }
       return users;
     } catch (error) {
@@ -70,7 +70,7 @@ export class FirebaseDbService {
       // Poll for the user document if the UID is provided
       if (uid) {
         logger.info("Polling for user document with UID:", uid);
-        userDocRef = await pollForUserDocument(db, uid, maxRetries);
+        userDocRef = await this.pollForUserDocument(db, uid, maxRetries);
         userDoc = await getDoc(userDocRef);
       }
 
@@ -99,7 +99,7 @@ export class FirebaseDbService {
         const roleRef = user.Role;
         if (roleRef) {
           logger.info("Fetching user role:", roleRef);
-          user.Role = await fetchUserRole(roleRef);
+          user.Role = await this.fetchUserRole(roleRef);
         } else {
           logger.warn("Role reference not yet set.")
         }
