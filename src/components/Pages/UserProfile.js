@@ -9,7 +9,6 @@ import { db } from '../../config/firestore';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
-  const [user, setUser] = useState(null);
   const [children, setChildren] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [reloadUserDataToggle, setReloadUserDataToggle] = useState(false);
@@ -59,7 +58,7 @@ const UserProfile = () => {
               <h4 className="text-right">Profile Settings</h4>
             </div>
             <div className="d-flex flex-column p-2">
-              <img className="rounded-circle" width="200px" height="200px" src={currentUser.PhotoURL ? currentUser.PhotoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
+              <img className="rounded-circle" width="200px" height="200px" src={currentUser.photoURL ? currentUser.photoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
               <span className="font-weight-bold">{currentUser?.displayName}</span><span className="text-black-50">{currentUser.email}</span><span> </span>
             </div>
             <UserForm reloadUserData={[reloadUserDataToggle, setReloadUserDataToggle]} />

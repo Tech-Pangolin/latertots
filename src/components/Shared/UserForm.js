@@ -7,7 +7,6 @@ import { FirebaseDbService } from "../../Helpers/firebase";
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
 import ChangePasswordForm from "../ChangePasswordForm";
-import { auth } from "firebaseui";
 
 const UserForm = ({ reloadUserData }) => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
@@ -34,7 +33,6 @@ const UserForm = ({ reloadUserData }) => {
       const fetchData = async () => {
         const userDocRef = doc(db, 'Users', currentUser.uid);
         const userDoc = await getDoc(userDocRef);
-        logger.info(userDoc)
         if (userDoc.exists()) {
           reset(userDoc.data());
           setMode('update');
@@ -73,6 +71,7 @@ const UserForm = ({ reloadUserData }) => {
     // Hardcode a user role for now
     const userRoleRef = await doc(db, 'Roles', 'parent-user');
     data.Role = userRoleRef;
+    data.archived = false;
 
     // Remove the image from the data object
     const userImage = data.Image[0];
@@ -85,10 +84,13 @@ const UserForm = ({ reloadUserData }) => {
 
     logger.info('Submit Mode:', mode);
     try {
-      logger.info('Data:', data);
+      logger.info('Form Data:', data);
 
-      const userDocRef = doc(db, 'Users', userRef.uid);
-      let photoURL = await dbService.uploadProfilePhoto(userRef.uid, userImage);
+      // If user is already authenticated, get uid from auth token
+      const user = userRef || currentUser;
+
+      const userDocRef = doc(db, 'Users', user.uid);
+      let photoURL = await dbService.uploadProfilePhoto(user.uid, userImage);
       
       // Add the photoURL to the user document data
       dataWithoutPassword.PhotoURL = photoURL;

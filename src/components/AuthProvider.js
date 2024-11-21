@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 import { app } from '../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firestore';
+import { logger } from '../Helpers/logger';
 
 const auth = getAuth();
 
@@ -40,13 +43,18 @@ export const AuthProvider = ({ children }) => {
           const idTokenResult = await user.getIdTokenResult(true);
           const claims = idTokenResult.claims;
 
+          // Fetch user data from Firestore
+          const userDocRef = await getDoc(doc(db, 'Users', user.uid));
+          const userDocData = userDocRef.data();
+
           // Include custom claims in the user object
           setCurrentUser({
             ...user,
             role: claims.role || 'parent-user', // Default to parent user if no role is set
+            photoURL: userDocData.PhotoURL || null,
           });
         } catch (error) {
-          console.error("Error getting custom claims: ", error);
+          logger.error("Error getting custom claims: ", error);
         }
       } else {
         setCurrentUser(user);
@@ -62,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await auth.signOut();
     } catch (error) {
-      console.log("Error logging out: ", error);
+      logger.error("Error logging out: ", error);
     }
   };
 
