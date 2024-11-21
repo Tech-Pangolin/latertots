@@ -60,7 +60,7 @@ export class FirebaseDbService {
    * @returns {Promise<Object|null>} - A promise that resolves to the user object if found, or null if not found.
    * @throws {Error} - If there is an error fetching the current user.
    */
-  fetchCurrentUser = async (email, uid) => {
+  fetchCurrentUser = async (identifier) => {
     this.validateAuth();
     const maxRetries = 10;
     try {
@@ -68,19 +68,21 @@ export class FirebaseDbService {
       let userDoc;
 
       // Poll for the user document if the UID is provided
-      if (uid) {
-        logger.info("Polling for user document with UID:", uid);
-        userDocRef = await this.pollForUserDocument(db, uid, maxRetries);
+      if (this.userContext.uid) {
+        logger.info(`${identifier} Polling for user document with UID:`, this.userContext.uid);
+        userDocRef = await this.pollForUserDocument(db, this.userContext.uid, maxRetries);
         userDoc = await getDoc(userDocRef);
       }
 
       // Poll for user document by email if not found by UID
       if (!userDoc || !userDoc.exists()) {
-        logger.info("Querying for user document with email:", email);
+        logger.info("Querying for user document with email:", this.userContext.email);
         for (let i = 0; i < maxRetries; i++) {
-          const q = query(collection(db, "Users"), where("Email", "==", email));
+          logger.info("fetchCurrentUser: start query by email")
+          const q = query(collection(db, "Users"), where("Email", "==", this.userContext.email), where("archived", "==", false));
           const querySnapshot = await getDocs(q);
-          const userDocSnapshot = querySnapshot.docs.find(doc => doc.data().Email === email);
+          const userDocSnapshot = querySnapshot.docs.find(doc => doc.data().Email === this.userContext.email);
+          logger.info("fetchCurrentUser: end query by email")
 
           if (userDocSnapshot) {
             userDocRef = userDocSnapshot.ref;
@@ -98,14 +100,14 @@ export class FirebaseDbService {
         const user = { id: userDoc.id, ...userDoc.data() };
         const roleRef = user.Role;
         if (roleRef) {
-          logger.info("Fetching user role:", roleRef);
+          logger.info(`${identifier || ''} Fetching user role:`, roleRef);
           user.Role = await this.fetchUserRole(roleRef);
         } else {
-          logger.warn("Role reference not yet set.")
+          logger.warn(`${identifier || ''} Role reference not yet set.`)
         }
         return user;
       } else {
-        throw new Error("No record found with email: " + email);
+        throw new Error("No record found with email: " + this.userContext.email);
       }
     } catch (error) {
       logger.error("Error fetching current user:", error);
@@ -162,12 +164,12 @@ export class FirebaseDbService {
    * @returns {Promise<Array<Object>>} - A promise that resolves to an array of child objects associated with the current user.
    * @throws {Error} - If there is an error querying the children.
    */
-  fetchAllCurrentUsersChildren = async (email) => {
+  fetchAllCurrentUsersChildren = async () => {
     this.validateAuth();
     try {
-      const q = query(collection(db, "Users"), where("Email", "==", email));
+      const q = query(collection(db, "Users"), where("Email", "==", this.userContext.email), where("archived", "==", false));
       const querySnapshot = await getDocs(q);
-      const userDoc = querySnapshot.docs.find(doc => doc.data().Email === email);
+      const userDoc = querySnapshot.docs.find(doc => doc.data().Email === this.userContext.email);
       if (userDoc) {
         const userRef = doc(collection(db, "Users"), userDoc.id);
         const userSnapshot = await getDoc(userRef);
@@ -175,12 +177,20 @@ export class FirebaseDbService {
         if (!childrenRefs) {
           return [];
         }
-        const childrenPromises = childrenRefs.map(childRef => getDoc(childRef));
+        const childrenPromises = childrenRefs.map(async (childRef) => {
+          try {
+            return await getDoc(childRef);
+          } catch (error) {
+            logger.error(`Error querying child: ${childRef.path}`, error);
+            throw error;
+          }
+        });
+
         const childrenSnapshots = await Promise.all(childrenPromises);
         const children = childrenSnapshots.map(childSnapshot => ({ id: childSnapshot.id, ...childSnapshot.data() }));
         return children;
       } else {
-        throw new Error("No record found with email: " + email);
+        throw new Error("No record found with email: " + this.userContext.email);
       }
     } catch (error) {
       console.error("Error querying children:", error);
@@ -198,7 +208,7 @@ export class FirebaseDbService {
   fetchAllCurrentUsersContacts = async (email) => {
     this.validateAuth();
     try {
-      const q = query(collection(db, "Users"), where("Email", "==", email));
+      const q = query(collection(db, "Users"), where("Email", "==", email), where("archived", "==", false));
       const querySnapshot = await getDocs(q);
       const userDoc = querySnapshot.docs.find(doc => doc.data().Email === email);
       if (userDoc) {
@@ -437,6 +447,35 @@ export class FirebaseDbService {
     }
   };
 
+  /**
+   * Archives a reservation document in the Reservations collection.
+   * 
+   * @param {string} reservationId - The ID of the reservation document to archive.
+   * @returns {Promise<void>} - A promise that resolves when the document is successfully archived.
+   * @returns {null} - If the reservation document does not exist.
+   * @throws {Error} - If there is an error archiving the document.
+   */
+  archiveReservationDocument = async (reservationId) => {
+    this.validateAuth();
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      const reservationSnapshot = await getDoc(reservationRef);
+      if (!reservationSnapshot.exists()) {
+        return null;
+      }
+
+      const status = reservationSnapshot.data().extendedProps.status;
+      if (status === 'pending' || status === 'confirmed') {
+        // Archive the document by updating the "archived" field
+        await updateDoc(reservationRef, { archived: true });
+      } else {
+        throw new Error("Cannot archive reservation with status: " + status);
+      }
+    } catch (error) {
+      console.error("Error archiving reservation document:", error);
+      throw error;
+    }
+  };
 
   /**
    * Creates a new user and authenticates using the provided email and password.
@@ -470,7 +509,7 @@ export class FirebaseDbService {
       if (userDoc.exists()) {
         return userDocRef;
       }
-      console.log(`User document not found, retrying... (${i + 1}/10)`);
+      logger.info(`User document not found, retrying... (${i + 1}/10)`);
       await new Promise(r => setTimeout(r, 1000 * i));
     }
     throw new Error('User document not found after maximum retries.');
