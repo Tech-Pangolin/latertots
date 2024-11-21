@@ -12,7 +12,6 @@ import { auth } from "firebaseui";
 const UserForm = ({ reloadUserData }) => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
   const { currentUser } = useAuth();
-  // logger.info("CurrentUser: ", currentUser)
   const [email, setEmail] = React.useState(currentUser?.email ?? '');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -31,32 +30,23 @@ const UserForm = ({ reloadUserData }) => {
   setLogLevel(LOG_LEVELS.DEBUG);
 
   useEffect(() => {
-    if (!dbService) return;
-
-    if (email && email !== '') {
-      console.log(email)
-      dbService.fetchCurrentUser(email, currentUser?.uid).then((resp) => {
-        logger.info("Fetched new current user: ", resp);
-        setAuthUserId(resp.id)
-        setHasAccount(true);
-      }).catch((e) => logger.error(e));
-
+    if (currentUser) {
       const fetchData = async () => {
-        if (authUserId) {
-          const userDocRef = doc(db, 'Users', authUserId);
-          const userDoc = await getDoc(userDocRef);
-          logger.info(userDoc)
-          if (userDoc.exists()) {
-            reset(userDoc.data());
-            setMode('update');
-          } else {
-            logger.error("No such user found!");
-          }
+        const userDocRef = doc(db, 'Users', currentUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        logger.info(userDoc)
+        if (userDoc.exists()) {
+          reset(userDoc.data());
+          setMode('update');
+          setHasAccount(true);
+          setAuthUserId(currentUser.uid);
+        } else {
+          logger.error("No such user found!");
         }
       };
       fetchData();
     }
-  }, [reset, authUserId, dbService]);
+  }, [reset, authUserId]);
 
   const createUser = async (e) => {
     e.preventDefault();
