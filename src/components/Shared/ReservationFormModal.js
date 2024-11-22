@@ -2,11 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogTitle, DialogContent, MenuItem } from '@mui/material';
 import { checkAgainstBusinessHours, checkFutureStartTime, getCurrentDate, getCurrentTime } from '../../Helpers/calendar';
 import { v4 as uuidv4 } from 'uuid';
-import { checkReservationAllowability } from '../../Helpers/firebase';
+import { FirebaseDbService } from '../../Helpers/firebase';
+import { useAuth } from '../AuthProvider';
 
 
 // Remember to create state for the open/closed state of the modal and the form data
 const ReservationFormModal = ({modalOpenState = false, setModalOpenState, children, setEvents, events, handleScheduleSave, currentUserData}) => {
+  const { currentUser } = useAuth();
+  const [dbService, setDbService] = useState(null);
+
+  useEffect(() => {
+    setDbService(new FirebaseDbService(currentUser));
+  }, [currentUser]);
+
   const initialState = {
     selectedChild: {id: '', name: 'Select a child'},
     date: `${getCurrentDate()}`,
@@ -59,7 +67,7 @@ const ReservationFormModal = ({modalOpenState = false, setModalOpenState, childr
     // Handle form submission logic here
     let allowSave = false;
     if (checkAgainstBusinessHours(newEvent) && checkFutureStartTime(newEvent)) {
-      allowSave = checkReservationAllowability(newEvent);
+      allowSave = dbService.checkReservationAllowability(newEvent);
     }
     if (allowSave) {
       setEvents(prevEvents => [...prevEvents, newEvent]);
