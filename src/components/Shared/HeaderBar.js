@@ -53,7 +53,7 @@ const HeaderBar = () => {
 
   return (
 
-    <header id="header" className="fixed-top d-flex align-items-center position-relative" style={{ background: '#E61378' }}>
+    <header id="header" className="fixed-top d-flex align-items-center position-relative">
       <div className="container d-flex align-items-center justify-content-between ">
 
         <div className="logo">
@@ -66,9 +66,9 @@ const HeaderBar = () => {
 
         <nav id="navbar" className={`navbar ${mobileMenu ? 'navbar-mobile' : ''}`}>
           <ul>
-            <li><a className={`nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href="/" >Home</a></li>
+            <li><a id="home-link" className={` nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href="/" >Home</a></li>
             <li className="nav-item dropdown">
-              <a className={`nav-link dropdown-toggle scrollto ${dropdownActiveTeam()}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a id="team-link" className={`nav-link team-link dropdown-toggle scrollto ${dropdownActiveTeam()}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Team Tots
               </a>
               <ul className="dropdown-menu">
@@ -78,7 +78,7 @@ const HeaderBar = () => {
               </ul>
             </li>
             <li className="nav-item dropdown">
-              <a className={`nav-link dropdown-toggle scrollto ${dropdownActiveTots()}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a id="big-tots-link" className={`nav-link big-tots-link dropdown-toggle scrollto ${dropdownActiveTots()}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Big Tots
               </a>
               <ul className="dropdown-menu">
@@ -86,15 +86,15 @@ const HeaderBar = () => {
                   </ul>
             </li>
             {/* <li><a className={`nav-link scrollto ${location.pathname === '/teamtots' ? 'active' : ''}`} href="/teamtots">Team Tots</a></li> */}
-            <li><a className={`nav-link scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Drop-In Fun</a></li>   
-             <li><a className={`nav-link scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/deals">Tot Deals</a></li>
-            <li><a className={`nav-link scrollto ${location.pathname === '/activities' ? 'active' : ''}`} href="/activities">Tot-tivities</a></li>
+            <li><a id="dropin-link" className={`nav-link dropin-link scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Drop-In Fun</a></li>   
+             <li><a id="deals-link" className={`nav-link deals-link scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/deals">Tot Deals</a></li>
+            <li><a id="activities-link" className={`nav-link activities-link scrollto ${location.pathname === '/activities' ? 'active' : ''}`} href="/activities">Tot-tivities</a></li>
         
-            {!currentUser ? <li><a className={`nav-link scrollto ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Become a Tot</a></li> : <li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
+            {!currentUser ? <li><a id="become-link" className={`nav-link become-link scrollto ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Become a Tot</a></li> : <li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
             {/* <li><a className="nav-link scrollto" href="#team">Contact Us</a></li> */}
-            {!currentUser ? '' : (<li><a className={`nav-link scrollto ${location.pathname === '/schedule' ? 'active' : ''}`} href="/schedule">My Schedule</a></li>)}
-            {!currentUser ? (<li><a className={`nav-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Play & Stay</a></li>) : (
-              <li><a className="nav-link scrollto" onClick={signOut}>Logout</a></li>
+            {!currentUser ? '' : (<li><a className={`nav-link login-link scrollto ${location.pathname === '/schedule' ? 'active' : ''}`} href="/schedule">My Schedule</a></li>)}
+            {!currentUser ? (<li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Play & Stay</a></li>) : (
+              <li><a id="logout-link" className="nav-link scrollto logout-link" onClick={signOut}>Logout</a></li>
             )}
           </ul>
           <i className="bi bi-list mobile-nav-toggle" onClick={handleMobileMenu}></i>

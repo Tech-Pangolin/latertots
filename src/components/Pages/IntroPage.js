@@ -26,7 +26,7 @@ function IntroPage() {
                             </div>
                         </div>
                         <div className="col-sm-12 col-lg-4 order-2 order-lg-1 order-sm-1 hero-img" dataAos="zoom-out" dataAosDelay="300">
-                            <img src="assets/img/brand/Logos/PNG/primaryLogos/primaryWhite.png" className="img-fluid animated slide-in" style={{width:"75%"}}  alt="" />
+                            <img src="assets/img/brand/Logos/PNG/primaryLogos/logo.png" id="hero-logo" className="img-fluid animated slide-in" style={{width:"75%"}}  alt="" />
                         </div>
                     </div>
                 </div>
@@ -54,6 +54,7 @@ function IntroPage() {
                         <div class="row content">
                             <div class="col-md-4 order-1 order-md-2" dataAos="fade-left">
                                 <img src="assets/img/bluehand.png" class="img-fluid" alt="" style={{borderRadius:'50%'}} />
+                                
                             </div>
                             <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch px-lg-5" dataAos="fade-left">
                                 <h2 style={{ color: '#41A8C5' }}>What is Later Tots?</h2>
@@ -68,6 +69,10 @@ function IntroPage() {
                                     At Later Tots, we truly believe that every child deserves a place where they feel at home, even when they're away. That’s why we’re proud to be your tot’s happy place away—where they can drop, play, and stay.
 
                                 </p>
+                                <div class="d-flex justify-content-center">
+                                <img src="assets/img/5kids.png" class="img-fluid main-kids"/>
+                                </div>
+
                             </div>
                         </div>
                         

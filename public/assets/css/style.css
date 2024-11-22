@@ -164,7 +164,7 @@ a {
   transition: all 0.5s;
   z-index: 997;
   transition: all 0.5s;
-  background: rgba(1, 4, 136, 0.9);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 #header.header-transparent {
@@ -227,7 +227,7 @@ a {
   font-size: 18px;
   font-weight: 500;  
   font-family: "Manjari", sans-serif;
-  color: rgba(255, 255, 255, 0.7);
+  color: #1acc8d;
   white-space: nowrap;
   transition: 0.3s;
 }
@@ -263,7 +263,7 @@ a {
 .navbar .active,
 .navbar .active:focus,
 .navbar li:hover>a {
-  color: #fff;
+  /* color: #fff; */
 }
 
 .navbar .dropdown ul {
@@ -333,11 +333,30 @@ a {
   }
 }
 
+#home-link,#become-link{
+  color:#41AAC6;
+}
+#team-link{
+  color:#ECE34B;
+}
+#big-tots-link,#logout-link{
+  color:#9D67E3;
+}
+#dropin-link{
+  color:#87DEBB;
+}
+#deals-link{
+  color:#EF7810;
+}
+#activities-link{
+  color:#E61479;
+}
+
 /**
 * Mobile Navigation 
 */
 .mobile-nav-toggle {
-  color: #fff;
+  color: #41AAC6;
   font-size: 28px;
   cursor: pointer;
   display: none;
@@ -518,6 +537,19 @@ a {
   /* animation: up-down 2s ease-in-out infinite alternate-reverse both; */
 }
 
+#hero-logo{
+  border-radius: 50%;
+  border:2px solid #9D67E4;
+  width: 80%;
+  background-color: #FFF;
+  height:80%;
+}
+
+.main-kids{
+  width: 450px;
+  text-align: center;
+}
+
 @media (min-width: 1024px) {
   #hero {
     background-attachment: fixed;
@@ -525,6 +557,13 @@ a {
 }
 
 @media (max-width: 991px) {
+  #hero-logo{
+    border-radius: 90%;
+    border:2px solid #9D67E4;
+    width: 100%;
+    background-color: #FFF;
+    height:100%;
+  }
   #hero {
     padding-top: 80px;
   }
