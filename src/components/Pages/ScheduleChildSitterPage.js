@@ -5,13 +5,14 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { Draggable } from '@fullcalendar/interaction';
-import { checkReservationAllowability, deleteReservationDocument, fetchAllCurrentUsersChildren, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
+import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import DraggableChildEvent from '../Shared/DraggableChildEvent';
 import { v4 as uuidv4 } from 'uuid';
 import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import ReservationFormModal from '../Shared/ReservationFormModal';
 import { set } from 'react-hook-form';
+import { db } from '../../config/firestore';
 
 const ScheduleChildSitterPage = () => {
   const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
@@ -21,15 +22,22 @@ const ScheduleChildSitterPage = () => {
   const { currentUser } = useAuth();
   const [currentUserData, setCurrentUserData] = useState({});
   const [modalOpenState, setModalOpenState] = useState(false);
-  
+  const [dbService, setDbService] = useState(null);
+
   useEffect(() => {
-    fetchCurrentUser(currentUser.email).then((resp) => {
-      setCurrentUserData(resp);
-    });
+    setDbService(new FirebaseDbService(currentUser));
   }, [currentUser]);
 
   useEffect(() => {
-    fetchUserReservations(currentUserData.id).then((resp) => {
+    if (!dbService) return;
+    dbService.fetchCurrentUser(currentUser.email).then((resp) => {
+      setCurrentUserData(resp);
+    });
+  }, [currentUser, dbService]);
+
+  useEffect(() => {
+    if (!dbService) return;
+    dbService.fetchUserReservations(currentUser.uid).then((resp) => {
       let formattedEvents = [];
       resp.forEach((event) => {
         event.start = event.start.toDate().toISOString();
@@ -41,14 +49,15 @@ const ScheduleChildSitterPage = () => {
     ).then((resp) => {
       setEvents(resp);
     });
-  }, [currentUserData.id]);
+  }, [currentUser, dbService]);
 
   // Fetch children data and prepare draggables flag
   useEffect(() => {
-    fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
+    if (!dbService) return;
+    dbService.fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
       setChildren(resp);
     }).then(() => { draggablesLoaded.current = true; });
-  }, [currentUser.email]);
+  }, [currentUser.email, dbService]);
 
   // Initialize draggable events
   useEffect(() => {
@@ -108,7 +117,7 @@ const ScheduleChildSitterPage = () => {
   // The eventReceive callback is triggered when a new event is created in FullCalendar.
   // Only now can we remove the event if it overlaps with too many existing reservations.
   const handleEventReceive = async (info) => {
-    const overlap = await checkReservationAllowability(info.event, events);
+    const overlap = await dbService.checkReservationAllowability(info.event, events);
 
     if (!overlap.allow) {
       // revert the event from FullCalendar
@@ -128,7 +137,7 @@ const ScheduleChildSitterPage = () => {
     // Calculate the new duration in hours
     const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
 
-    const overlap = checkReservationAllowability(event, events);
+    const overlap = dbService.checkReservationAllowability(event, events);
     console.log("overlap", overlap)
 
     
@@ -161,7 +170,7 @@ const ScheduleChildSitterPage = () => {
 
   const handleEventMove = (info) => {
     const { event } = info;
-    const overlap = checkReservationAllowability(event, events);
+    const overlap = dbService.checkReservationAllowability(event, events);
 
     if (!overlap.allow) {
       info.revert();
@@ -183,7 +192,7 @@ const ScheduleChildSitterPage = () => {
     // Validate the new event state
     let allowSave = false;
     if (checkAgainstBusinessHours(event) && checkFutureStartTime(event)) {
-      allowSave = checkReservationAllowability(event);
+      allowSave = dbService.checkReservationAllowability(event);
     }
 
     // Update the events state if the new event is valid
@@ -205,8 +214,13 @@ const handleEventClick = ({ event }) => {
   // Only allow deletion of children reservations that belong to the current user
   const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
 
-  if (belongsToCurrentUser && window.confirm(`Are you sure you want to delete the event: ${event.title}?`)) {
-    deleteReservationDocument(event.id);
+  if (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`)) {
+    if (currentUser.role !== 'admin') {
+      dbService.archiveReservationDocument(event.id);
+    } else {
+      // TODO: Implement a way for admins to choose whether to archive or delete reservations
+      dbService.deleteReservationDocument(event.id);
+    }
     setEvents((prevEvents) => prevEvents.filter(e => e.id !== event.id));
   }
 };
@@ -243,7 +257,7 @@ const handleEventClick = ({ event }) => {
           customButtons={{
             saveButton: {
               text: 'Save Schedule',
-              click: () => handleScheduleSave(events, currentUserData)
+              click: () => handleScheduleSave(events, currentUserData, dbService)
             },
             newReservationForm: {
               text: 'New Reservation',

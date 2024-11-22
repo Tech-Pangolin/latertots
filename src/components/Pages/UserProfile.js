@@ -1,21 +1,18 @@
 import ContactsTable from '../Shared/ContactsTable';
 import React, { useState, useEffect } from 'react';
-import MuiGrid from '@mui/material/Grid';
-import MuiButton from '@mui/material/Button';
-import { fetchAllCurrentUsersChildren, fetchAllCurrentUsersContacts, fetchCurrentUser } from '../../Helpers/firebase';
+import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import ChildCard from '../Shared/ChildCard';
-import { Avatar, Typography } from '@mui/material';
-import ChildInfoDialog from '../Shared/ChildInfoDialog';
 import UserForm from '../Shared/UserForm';
 import { logger } from '../../Helpers/logger';
+import { db } from '../../config/firestore';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
-  const [user, setUser] = useState(null);
   const [children, setChildren] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [reloadUserDataToggle, setReloadUserDataToggle] = useState(false);
+  const [dbService, setDbService] = useState(null);
 
   // Dialog state
   const [selectedChild, setSelectedChild] = useState(null);
@@ -27,18 +24,21 @@ const UserProfile = () => {
   const handleClose = () => setOpen(false);
 
   useEffect(() => {
-    logger.info(currentUser)
-    fetchCurrentUser(currentUser.email).then((resp) => {
-      setUser(resp)
-      logger.info("user", resp)
-    }).catch((e) => logger.error(e));
-    fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
-      setChildren(resp);
-    }).catch((e) => logger.error(e));
-    fetchAllCurrentUsersContacts(currentUser.email).then((resp) => {
-      setContacts(resp);
-    }).catch((e) => logger.error(e));
-  }, [currentUser.email, reloadUserDataToggle]);
+    setDbService(new FirebaseDbService(currentUser));
+  }, [currentUser]);
+
+  useEffect(() => {
+    logger.info("currentUser: ",currentUser)
+
+    if (dbService) {
+      dbService.fetchAllCurrentUsersChildren().then((resp) => {
+        setChildren(resp);
+      }).catch((e) => logger.error(e));
+      dbService.fetchAllCurrentUsersContacts(currentUser.email).then((resp) => {
+        setContacts(resp);
+      }).catch((e) => logger.error(e));
+    } 
+  }, [currentUser.email, reloadUserDataToggle, dbService]);
 
   return (
     <div className="container rounded bg-white mt-5 mb-5">
@@ -58,7 +58,7 @@ const UserProfile = () => {
               <h4 className="text-right">Profile Settings</h4>
             </div>
             <div className="d-flex flex-column p-2">
-              <img className="rounded-circle" width="200px" height="200px" src={(user && user.PhotoURL) ? user.PhotoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
+              <img className="rounded-circle" width="200px" height="200px" src={currentUser.photoURL ? currentUser.photoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
               <span className="font-weight-bold">{currentUser?.displayName}</span><span className="text-black-50">{currentUser.email}</span><span> </span>
             </div>
             <UserForm reloadUserData={[reloadUserDataToggle, setReloadUserDataToggle]} />

@@ -3,16 +3,14 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { useAuth } from "../AuthProvider";
-import { uploadProfilePhoto, fetchCurrentUser, createUserAndAuthenticate, pollForUserDocument } from "../../Helpers/firebase";
+import { FirebaseDbService } from "../../Helpers/firebase";
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
 import ChangePasswordForm from "../ChangePasswordForm";
-import { auth } from "firebaseui";
 
 const UserForm = ({ reloadUserData }) => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
   const { currentUser } = useAuth();
-  // logger.info("CurrentUser: ", currentUser)
   const [email, setEmail] = React.useState(currentUser?.email ?? '');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -22,30 +20,26 @@ const UserForm = ({ reloadUserData }) => {
   const [hasAccount, setHasAccount] = React.useState(false);
   const [userRef, setUserRef] = React.useState(null);
   const [error, setError] = React.useState(null);
+  const [dbService, setDbService] = useState(null);
+
+  useEffect(() => {
+    setDbService(new FirebaseDbService(currentUser));
+  }, [currentUser]);
 
   setLogLevel(LOG_LEVELS.DEBUG);
 
   useEffect(() => {
-
-    if (email && email !== '') {
-      console.log(email)
-      fetchCurrentUser(email, currentUser?.uid).then((resp) => {
-        logger.info("Fetched new current user: ", resp);
-        setAuthUserId(resp.id)
-        setHasAccount(true);
-      }).catch((e) => logger.error(e));
-
+    if (currentUser) {
       const fetchData = async () => {
-        if (authUserId) {
-          const userDocRef = doc(db, 'Users', authUserId);
-          const userDoc = await getDoc(userDocRef);
-          logger.info(userDoc)
-          if (userDoc.exists()) {
-            reset(userDoc.data());
-            setMode('update');
-          } else {
-            logger.error("No such user found!");
-          }
+        const userDocRef = doc(db, 'Users', currentUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          reset(userDoc.data());
+          setMode('update');
+          setHasAccount(true);
+          setAuthUserId(currentUser.uid);
+        } else {
+          logger.error("No such user found!");
         }
       };
       fetchData();
@@ -57,7 +51,7 @@ const UserForm = ({ reloadUserData }) => {
     // Handle form submission logic here
     try {
       if (password === confirm) {
-        const user = await createUserAndAuthenticate(firebaseAuth, email, password);
+        const user = await dbService.createUserAndAuthenticate(firebaseAuth, email, password);
         setHasAccount(true);
         setUserRef(user);
 
@@ -77,6 +71,7 @@ const UserForm = ({ reloadUserData }) => {
     // Hardcode a user role for now
     const userRoleRef = await doc(db, 'Roles', 'parent-user');
     data.Role = userRoleRef;
+    data.archived = false;
 
     // Remove the image from the data object
     const userImage = data.Image[0];
@@ -89,10 +84,13 @@ const UserForm = ({ reloadUserData }) => {
 
     logger.info('Submit Mode:', mode);
     try {
-      logger.info('Data:', data);
+      logger.info('Form Data:', data);
 
-      const userDocRef = doc(db, 'Users', userRef.uid);
-      let photoURL = await uploadProfilePhoto(userRef.uid, userImage);
+      // If user is already authenticated, get uid from auth token
+      const user = userRef || currentUser;
+
+      const userDocRef = doc(db, 'Users', user.uid);
+      let photoURL = await dbService.uploadProfilePhoto(user.uid, userImage);
       
       // Add the photoURL to the user document data
       dataWithoutPassword.PhotoURL = photoURL;

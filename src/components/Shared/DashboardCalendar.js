@@ -4,21 +4,26 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useSelector } from 'react-redux';
-import { checkReservationAllowability, deleteReservationDocument, fetchAllCurrentUsersChildren, fetchAllReservationsByMonth, fetchCurrentUser, fetchUserReservations } from '../../Helpers/firebase';
+import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
-import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import ChipBadge from './ChipBadge';
 
 const DashboardCalendar = () => {
   const businessHours = useSelector(state => state.settings.businessHours);
   const [reservations, setReservations] = useState([]);
+  const { currentUser } = useAuth();
+  const [dbService, setDbService] = useState(null);
+
+  useEffect(() => {
+    setDbService(new FirebaseDbService(currentUser));
+  }, [currentUser]);
 
   useEffect(() => {
     console.log('reservations:', reservations);
   }, [reservations]);
 
   const getReservationsByCurrentViewMonth = (month, year) => {
-    fetchAllReservationsByMonth(month, year)
+    dbService.fetchAllReservationsByMonth(month, year)
       .then((resp) => {
         setReservations(resp.map((reservation) => {
           return {
