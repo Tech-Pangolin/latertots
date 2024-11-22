@@ -734,6 +734,42 @@ Team Tots
   position: relative;
 }
 
+/*
+Testimonials
+*/
+.testimonials-hero{
+  background: url("../img/testimonials/testimonialhero.jpg") top center no-repeat;
+  background-size: cover;
+  /* padding: 60px 0; */
+  height: 500px;
+  width: 100%;
+  /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
+  position: relative;
+}
+/*
+Careers
+*/
+.careers-hero{
+  background: url("../img/careers/careers.jpg") center center no-repeat;
+  background-size: cover;
+  /* padding: 60px 0; */
+  height: 500px;
+  width: 100%;
+  /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
+  position: relative;
+}
+/*
+Tidbits
+*/
+.tidbits-hero{
+  background: url("../img/lt-logo.png") center center no-repeat;
+  background-size: contain;
+  /* padding: 60px 0; */
+  height: 500px;
+  width: 100%;
+  /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
+  position: relative;
+}
 
 .page-img{
   border-radius:50%;
@@ -995,6 +1031,32 @@ section {
   z-index: 200;
   animation: none;
   border-radius: 0;
+}
+.amber-about-img{
+  width:200px;
+}
+
+.losange, .losange div {
+  margin: 0 auto;
+  transform-origin: 50% 50%;
+  overflow: hidden;
+  width: 250px;
+  height: 250px;
+}
+
+.losange {
+  transform: rotate(45deg) translateY(10px);
+}
+
+.losange .los1 {
+  width: 355px;
+  height: 355px;
+  transform: rotate(-45deg) translateY(-74px);
+}
+
+.losange .los1 img {
+  width: 100%;
+  height: auto;
 }
 
 @keyframes pulsate-btn {

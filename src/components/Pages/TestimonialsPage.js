@@ -5,11 +5,10 @@ import React from 'react';
 function TestimonialsPage() {
     return (
         <div className='bg-white'>
-            {/* <section id="testimonials" className="testimonials" >
+            <section id="testimonials" className="testimonials-hero" >
                 <div className="container">
                     <div className="row justify-content-center">
                         <div className="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
-                            <img src="./assets/img/testimonials/transparenttots.png" className='img-fluid' alt='colorful hands' />
 
                         </div>
 
@@ -17,8 +16,7 @@ function TestimonialsPage() {
                 </div>
 
 
-
-            </section> */}
+            </section>
 
 
             <section className="pt-5 pb-5">

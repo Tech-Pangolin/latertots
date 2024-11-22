@@ -5,18 +5,30 @@ import React from 'react';
 function TotsTidbits() {
     return (
         <div className='bg-white'>
+            <section id="tidbits" className="tidbits-hero" >
+                <div className="container">
+                    <div className="row justify-content-center">
+                        <div className="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+            </section>
 
             <section className="mx-1">
                 <div className="container">
                     <div className="section-title" dataAos="fade-up">
-                        <h2>Tots & Tidbits</h2>
-                        <p sx={{ color: '#3B38DA' }}>TotsTidbits</p>
+                        <h2>Important Information</h2>
+                        <p sx={{ color: '#3B38DA' }}>Tots & Tidbits</p>
                     </div>
 
 
                 </div>
             </section>
-            <section id="details" className="details" style={{paddingTop:0}}>
+            <section id="details" className="details" style={{ paddingTop: 0 }}>
                 <div className="container">
 
                     <div className="row content">
@@ -44,7 +56,7 @@ function TotsTidbits() {
 
                     <div className="row content">
                         <div className="col-md-6 order-1 order-md-2" dataAos="fade-left">
-                        <h3>Food Policy</h3>
+                            <h3>Food Policy</h3>
                             {/* <p>Cupiditate placeat cupiditate placeat est ipsam culpa. Delectus quia minima quod. Sunt saepe odit aut quia voluptatem hic voluptas dolor doloremque.</p> */}
                             <ul>
                                 <li><i className="bi bi-check"></i> Outside food and drinks are permitted, but must not contain peanuts, gum, or candy.
@@ -67,7 +79,7 @@ function TotsTidbits() {
                         </div>
                     </div>
 
-                    
+
 
                     <div className="row content">
                         <div className="col-md-4 order-1 order-md-2" dataAos="fade-left">

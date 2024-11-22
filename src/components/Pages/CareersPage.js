@@ -3,7 +3,7 @@ import React from 'react';
 function CareersPage() {
     return (
         <div className='bg-white'>
-            <section id="deals" className="deals" >
+            <section id="careers" className="careers-hero" >
                 <div className="container">
                     <div className="row justify-content-center">
                         <div className="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
