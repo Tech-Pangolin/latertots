@@ -1846,3 +1846,16 @@ Bootstrap Overrides
 }
 
 
+figcaption{
+  font-family: 'Snack', sans-serif;
+  text-align: center;
+  font-size: 14px;
+}
+
+.blockquote-footer::before {
+  content: "~  ";
+}
+
+blockquote h5, blockquote p{
+  text-align: center;
+}

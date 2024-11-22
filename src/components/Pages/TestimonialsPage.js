@@ -29,10 +29,10 @@ function TestimonialsPage() {
                     </div>
                     <div className="row">
                         <div className="col-12">
-                            <h2 className="mb-2 text-center">What people say</h2>
+                            <h2 className="mb-5 text-center">What people say</h2>
                             {/* <p className="mb-5 text-center">Masonry testimonial cards grid</p> */}
                         </div>
-                        <div className="col-12">
+                        <div className="col-12 col-md-4">
                             <div className="card-columns">
                                 <div className="card mb-4">
                                     <div className="card-body">
@@ -51,7 +51,7 @@ function TestimonialsPage() {
 
                                         </blockquote>
                                         <figcaption className="blockquote-footer">
-                                            Customer
+                                            Yvonne B
                                         </figcaption>
                                     </div>
                                 </div>
@@ -59,28 +59,9 @@ function TestimonialsPage() {
                                     <div className="card-body">
                                         <blockquote className=" ">
                                             <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
-                                            <h5>Amber is Truly One of a Kind</h5>
-                                            <p className="m-0 text-muted ">
-                                                We were incredibly fortunate to have Amber as our nanny for the past 18 months, and I can confidently say she is exceptional at what she does. From day one, her efficiency, care, and attention to detail have been remarkable. As a parent, I found myself learning from her and trying to keep up with the high standards she set. Amber has earned our full trust with both our children—our 4-year-old daughter Lilah and 20-month-old son Charlie, who lovingly calls her 'Ambey.'
-
-                                            </p>
-                                            <p className="m-0 text-muted ">Amber has an incredible understanding of child development, and she excels in every aspect of caregiving. She’s smart, resourceful, thoughtful, and kind. Thanks to her, Charlie has flourished—his language, counting, and motor skills are beyond what we ever expected, and I know Amber's daily work with him played a huge role in that progress.</p>
-                                            <p className="m-0 text-muted ">As someone who evaluates talent for a living, I can say without hesitation that Amber is exceptional at her job. She's exactly where she should be—raising and nurturing little humans. If you’re lucky enough to work with Amber, your family will be in the best possible hands.</p>
-
-                                        </blockquote>
-                                        <figcaption className="blockquote-footer">
-                                            Customer
-                                        </figcaption>
-                                    </div>
-                                </div>
-                                <div className="card mb-4">
-                                    <div className="card-body">
-                                        <blockquote className=" ">
-                                            <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
-                                            <h5>Thank you Ms. Amber!</h5>
+                                            <h5>Heartfelt Gratitude for an Exceptional Caregiver</h5>
                                             <p className="m-0 text-muted ">
                                                 I just wanted to take a moment to express my heartfelt appreciation for Ms. Amber Brown. Having the privilege to work alongside her was a true gift. Your kindness, patience, and unwavering dedication to every child’s well-being never went unnoticed.
-
 
 
                                             </p>
@@ -90,7 +71,7 @@ function TestimonialsPage() {
 
                                         </blockquote>
                                         <figcaption className="blockquote-footer">
-                                            Customer
+                                            Laura J
                                         </figcaption>
                                     </div>
                                 </div>
@@ -98,99 +79,144 @@ function TestimonialsPage() {
                                     <div className="card-body">
                                         <blockquote className=" ">
                                             <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
-                                            <h5>Amber Became an Extension of Our Family</h5>
+                                            <h5>A Caregiver Who Truly Understands</h5>
                                             <p className="m-0 text-muted ">
-                                                Our family has known Amber since 2015, and to say she’s become like family is truly an understatement. During our search for the perfect caregiver, we struggled to find someone with the right combination of skills, experience, and personality—until we found Amber. From the moment we met, we instantly connected with her, and it became clear that she had the background and heart for what she does.
-                                            </p>
-                                            <p className="m-0 text-muted ">Amber's experience with babies our daughter's age reassured us that she understood exactly what was needed. Her patience and genuine love for children shined through, and our daughter's face would light up every time she saw Amber. That's when we knew we'd found the right person.
-
-                                            </p>
-                                            <p className="m-0 text-muted ">Amber cared for our family for eight months and handled everything—teething, diaper changes, nap times, tummy time, toddler highs and lows—effortlessly. Even after her time as our nanny ended, she remained an important part of our lives, stopping by weekly, attending family events, and being our go-to for date nights.
-                                            </p>
-                                            <p className="m-0 text-muted ">Amber is an absolute blessing with a warm, infectious personality, and anyone fortunate enough to work with her will experience the same joy and trust we did.
-                                            </p>
-
-                                        </blockquote>
-                                        <figcaption className="blockquote-footer">
-                                            Customer
-                                        </figcaption>
-                                    </div>
-                                </div>
-                                <div className="card mb-4">
-                                    <div className="card-body">
-                                        <blockquote className=" ">
-                                            <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
-                                            <h5>Amber is the difference</h5>
-                                            <p className="m-0 text-muted ">
-                                            I highly recommend Amber—she stands out from the rest. As a parent of two children with different ages and personalities, I saw significant improvements in both their academics and social skills in such a short time. Amber is incredibly patient and gives each of my kids the individual attention they need. Her genuine passion for working with children makes learning fun and engaging for them, and that put me at ease as a parent. Knowing she truly cares made all the difference.
+                                                Amber has been an incredible influence on my child's growth. My little one struggled with social interactions, but under Amber's care, I've seen such a positive transformation. Her patience and creativity make every activity engaging, and her ability to connect with kids on a personal level is unmatched. Amber's dedication gave my child the confidence and skills they needed to thrive.
                                             </p>
                                         </blockquote>
                                         <figcaption className="blockquote-footer">
-                                            Customer
-                                        </figcaption>
-                                    </div>
-                                </div>
-                                <div className="card mb-4">
-                                    <div className="card-body">
-                                        <blockquote className=" ">
-                                            <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
-                                            <h5>Amber's Passion Shines Through</h5>
-                                            <p className="m-0 text-muted ">
-Amber has a unique ability to connect with children and make learning a joy for them. Both of my kids, who have very different personalities, blossomed under her care. I noticed huge improvements in their social skills and academics in just a short period. Her patience and dedication put me at ease, and I couldn’t recommend her more.
-
-                                            </p>
-                                        </blockquote>
-                                        <figcaption className="blockquote-footer">
-                                            Customer
-                                        </figcaption>
-                                    </div>
-                                </div>
-                                <div className="card mb-4">
-                                    <div className="card-body">
-                                        <blockquote className=" ">
-                                            <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
-                                            <h5>A Caregiver Like No Other</h5>
-                                            <p className="m-0 text-muted ">
-                                            Amber is truly exceptional! As a parent of two children with very different needs, I was amazed by how much they improved both socially and academically in such a short time. Amber is so patient and attentive, making learning fun for them. It’s clear that working with kids is her passion, and that made all the difference for our family.
-                                            </p>
-                                        </blockquote>
-                                        <figcaption className="blockquote-footer">
-                                            Customer
-                                        </figcaption>
-                                    </div>
-                                </div>
-                                <div className="card mb-4">
-                                    <div className="card-body">
-                                        <blockquote className=" ">
-                                            <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
-                                            <h5>A Trustworthy and Talented Caregiver</h5>
-                                            <p className="m-0 text-muted ">
-                                            Amber stands out from the rest—her passion for working with children is undeniable. My two children, who have different personalities and needs, both made incredible progress with her. She’s patient, nurturing, and knows how to bring out the best in each child. I felt completely at ease knowing they were in her care.
-
-                                            </p>
-                                        </blockquote>
-                                        <figcaption className="blockquote-footer">
-                                            Customer
-                                        </figcaption>
-                                    </div>
-                                </div>
-                                <div className="card mb-4">
-                                    <div className="card-body">
-                                        <blockquote className=" ">
-                                            <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
-                                            <h5>Amber Makes Learning Fun!</h5>
-                                            <p className="m-0 text-muted ">
-                                            I can’t recommend Amber enough! She has a gift for making learning exciting and engaging for kids. Both of my children, despite their differences in age and personality, saw significant improvements in their academics and social skills. Amber’s patient approach and true passion for what she does are what set her apart.
-
-                                            </p>
-                                        </blockquote>
-                                        <figcaption className="blockquote-footer">
-                                            Customer
+                                            Kim S
                                         </figcaption>
                                     </div>
                                 </div>
 
 
+
+                            </div>
+                        </div>
+                        <div className="col-12 col-md-4">
+                            <div className="card mb-4">
+                                <div className="card-body">
+                                    <blockquote className=" ">
+                                        <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
+                                        <h5>Amber Became an Extension of Our Family</h5>
+                                        <p className="m-0 text-muted ">
+                                            Our family has known Amber since 2015, and to say she's become like family is truly an understatement. During our search for the perfect caregiver, we struggled to find someone with the right combination of skills, experience, and personality—until we found Amber. From the moment we met, we instantly connected with her, and it became clear that she had the background and heart for what she does.
+                                        </p>
+                                        <p className="m-0 text-muted ">Amber's experience with babies our daughter's age reassured us that she understood exactly what was needed. Her patience and genuine love for children shined through, and our daughter's face would light up every time she saw Amber. That's when we knew we'd found the right person.
+                                        </p>
+                                        <p className="m-0 text-muted ">Amber is an absolute blessing with a warm, infectious personality, and anyone fortunate enough to work with her will experience the same joy and trust we did.</p>
+                                    </blockquote>
+                                    <figcaption className="blockquote-footer">
+                                        Myesha B
+                                    </figcaption>
+                                </div>
+                            </div>
+                            <div className="card mb-4">
+                                <div className="card-body">
+                                    <blockquote className=" ">
+                                        <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
+                                        <h5>Amber is Truly One of a Kind</h5>
+                                        <p className="m-0 text-muted ">
+                                            We were incredibly fortunate to have Amber in our lives. I can confidently say she is exceptional at what she does. From day one, her efficiency, care, and attention to detail have been remarkable. As a parent, I found myself learning from her and trying to keep up with the high standards she set. Amber has earned our full trust with both our children who lovingly calls her 'Ambey.'
+                                        </p>
+                                        <p className="m-0 text-muted ">Amber has an incredible understanding of child development, and she excels in every aspect of caregiving. She's smart, resourceful, thoughtful, and kind. Thanks to her, Charlie has flourished—his language, counting, and motor skills are beyond what we ever expected, and I know Amber's daily work with him played a huge role in that progress.
+
+                                        </p>
+                                        <p className="m-0 text-muted ">As someone who evaluates talent for a living, I can say without hesitation that Amber is exceptional at her job. She's exactly where she should be—raising and nurturing little humans. If you're lucky enough to work with Amber, your family will be in the best possible hands.</p>
+
+                                    </blockquote>
+                                    <figcaption className="blockquote-footer">
+                                        Chris C
+                                    </figcaption>
+                                </div>
+                            </div>
+
+                            <div className="card mb-4">
+                                <div className="card-body">
+                                    <blockquote className=" ">
+                                        <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
+                                        <h5>Amber is the difference</h5>
+                                        <p className="m-0 text-muted ">
+                                            I highly recommend Amber—she stands out from the rest. As a parent of two children with different ages and personalities, I saw significant improvements in both their academics and social skills in such a short time. Amber is incredibly patient and gives each of my kids the individual attention they need. Her genuine passion for working with children makes learning fun and engaging for them, and that puts me at ease as a parent. Knowing she truly cares made all the difference.
+                                        </p>
+
+                                    </blockquote>
+                                    <figcaption className="blockquote-footer">
+                                        Amber W
+                                    </figcaption>
+                                </div>
+                            </div>
+
+
+                            
+
+
+                        </div>
+                        <div className="col-12 col-md-4">
+                            <div className="card mb-4">
+                                <div className="card-body">
+                                    <blockquote className=" ">
+                                        <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
+                                        <h5>Amber is Truly One of a Kind</h5>
+                                        <p className="m-0 text-muted ">
+                                            We were incredibly fortunate to have Amber in our lives. I can confidently say she is exceptional at what she does. From day one, her efficiency, care, and attention to detail have been remarkable. As a parent, I found myself learning from her and trying to keep up with the high standards she set. Amber has earned our full trust with both our children who lovingly calls her 'Ambey.'
+                                        </p>
+                                        <p className="m-0 text-muted ">Amber has an incredible understanding of child development, and she excels in every aspect of caregiving. She's smart, resourceful, thoughtful, and kind. Thanks to her, Charlie has flourished—his language, counting, and motor skills are beyond what we ever expected, and I know Amber's daily work with him played a huge role in that progress.
+
+                                        </p>
+                                        <p className="m-0 text-muted ">As someone who evaluates talent for a living, I can say without hesitation that Amber is exceptional at her job. She's exactly where she should be—raising and nurturing little humans. If you're lucky enough to work with Amber, your family will be in the best possible hands.</p>
+
+                                    </blockquote>
+                                    <figcaption className="blockquote-footer">
+                                        Chris C
+                                    </figcaption>
+                                </div>
+                            </div>
+                            <div className="card mb-4">
+                                <div className="card-body">
+                                    <blockquote className=" ">
+                                        <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
+                                        <h5>Gifted and Caring</h5>
+                                        <p className="m-0 text-muted ">
+                                            Amber's natural talent for working with children is evident in the positive changes I've seen in my kids. She has a knack for understanding their unique needs and helping them blossom in ways I never imagined. Whether it's learning new skills or building confidence, Amber creates a warm and engaging environment that makes all the difference.
+
+
+                                        </p>
+                                    </blockquote>
+                                    <figcaption className="blockquote-footer">
+                                        Nicole B
+                                    </figcaption>
+                                </div>
+                            </div>
+                            <div className="card mb-4">
+                                <div className="card-body">
+                                    <blockquote className=" ">
+                                        <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
+                                        <h5>Amber Makes Learning Fun!</h5>
+                                        <p className="m-0 text-muted ">
+                                            I can't recommend Amber enough! She has a gift for making learning exciting and engaging for kids. Both of my children, despite their differences in age and personality, saw significant improvements in their academics and social skills. Amber’s patient approach and true passion for what she does are what set her apart.
+                                        </p>
+                                    </blockquote>
+                                    <figcaption className="blockquote-footer">
+                                        Stacy A
+                                    </figcaption>
+                                </div>
+                            </div>
+
+                            <div className="card mb-4">
+                                <div className="card-body">
+                                    <blockquote className=" ">
+                                        <i className="fa fa-quote-right fa-2x text-muted pull-right mt-3 mb-3" aria-hidden="true"></i>
+                                        <h5>A Caregiver Who Transforms Lives</h5>
+                                        <p className="m-0 text-muted ">
+                                            Amber has a remarkable ability to connect with children and help them thrive. Watching my kids grow socially and academically under her care was nothing short of amazing. Her thoughtful and personalized approach ensured that each of my children felt understood and supported. Amber's genuine passion for childcare shines through in everything she does.
+                                        </p>
+                                    </blockquote>
+                                    <figcaption className="blockquote-footer">
+                                        Tierra K
+                                    </figcaption>
+                                </div>
                             </div>
                         </div>
                     </div>
