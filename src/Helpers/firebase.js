@@ -277,7 +277,8 @@ export class FirebaseDbService {
 
     try {
       const q = query(collection(db, "Reservations"),
-        where("User", "==", doc(collection(db, "Users"), userId)) //,
+        where("User", "==", doc(collection(db, "Users"), userId)),
+        where("archived", "!=", true) //,
         //where("extendedProps.status", "in", ["pending", "confirmed"])
       );
       const querySnapshot = await getDocs(q);
@@ -375,6 +376,9 @@ export class FirebaseDbService {
       // Convert the start and end dates to Firestore Timestamps
       dataWithoutId.start = Timestamp.fromDate(new Date(dataWithoutId.start));
       dataWithoutId.end = Timestamp.fromDate(new Date(dataWithoutId.end));
+      
+      // Set the archived field to false
+      dataWithoutId.archived = false;
 
       const docRef = await addDoc(collection(db, "Reservations"), dataWithoutId);
       const userRef = doc(collection(db, "Users"), userId);

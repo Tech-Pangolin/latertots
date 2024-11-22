@@ -37,7 +37,7 @@ const ScheduleChildSitterPage = () => {
 
   useEffect(() => {
     if (!dbService) return;
-    dbService.fetchUserReservations(currentUserData.id).then((resp) => {
+    dbService.fetchUserReservations(currentUser.uid).then((resp) => {
       let formattedEvents = [];
       resp.forEach((event) => {
         event.start = event.start.toDate().toISOString();
@@ -49,7 +49,7 @@ const ScheduleChildSitterPage = () => {
     ).then((resp) => {
       setEvents(resp);
     });
-  }, [currentUserData.id, dbService]);
+  }, [currentUser, dbService]);
 
   // Fetch children data and prepare draggables flag
   useEffect(() => {
@@ -214,8 +214,13 @@ const handleEventClick = ({ event }) => {
   // Only allow deletion of children reservations that belong to the current user
   const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
 
-  if (belongsToCurrentUser && window.confirm(`Are you sure you want to delete the event: ${event.title}?`)) {
-    dbService.deleteReservationDocument(event.id);
+  if (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`)) {
+    if (currentUser.role !== 'admin') {
+      dbService.archiveReservationDocument(event.id);
+    } else {
+      // TODO: Implement a way for admins to choose whether to archive or delete reservations
+      dbService.deleteReservationDocument(event.id);
+    }
     setEvents((prevEvents) => prevEvents.filter(e => e.id !== event.id));
   }
 };
