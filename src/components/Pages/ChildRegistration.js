@@ -29,6 +29,7 @@ const ChildRegistration = () => {
 
   const onSubmit = async (data) => {
     try {
+      data.archived = false;
       if (child) {
         // Update the existing child document
         const childRef = doc(db, 'Children', child.id);
