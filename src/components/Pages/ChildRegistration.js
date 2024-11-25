@@ -35,9 +35,7 @@ const ChildRegistration = () => {
         await updateDoc(childRef, data);
       } else {
         // Create a new child document
-        await dbService.fetchCurrentUser(currentUser.email).then( async (resp) => {
-          await dbService.createChildDocument(resp.id, data);
-        });
+        await dbService.createChildDocument(data);
       }
 
       // Navigate back to the profile on success

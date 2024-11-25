@@ -5,9 +5,6 @@ import { FirebaseDbService } from '../../Helpers/firebase';
 
 function ContactRegistration() {
   const { register, handleSubmit } = useForm();
-  const { currentUser: { email } } = useAuth();
-  const [authUserId, setAuthUserId] = React.useState(null);
-
   const { currentUser } = useAuth();
   const [dbService, setDbService] = useState(null);
 
@@ -15,14 +12,10 @@ function ContactRegistration() {
     setDbService(new FirebaseDbService(currentUser));
   }, [currentUser]);
 
-  useEffect(() => {
-    if (!dbService) return;
-    dbService.fetchCurrentUser(email).then((resp) => setAuthUserId(resp.id));
-  }, [email]);
 
   const onSubmit = async (data) => {
     try {
-      await dbService.createContactDocument(authUserId, data);
+      await dbService.createContactDocument(data);
 
       // Redirect to the user profile page
       window.location.href = '/profile';
@@ -36,17 +29,17 @@ function ContactRegistration() {
       <h1>Contact Registration</h1>
       <div className="row">
       <form onSubmit={handleSubmit(onSubmit)} className='col-6'>
-        <label htmlFor="Name" class="form-label">Name:</label>
-        <input type="text" id="Name" {...register('Name', { required: true })} class="form-control" />
+        <label htmlFor="Name" className="form-label">Name:</label>
+        <input type="text" id="Name" {...register('Name', { required: true })} className="form-control" />
 
-        <label htmlFor="Phone" class="form-label">Phone:</label>
-        <input type="tel" id="Phone" {...register('Phone')} class="form-control" />
+        <label htmlFor="Phone" className="form-label">Phone:</label>
+        <input type="tel" id="Phone" {...register('Phone')} className="form-control" />
 
-        <label htmlFor="Email" class="form-label">Email:</label>
-        <input type="Email" id="Email" {...register('Email')} class="form-control" />
+        <label htmlFor="Email" className="form-label">Email:</label>
+        <input type="Email" id="Email" {...register('Email')} className="form-control" />
 
-        <label htmlFor="Relation" class="form-label">Relation:</label>
-        <select id="Relation" {...register('Relation', { required: true })} class="form-control">
+        <label htmlFor="Relation" className="form-label">Relation:</label>
+        <select id="Relation" {...register('Relation', { required: true })} className="form-control">
           <option value="Parent">Parent</option>
           <option value="Family">Family</option>
           <option value="Guardian">Legal Guardian</option>
