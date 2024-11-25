@@ -491,10 +491,6 @@ export class FirebaseDbService {
    */
   createUserAndAuthenticate = async (firebaseAuth, email, password) => {
     const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-    const userDocRef = doc(db, 'Users', userCredential.user.uid);
-    const userDoc = await getDoc(userDocRef);
-    userDoc.archived = false;
-    await updateDoc(userDocRef, userDoc);
     return userCredential.user;
   };
 
