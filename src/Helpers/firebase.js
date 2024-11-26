@@ -1,4 +1,4 @@
-import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, deleteDoc, Timestamp } from "@firebase/firestore";
+import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, setDoc, doc, deleteDoc, Timestamp } from "@firebase/firestore";
 import { db } from "../config/firestore";
 import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
@@ -490,12 +490,50 @@ export class FirebaseDbService {
    * @returns {Promise<User>} A promise that resolves to the authenticated user object.
    */
   createUserAndAuthenticate = async (firebaseAuth, email, password) => {
-    const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-    const userDocRef = doc(db, 'Users', userCredential.user.uid);
-    const userDoc = await getDoc(userDocRef);
-    userDoc.archived = false;
-    await updateDoc(userDocRef, userDoc);
-    return userCredential.user;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      logger.info('User created and authenticated:', userCredential.user);
+
+      const roleRef = doc(db, 'Roles', 'parent-user');
+
+      try {
+        const attempt = 0;
+        while (attempt < 10 && userCredential.user) {
+          const userDocRef = doc(db, 'Users', userCredential.user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            logger.info('User document found:', userDoc.data());
+            break;
+          }
+          logger.info('User document not found, retrying... (attempt', attempt + 1, '/10)');
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+        }
+
+        await setDoc(doc(db, 'Users', userCredential.user.uid), 
+        { 
+          CellNumber: "",
+          City: "",
+          Email: userCredential.user.email,
+          Name: userCredential.user.displayName || "",
+          State: "",
+          StreetAddress: "",
+          Zip: "",
+          archived: false,
+          Role: roleRef,
+        }, { merge: true });
+      
+        logger.info('User document created:', userCredential.user.uid);
+      } catch (error) {
+        logger.error('createUserAndAuthenticate: Error creating user document:', error);
+        throw error;
+      }
+      logger.info('createUserAndAuthenticate: Returning userCredential.user', userCredential.user);
+      return userCredential.user;
+    } catch (error) {
+      logger.error('createUserAndAuthenticate: Error:', error);
+      throw error;
+    }
+    
   };
 
 

@@ -28,7 +28,8 @@ exports.validateNewUser = functions.firestore
             Role: db.collection('Roles').doc('parent-user'),
             State: "",
             StreetAddress: "",
-            Zip: ""
+            Zip: "",
+            archived: false
         };
 
         // Save the updated document
@@ -40,4 +41,5 @@ exports.validateNewUser = functions.firestore
     });
 
 // Deployment command: firebase deploy --only functions
+// May need to re-authenticate with Firebase: firebase login --reauth
 // Run from the root of the project directory

@@ -42,10 +42,32 @@ export const AuthProvider = ({ children }) => {
           // Force token refresh to ensure latest claims
           const idTokenResult = await user.getIdTokenResult(true);
           const claims = idTokenResult.claims;
+          logger.info('AuthProvider: fetched latest claims')
 
           // Fetch user data from Firestore
-          const userDocRef = await getDoc(doc(db, 'Users', user.uid));
-          const userDocData = userDocRef.data();
+          const fetchWithRetry = async (maxRetries = 7, delay = 750) => {
+            let attempts = 0;
+            while (attempts < maxRetries) {
+              try {
+                logger.info(`AuthProvider: Attempting to fetch user data (attempt ${attempts + 1})`);
+                const userDocRef = await getDoc(doc(db, 'Users', user.uid));
+                const userDocData = userDocRef.data();
+
+                return userDocData;
+              } catch (error) {
+                attempts++;
+                logger.warn(`AuthProvider: Attempt ${attempts} failed:`, error);
+
+                if (attempts >= maxRetries) {
+                  throw new Error(`Failed to fetch user data after maximum ${attempts} attempts`);
+                }
+
+                await new Promise((resolve) => setTimeout(resolve, delay));
+              }
+            }
+          }
+
+          const userDocData = await fetchWithRetry();
 
           // Include custom claims in the user object
           setCurrentUser({
