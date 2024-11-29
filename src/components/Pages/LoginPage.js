@@ -1,19 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import 'firebaseui/dist/firebaseui.css';
-import { signInWithGoogle, signInWithEmail } from '../AuthProvider';
+import { signInWithGoogle, signInWithEmail, useAuth } from '../AuthProvider';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 
 
 function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/profile');
+    }
+  }, [currentUser, navigate]);
+
   const onSubmit =  async ({email, password}, e) => {
- 
-    // e.preventDefault();
     try {   
       console.log("WTF", email, password)
-     await signInWithEmail(email, password);
-      // Redirect to "/" if sign-in is successful
-
+      await signInWithEmail(email, password);
     } catch (error) {
       console.error(error);
     }
