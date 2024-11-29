@@ -1,8 +1,8 @@
-import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, deleteDoc, Timestamp } from "@firebase/firestore";
+import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, setDoc, deleteDoc, Timestamp } from "@firebase/firestore";
 import { db } from "../config/firestore";
 import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
 
 
@@ -20,6 +20,37 @@ export class FirebaseDbService {
   async fetchUserRole(roleRef) {
     const roleSnapshot = await getDoc(roleRef);
     return roleSnapshot.exists() ? roleSnapshot.id : null;
+  }
+
+  /**
+   * Fetches the role of a user based on the provided user ID.
+   * 
+   * @param {string} userId - The ID of the user to fetch the role for.
+   * @returns {Promise<string|null>} - A promise that resolves to the role ID if found, or null if not found.
+   */
+  async fetchRoleByUserId(userId) {
+    const userDocRef = doc(db, 'Users', userId);
+    const userDoc = await getDoc(userDocRef);
+    if (userDoc.exists()) {
+      const roleRef = userDoc.data().Role;
+      return await this.fetchUserRole(roleRef);
+    }
+    return null;
+  }
+
+  /**
+   * Fetches the avatar photo URL of a user based on the provided user ID.
+   * 
+   * @param {string} userId - The ID of the user to fetch the avatar photo for.
+   * @returns {Promise<string|null>} - A promise that resolves to the avatar photo URL if found, or null if not found.
+   */
+  async fetchAvatarPhotoByUserId(userId) {
+    const userDocRef = doc(db, 'Users', userId);
+    const userDoc = await getDoc(userDocRef);
+    if (userDoc.exists()) {
+      return userDoc.data().PhotoURL || null;
+    }
+    return null;
   }
 
   validateAuth(requiredRole = null) {
@@ -490,8 +521,38 @@ export class FirebaseDbService {
    * @returns {Promise<User>} A promise that resolves to the authenticated user object.
    */
   createUserAndAuthenticate = async (firebaseAuth, email, password) => {
-    const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-    return userCredential.user;
+    let userCredential = null
+    try {
+      userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      const uid = userCredential.user.uid;
+
+      try {
+        await setDoc(doc(db, 'Users', uid), {
+          CellNumber: "",
+          City: "",
+          Email: userCredential.user.email,
+          Name:   userCredential.user.displayName || "",
+          Role: doc(db, 'Roles', 'parent-user'),
+          State: "",
+          StreetAddress: "",
+          Zip: "",
+          archived: false
+      });
+        logger.info("User document initialized with template data.");
+      } catch (error) {
+        logger.error("createUserAndAuthenticate: Could not initialize /Users document with template data: ", error);
+        throw error;
+      }
+
+      logger.info("User created and authenticated:", userCredential.user);
+      return userCredential.user;
+    } catch (error) {
+      if (userCredential) {
+        await deleteUser(userCredential.user);
+      }
+      logger.error("createUserAndAuthenticate: Could not create new FirebaseAuth account: ", error);
+      throw error;
+    }
   };
 
 
