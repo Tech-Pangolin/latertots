@@ -7,24 +7,24 @@ import { useSelector } from 'react-redux';
 import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import ChipBadge from './ChipBadge';
+import { logger } from '../../Helpers/logger';
 
 const DashboardCalendar = () => {
   const businessHours = useSelector(state => state.settings.businessHours);
   const [reservations, setReservations] = useState([]);
-  const { currentUser } = useAuth();
-  const [dbService, setDbService] = useState(null);
-
-  useEffect(() => {
-    setDbService(new FirebaseDbService(currentUser));
-  }, [currentUser]);
+  const { currentUser, dbService } = useAuth();
 
   useEffect(() => {
     console.log('reservations:', reservations);
+    console.log('currentUser:', currentUser);
   }, [reservations]);
 
   const getReservationsByCurrentViewMonth = (month, year) => {
-    dbService.fetchAllReservationsByMonth(month, year)
+    logger.info('getReservationsByCurrentViewMonth:', month, year);
+    try {
+      dbService.fetchAllReservationsByMonth(month, year)
       .then((resp) => {
+        logger.info('Reservations fetched:', resp);
         setReservations(resp.map((reservation) => {
           return {
             status: reservation.extendedProps.status,
@@ -36,6 +36,10 @@ const DashboardCalendar = () => {
       .catch((error) => {
         console.error('Error fetching reservations:', error);
       });
+    } catch (error) {
+      logger.error('Error in getReservationsByCurrentViewMonth:', error);
+    }
+    
   }
 
   const getViewDates = (args) => {
