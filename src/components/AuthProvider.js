@@ -33,7 +33,6 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setDbService(new FirebaseDbService(user)); // Cannot use this immediately after setting dbService
       const tempDbService = new FirebaseDbService(user);
 
       const userRole = await tempDbService.fetchRoleByUserId(user.uid)
@@ -45,6 +44,7 @@ export const AuthProvider = ({ children }) => {
         photoURL: userPhoto
       }
 
+      setDbService(new FirebaseDbService(loggedInUser));
       setCurrentUser(loggedInUser);
       setLoading(false);
     });

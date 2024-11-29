@@ -324,14 +324,15 @@ export class FirebaseDbService {
   };
 
   fetchAllReservationsByMonth = async (monthNumber, year) => {
-    this.validateAuth('admin');
+    this.validateAuth("admin");
     // 'start' property is a Firestore Timestamp
     const currentYear = new Date().getFullYear();
 
     try {
       const q = query(collection(db, "Reservations"),
         where("start", ">=", new Date(year, monthNumber, 1)),
-        where("start", "<", new Date(year, monthNumber + 1, 1))
+        where("start", "<", new Date(year, monthNumber + 1, 1)),
+        where("archived", "!=", true)
       );
       const querySnapshot = await getDocs(q);
       const reservations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
