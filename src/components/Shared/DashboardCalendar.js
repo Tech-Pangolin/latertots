@@ -15,16 +15,14 @@ const DashboardCalendar = () => {
   const { currentUser, dbService } = useAuth();
 
   useEffect(() => {
-    console.log('reservations:', reservations);
-    console.log('currentUser:', currentUser);
+    logger.info('reservations:', reservations);
+    logger.info('currentUser:', currentUser);
   }, [reservations]);
 
   const getReservationsByCurrentViewMonth = (month, year) => {
-    logger.info('getReservationsByCurrentViewMonth:', month, year);
     try {
       dbService.fetchAllReservationsByMonth(month, year)
       .then((resp) => {
-        logger.info('Reservations fetched:', resp);
         setReservations(resp.map((reservation) => {
           return {
             status: reservation.extendedProps.status,
@@ -34,7 +32,7 @@ const DashboardCalendar = () => {
         }));
       })
       .catch((error) => {
-        console.error('Error fetching reservations:', error);
+        logger.error('Error fetching reservations:', error);
       });
     } catch (error) {
       logger.error('Error in getReservationsByCurrentViewMonth:', error);
