@@ -1961,3 +1961,7 @@ figcaption{
 blockquote h5, blockquote p{
   text-align: center;
 }
+
+#schedule-link{
+  color:#41A8C5;
+}
