@@ -68,7 +68,7 @@ export class FirebaseDbService {
    * 
    * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects.
    */
-  fetchAllUsers = async () => {
+  fetchAllUsers = async (includeArchived = false) => {
     this.validateAuth('admin');
     try {
       const snapshot = await getDocs(collection(db, "Users"));
@@ -77,7 +77,7 @@ export class FirebaseDbService {
         const roleRef = user.Role;
         user.Role = await this.fetchUserRole(roleRef);
       }
-      return users;
+      return includeArchived ? users : users.filter(user => !user.archived);
     } catch (error) {
       logger.error("Error fetching users:", error);
       return [];
@@ -98,6 +98,24 @@ export class FirebaseDbService {
       return includeArchived ? contacts : contacts.filter(contact => !contact.archived);
     } catch (error) {
       logger.error("Error fetching contacts:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetches all children from the "Children" collection.
+   * 
+   * @param {boolean} [includeArchived=false] - Whether to include archived children in the results.
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of child objects.
+   */
+  fetchAllChildren = async (includeArchived = false) => {
+    this.validateAuth('admin');
+    try {
+      const snapshot = await getDocs(collection(db, "Children"));
+      const children = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return includeArchived ? children : children.filter(child => !child.archived);
+    } catch (error) {
+      logger.error("Error fetching children:", error);
       return [];
     }
   }
