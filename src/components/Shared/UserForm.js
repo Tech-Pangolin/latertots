@@ -7,15 +7,16 @@ import { FirebaseDbService } from "../../Helpers/firebase";
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
 import ChangePasswordForm from "../ChangePasswordForm";
+import { useNavigate } from "react-router-dom"
 
 const UserForm = ({ reloadUserData }) => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = React.useState(currentUser?.email ?? '');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [passwordMismatch, setPasswordMismatch] = useState(false);
-  const [authUserId, setAuthUserId] = React.useState(null);
   const [mode, setMode] = React.useState('create');
   const [hasAccount, setHasAccount] = React.useState(false);
   const [userRef, setUserRef] = React.useState(null);
@@ -37,14 +38,30 @@ const UserForm = ({ reloadUserData }) => {
           reset(userDoc.data());
           setMode('update');
           setHasAccount(true);
-          setAuthUserId(currentUser.uid);
         } else {
           logger.error("No such user found!");
         }
       };
       fetchData();
     }
-  }, [reset, authUserId]);
+  }, [reset]);
+
+  const waitForCurrentUserToBeSet = (timeoutMs = 5000) => {
+    return new Promise((resolve, reject) => {
+      const interval = setInterval(() => {
+        if (currentUser) {
+          clearInterval(interval); // Clear interval to prevent further checks
+          clearTimeout(timeout); // Clear timeout to prevent rejections
+          resolve(currentUser);
+        }
+      }, 100); // Check every 100ms
+
+      const timeout = setTimeout(() => {
+        clearInterval(interval); // Clear interval to prevent further checks
+        reject('Timeout waiting for current user to be set');
+      }, timeoutMs); // Max wait time
+    });
+  }
 
   const createUser = async (e) => {
     e.preventDefault();
@@ -52,10 +69,13 @@ const UserForm = ({ reloadUserData }) => {
     try {
       if (password === confirm) {
         const user = await dbService.createUserAndAuthenticate(firebaseAuth, email, password);
+        logger.info('Passed createUserAndAuthenticate in UserForm');
         setHasAccount(true);
         setUserRef(user);
-
-        window.location.href = '/profile';
+        logger.info('starting waitForCurrentUserToBeSet');
+        await waitForCurrentUserToBeSet();
+        logger.info('redirecting to profile')
+        navigate('/profile');
       } else {
         setPasswordMismatch(true);
       }
