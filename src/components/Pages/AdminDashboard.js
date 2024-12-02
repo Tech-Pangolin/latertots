@@ -3,6 +3,7 @@ import DashHome from '../Dashboard/DashHome';
 import DashNav from '../Dashboard/DashNav';
 import AdminUsers from '../Dashboard/AdminUsers';
 import AdminContacts from '../Dashboard/AdminContacts';
+import AdminChildren from '../Dashboard/AdminChildren';
 
 const AdminDashboard = () => {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -18,7 +19,7 @@ const AdminDashboard = () => {
       case 'users':
         return <AdminUsers />;
       case 'children':
-        return <h1>Children</h1>;
+        return <AdminChildren />;
       case 'contacts':
         return <AdminContacts />;
       case 'dashboard':
