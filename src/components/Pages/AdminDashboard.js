@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import DashHome from '../Dashboard/DashHome';
 import DashNav from '../Dashboard/DashNav';
 import AdminUsers from '../Dashboard/AdminUsers';
+import AdminContacts from '../Dashboard/AdminContacts';
 
 const AdminDashboard = () => {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -19,7 +20,7 @@ const AdminDashboard = () => {
       case 'children':
         return <h1>Children</h1>;
       case 'contacts':
-        return <h1>Contacts</h1>;
+        return <AdminContacts />;
       case 'dashboard':
       default:
         return <DashHome />;
