@@ -33,6 +33,12 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setCurrentUser(null);
+        setLoading(false);
+        return;
+      }
+      
       const tempDbService = new FirebaseDbService(user);
 
       const userRole = await tempDbService.fetchRoleByUserId(user.uid)
