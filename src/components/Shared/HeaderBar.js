@@ -92,7 +92,7 @@ const HeaderBar = () => {
         
             {!currentUser ? <li><a id="become-link" className={`nav-link become-link scrollto ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Become a Tot</a></li> : <li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
             {/* <li><a className="nav-link scrollto" href="#team">Contact Us</a></li> */}
-            {!currentUser ? '' : (<li><a className={`nav-link login-link scrollto ${location.pathname === '/schedule' ? 'active' : ''}`} href="/schedule">My Schedule</a></li>)}
+            {!currentUser ? '' : (<li><a id="schedule-link" className={`nav-link login-link scrollto ${location.pathname === '/schedule' ? 'active' : ''}`} href="/schedule">My Schedule</a></li>)}
             {!currentUser ? (<li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Play & Stay</a></li>) : (
               <li><a id="logout-link" className="nav-link scrollto logout-link" onClick={signOut}>Logout</a></li>
             )}
