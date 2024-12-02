@@ -85,6 +85,24 @@ export class FirebaseDbService {
   };
 
   /**
+   * Fetches all contacts from the "Contacts" collection.
+   * 
+   * @param {boolean} [includeArchived=false] - Whether to include archived contacts in the results.
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of contact objects.
+   */ 
+  fetchAllContacts = async (includeArchived = false) => {
+    this.validateAuth('admin');
+    try {
+      const snapshot = await getDocs(collection(db, "Contacts"));
+      const contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return includeArchived ? contacts : contacts.filter(contact => !contact.archived);
+    } catch (error) {
+      logger.error("Error fetching contacts:", error);
+      return [];
+    }
+  }
+
+  /**
    * Fetches the current user based on the provided email.
    * 
    * @param {string} email - The email of the user to fetch.

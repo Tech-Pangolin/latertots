@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../AuthProvider";
+import { logger } from "../../Helpers/logger";
 
-const AdminUsers = () => {
+const AdminContacts = () => {
   const [users, setUsers] = useState(null);
   const { dbService } = useAuth();
 
   useEffect(() => {
     if (!dbService) return;
-    const getUsers = async () => dbService.fetchAllUsers()
+    const getUsers = async () => dbService.fetchAllContacts()
       .then((data) => {
+        logger.info("Fetched all contacts: ", data);
         setUsers(data);
       }).catch((error) => {
         console.error(error);
@@ -22,7 +24,8 @@ const AdminUsers = () => {
       <tr key={user.id}>
         <th scope="row">{user.Name || '--'}</th>
         <td>{user.Email || '--'}</td>
-        <td>{user.CellNumber || '--'}</td>
+        <td>{user.Phone || '--'}</td>
+        <td>{user.Relation || '--'}</td>
       </tr>
     )
   }
@@ -32,7 +35,7 @@ const AdminUsers = () => {
       <div className="row">
         <div className="col-12 col-xl-8 mb-4 mb-lg-0">
           <div className="card">
-            <h5 className="card-header">Users</h5>
+            <h5 className="card-header">All Contacts</h5>
             <div className="card-body">
               <div className="table-responsive">
                 <table className="table">
@@ -41,6 +44,7 @@ const AdminUsers = () => {
                       <th scope="col">Name</th>
                       <th scope="col">Email</th>
                       <th scope="col">Phone</th>
+                      <th scope="col">Relation</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -57,4 +61,4 @@ const AdminUsers = () => {
   );
 }
 
-export default AdminUsers;
+export default AdminContacts;
