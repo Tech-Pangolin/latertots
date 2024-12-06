@@ -59,6 +59,9 @@ export const handleScheduleSave = async (events, currentUserData, dbService) => 
   }
   
   alert('Schedule saved successfully!');
+  if (currentUserData.Role === 'admin') {
+    return;
+  }
   window.location.href = '/profile';
 }
 

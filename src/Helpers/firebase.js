@@ -167,7 +167,6 @@ export class FirebaseDbService {
         const user = { id: userDoc.id, ...userDoc.data() };
         const roleRef = user.Role;
         if (roleRef) {
-          logger.info(`${identifier || ''} Fetching user role:`, roleRef);
           user.Role = await this.fetchUserRole(roleRef);
         } else {
           logger.warn(`${identifier || ''} Role reference not yet set.`)

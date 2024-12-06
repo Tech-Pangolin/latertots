@@ -4,7 +4,6 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useSelector } from 'react-redux';
-import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import ChipBadge from './ChipBadge';
 import { logger } from '../../Helpers/logger';
@@ -68,7 +67,7 @@ const DashboardCalendar = () => {
         <div className="event-summary">
           <ChipBadge text={'Pending'} color={'tomato'} num={1} />
           <ChipBadge text={'Approved'} color={'mediumseagreen'} num={5} />
-          <ChipBadge text={'Capacity Fill'} num={37} />
+          <ChipBadge text={'Capacity Fill'} num={12} />
         </div>
       </div>
     );
