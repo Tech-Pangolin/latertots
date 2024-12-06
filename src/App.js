@@ -18,6 +18,7 @@ import DealsPage from './components/Pages/DealsPage';
 import TestimonialsPage from './components/Pages/TestimonialsPage';
 import CareersPage from './components/Pages/CareersPage';
 import TotsTidbits from './components/Pages/TotsTidbits';
+import ManageReservationsPage from './components/Dashboard/ManageReservationsPage';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
           <Route path="/addContact" element={ <PrivateRoute element={ <ContactRegistration /> } />} />
           <Route path="/addChild/:childId?" element={ <PrivateRoute element={ <ChildRegistration /> } />} />
           <Route path="/admin" element={ <PrivateRoute element={ <AdminDashboard /> } />} />
+          <Route path="/admin/manageReservations" element={ <PrivateRoute element={ <ManageReservationsPage /> } />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>

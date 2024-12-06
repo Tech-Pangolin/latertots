@@ -20,7 +20,7 @@ const DashboardCalendar = () => {
 
   const getReservationsByCurrentViewMonth = (month, year) => {
     try {
-      dbService.fetchAllReservationsByMonth(month, year)
+      dbService.fetchAllReservationsByMonthDay(year, month)
       .then((resp) => {
         setReservations(resp.map((reservation) => {
           return {
