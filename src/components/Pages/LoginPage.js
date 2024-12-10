@@ -12,6 +12,9 @@ function LoginPage() {
 
   useEffect(() => {
     if (currentUser) {
+      if (currentUser.role === 'admin') {
+        navigate('/admin');
+      }
       navigate('/profile');
     }
   }, [currentUser, navigate]);

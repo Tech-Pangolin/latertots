@@ -2,7 +2,7 @@ import React from 'react';
 import { Avatar, Chip } from '@mui/material';
 import { darken, lighten, margin, readableColor, rgb } from 'polished';
 
-const ChipBadge = ({ text, color, num }) => {
+const ChipBadge = ({ text, color, num, clickHandler }) => {
   const defaultBackgroundColor = rgb(237, 84, 197);
 
   const chipStyle = {
@@ -17,12 +17,12 @@ const ChipBadge = ({ text, color, num }) => {
     fontWeight: 900
   }
 
-  const numberBadge = (num) => <Avatar style={badgeStyle} >{num}</Avatar>;
+  const numberBadge = (num) => <Avatar style={badgeStyle}>{`${num}`}</Avatar>;
 
   if (num) {
-    return (<Chip label={text} style={chipStyle} avatar={numberBadge(num)} />);
+    return (<Chip label={text} style={chipStyle} avatar={numberBadge(num)} onClick={clickHandler}/>);
   } else {
-    return (<Chip label={text} style={chipStyle} />);
+    return (<Chip label={text} style={chipStyle} onClick={clickHandler}/>);
   }
 };
 

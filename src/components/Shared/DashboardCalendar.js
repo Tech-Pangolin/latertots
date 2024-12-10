@@ -4,15 +4,16 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useSelector } from 'react-redux';
-import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import ChipBadge from './ChipBadge';
 import { logger } from '../../Helpers/logger';
+import { useNavigate } from 'react-router-dom';
 
 const DashboardCalendar = () => {
   const businessHours = useSelector(state => state.settings.businessHours);
   const [reservations, setReservations] = useState([]);
   const { currentUser, dbService } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     logger.info('reservations:', reservations);
@@ -21,15 +22,15 @@ const DashboardCalendar = () => {
 
   const getReservationsByCurrentViewMonth = (month, year) => {
     try {
-      dbService.fetchAllReservationsByMonth(month, year)
+      dbService.fetchAllReservationsByMonthDay(year, month)
       .then((resp) => {
-        setReservations(resp.map((reservation) => {
+        return setReservations(resp.map((reservation) => {
           return {
             status: reservation.extendedProps.status,
             title: reservation.title,
             start: new Date(reservation.start.seconds * 1000),
           }
-        }));
+        }))
       })
       .catch((error) => {
         logger.error('Error fetching reservations:', error);
@@ -54,6 +55,18 @@ const DashboardCalendar = () => {
       return event.start.getDate() === dayCellInfo.date.getDate();
     })
 
+    const pendingEvents = dayEvents.filter((event) => {
+      return event.status === 'pending';
+    });
+
+    const approvedEvents = dayEvents.filter((event) => {
+      return event.status === 'confirmed';
+    });
+
+    const chipClickHandler = () => {
+      navigate('/admin/manageReservations', {state: {date: dayCellInfo.date} });
+    }
+
     if (dayEvents.length === 0 || !isBusinessDay(dayCellInfo.date)) {
       return (
         <div className="fc-daygrid-day-number">
@@ -66,9 +79,21 @@ const DashboardCalendar = () => {
       <div className="fc-daygrid-day-number">
         {dayCellInfo.dayNumberText}
         <div className="event-summary">
-          <ChipBadge text={'Pending'} color={'tomato'} num={1} />
-          <ChipBadge text={'Approved'} color={'mediumseagreen'} num={5} />
-          <ChipBadge text={'Capacity Fill'} num={37} />
+          <ChipBadge 
+            text={'Pending'} 
+            color={'tomato'} 
+            num={pendingEvents.length.toString()}
+            clickHandler={chipClickHandler} 
+          />
+          <ChipBadge 
+            text={'Approved'} 
+            color={'mediumseagreen'} 
+            num={approvedEvents.length.toString()}
+            clickHandler={chipClickHandler} 
+          />
+
+          {/* TODO: Display a percentage of capacity (which should be configurable in settings) */}
+          {/* ie. If there are 12 hours and 12 child capacity, how many hours of 144 are filled? */}
         </div>
       </div>
     );
