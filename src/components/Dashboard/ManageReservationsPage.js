@@ -8,6 +8,7 @@ import { useAuth } from '../AuthProvider';
 import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import { logger } from '../../Helpers/logger';
 import ReservationStatusDialog from '../Shared/ReservationStatusDialog';
+import { useLocation } from 'react-router-dom';
 
 const ManageReservationsPage = () => {
   const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
@@ -20,10 +21,14 @@ const ManageReservationsPage = () => {
   const [dialogValue, setDialogValue] = useState('pending'); // Only to track the status of the selected reservation
   const [refreshReservations, setRefreshReservations] = useState(false);
 
+  const { state: { date: initialDateValue } } = useLocation();  
+
+  // get the dbService instance
   useEffect(() => {
     setDbService(new FirebaseDbService(currentUser));
   }, [currentUser]);
 
+  // Fetch the current user's data
   useEffect(() => {
     if (!dbService) return;
     dbService.fetchCurrentUser(currentUser.email).then((resp) => {
@@ -31,9 +36,9 @@ const ManageReservationsPage = () => {
     });
   }, [currentUser, dbService]);
 
+  // Fetch ALL reservations for the current day
+  // Save them in state under events
   useEffect(() => {
-    // Fetch ALL reservations for the current day
-    // Save them in state under events
     if (!dbService) return;
     if (!currentDate) return;
 
@@ -55,6 +60,7 @@ const ManageReservationsPage = () => {
     logger.info('Events:', events);
   }, [events]);
 
+  // Set the dialog value when the dialog is opened
   useEffect(() => {
     if (!dialogReservationContext) return;
     setDialogValue(dialogReservationContext.extendedProps.status);
@@ -179,6 +185,7 @@ const handleDialogClose = async (newValue) => {
               duration: { days: 1 }
             }
           }}
+          initialDate={initialDateValue || new Date()}
           // Display an hour before open and after close
           // TODO: Tie these into business hours settings
           slotMinTime={"05:00:00"}
