@@ -167,7 +167,6 @@ export class FirebaseDbService {
         const user = { id: userDoc.id, ...userDoc.data() };
         const roleRef = user.Role;
         if (roleRef) {
-          logger.info(`${identifier || ''} Fetching user role:`, roleRef);
           user.Role = await this.fetchUserRole(roleRef);
         } else {
           logger.warn(`${identifier || ''} Role reference not yet set.`)
@@ -359,17 +358,38 @@ export class FirebaseDbService {
     }
   };
 
-  fetchAllReservationsByMonth = async (monthNumber, year) => {
+  /**
+   * Fetches all reservations from the Reservations collection by month and optional day.
+   * 
+   * @param {number} year - The year to fetch reservations for.
+   * @param {number} monthNumber - The month number to fetch reservations for.
+   * @param {number} [dayNumber=null] - The day number to fetch reservations for.
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of reservation objects.
+   * @throws {Error} - If there is an error fetching the reservations.
+   */
+  fetchAllReservationsByMonthDay = async (year, monthNumber, dayNumber = null) => {
     this.validateAuth("admin");
     // 'start' property is a Firestore Timestamp
-    const currentYear = new Date().getFullYear();
-
     try {
-      const q = query(collection(db, "Reservations"),
-        where("start", ">=", new Date(year, monthNumber, 1)),
-        where("start", "<", new Date(year, monthNumber + 1, 1)),
+      let q, dateStart, dateEnd;
+      const collectionRef = collection(db, "Reservations");
+
+      if (dayNumber) {
+        // Fetch reservations for a specific day
+        dateStart = new Date(year, monthNumber, dayNumber);
+        dateEnd = new Date(year, monthNumber, dayNumber + 1);
+      } else {
+        // Fetch reservations for the entire month
+        dateStart = new Date(year, monthNumber, 1);
+        dateEnd = new Date(year, monthNumber + 1, 1);
+      }
+
+      q = query(collectionRef,
+        where("start", ">=", dateStart),
+        where("start", "<", dateEnd),
         where("archived", "!=", true)
       );
+
       const querySnapshot = await getDocs(q);
       const reservations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       return reservations;
@@ -378,6 +398,7 @@ export class FirebaseDbService {
       throw error;
     }
   };
+
 
   /**
    * Checks if a new reservation overlaps with existing reservations and determines if it is allowable.

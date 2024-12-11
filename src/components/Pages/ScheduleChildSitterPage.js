@@ -11,8 +11,6 @@ import DraggableChildEvent from '../Shared/DraggableChildEvent';
 import { v4 as uuidv4 } from 'uuid';
 import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import ReservationFormModal from '../Shared/ReservationFormModal';
-import { set } from 'react-hook-form';
-import { db } from '../../config/firestore';
 
 const ScheduleChildSitterPage = () => {
   const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
