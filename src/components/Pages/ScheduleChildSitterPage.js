@@ -53,7 +53,11 @@ const ScheduleChildSitterPage = () => {
   useEffect(() => {
     if (!dbService) return;
     dbService.fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
-      setChildren(resp);
+      if (resp.length === 0) {
+        window.location.href = '/addChild';
+      } else {
+        setChildren(resp);
+      }
     }).then(() => { draggablesLoaded.current = true; });
   }, [currentUser.email, dbService]);
 
@@ -212,7 +216,13 @@ const handleEventClick = ({ event }) => {
   // Only allow deletion of children reservations that belong to the current user
   const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
 
-  if (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`)) {
+  if (!window.confirm(`Are you sure you want to remove the event: ${event.title}?`)) { return }
+
+  if (event.id.split("").includes("-")) {
+    // Remove the event from the events state if it hasn't been saved to FB yet
+    setEvents(events.filter(evt => evt.id != event.id));
+  } 
+  else if (belongsToCurrentUser) {
     if (currentUser.role !== 'admin') {
       dbService.archiveReservationDocument(event.id);
     } else {
