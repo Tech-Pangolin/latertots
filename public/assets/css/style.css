@@ -763,8 +763,8 @@ Careers
 Tidbits
 */
 .tidbits-hero{
-  background: url("../img/lt-logo.png") center center no-repeat;
-  background-size: contain;
+  background: url("../img/tidbits.jpg") center center no-repeat;
+  background-size: cover;
   /* padding: 60px 0; */
   height: 500px;
   width: 100%;
