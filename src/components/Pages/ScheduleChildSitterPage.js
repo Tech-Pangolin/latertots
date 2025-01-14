@@ -4,18 +4,14 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { Draggable } from '@fullcalendar/interaction';
 import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
-import DraggableChildEvent from '../Shared/DraggableChildEvent';
 import { v4 as uuidv4 } from 'uuid';
 import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import ReservationFormModal from '../Shared/ReservationFormModal';
 
 const ScheduleChildSitterPage = () => {
   const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
-  const draggableInitialized = useRef(false);
-  const draggablesLoaded = useRef(false);
   const [children, setChildren] = useState([]);
   const { currentUser } = useAuth();
   const [currentUserData, setCurrentUserData] = useState({});
@@ -49,28 +45,13 @@ const ScheduleChildSitterPage = () => {
     });
   }, [currentUser, dbService]);
 
-  // Fetch children data and prepare draggables flag
+  // Fetch children data
   useEffect(() => {
     if (!dbService) return;
     dbService.fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
       setChildren(resp);
-    }).then(() => { draggablesLoaded.current = true; });
+    });
   }, [currentUser.email, dbService]);
-
-  // Initialize draggable events
-  useEffect(() => {
-    if (!draggableInitialized.current && draggablesLoaded.current) { // Prevent multiple initializations from multiple renders
-      const draggableEls = document.getElementsByClassName('draggable-event');
-      Array.from(draggableEls).forEach(el => {
-        new Draggable(el, {
-          eventData: function (eventEl) {
-            return JSON.parse(eventEl.getAttribute('data-event'));
-          }
-        });
-      });
-      draggableInitialized.current = true;
-    }
-  }, [children]);
 
   useEffect(() => {
     console.log('Events:', events);
@@ -225,24 +206,8 @@ const handleEventClick = ({ event }) => {
 
   return (
     <Grid container className="schedule-child-sitter-page">
-      <Grid item xs={2} className="sidebar">
-        <style>
-          {`
-            .draggable-event {
-              padding: 10px;
-              margin: 5px;
-              background-color: #f9f9f9;
-              border: 1px solid #ccc;
-              cursor: pointer;
-            }
-          `}
-        </style>
-        <div className='draggable-event' draggable={true} data-event='{"title":"Event 1", "duration":"01:00"}'>
-          Draggable Example Event
-        </div>
-        {children.map(child => <DraggableChildEvent key={child.id} child={child} />)}
-      </Grid>
-      <Grid item xs={10} className="main">
+      <Grid item xs={1} />
+      <Grid item xs={10} className="main" style={{ marginTop: '15px'}}>
         <FullCalendar
           // TODO: Specify a timezone prop and tie into admin settings
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -278,6 +243,7 @@ const handleEventClick = ({ event }) => {
           allDaySlot={false}
         />
       </Grid>
+      <Grid item xs={1} />
       <ReservationFormModal 
         modalOpenState={modalOpenState} 
         setModalOpenState={setModalOpenState} 
