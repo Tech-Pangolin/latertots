@@ -68,7 +68,7 @@ const HeaderBar = () => {
             <li><a id="home-link" className={` nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href="/" >Home</a></li>
             
             {/* Show the marketing pages if the current user is not an admin */}
-            {currentUser.role !== 'admin' && <>
+            {currentUser && currentUser?.role !== 'admin' && <>
               <li className="nav-item dropdown">
                 <a id="team-link" className={`nav-link team-link dropdown-toggle scrollto ${dropdownActiveTeam()}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   Team Tots
@@ -95,7 +95,7 @@ const HeaderBar = () => {
             </>}
             
             {/* Hide the marketing pages if the current user is an admin */}
-            {currentUser.role === 'admin' && <>
+            {currentUser && currentUser.role === 'admin' && <>
               <li><a id="team-link" className={`nav-link dropin-link scrollto ${location.pathname === '/admin' ? 'active' : ''}`} href="/admin">Admin Dashboard</a></li>
             </>}
 
