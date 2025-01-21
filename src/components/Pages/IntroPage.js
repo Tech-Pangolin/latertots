@@ -14,11 +14,18 @@ function IntroPage() {
             {/* HERO SECTION */}
             <section id="hero">
                 <div className="container-fluid">
-                    <div className="row justify-content-between">
-                        <div className="col-sm-12 col-lg-7 pt-5 pt-lg-0 order-1 order-lg-2 order-sm-2 d-flex align-items-center d-none d-sm-block">
+                    <div className="row">
+                        <div className="col-12 ">
+
+
+                        <div style={{width:'100%'}} className='d-flex justify-content-center'><img src="./assets/img/hero/welcome.png" className="img-fluid" /></div>
+                        </div>
+                    </div>
+                    <div className="row justify-content-between mt-5">
+                        <div className="col-sm-12 col-lg-6 pt-5 pt-lg-0 order-1 order-lg-2 order-sm-2 d-flex align-items-center d-none d-sm-block">
                             <div dataAos="zoom-out">
-                                
-                                <h1 >Welcome to LaterTots</h1>
+
+                                {/* <h1 >Welcome to LaterTots</h1> */}
                                 <h2>Where every child finds their happy place away.<br /> Discover a world of flexible, fun, and secure child care that fits your busy life.</h2>
                                 <div className="text-center text-lg-start mb-5">
                                     <a href="/register" className="btn-get-started scrollto">Get Started</a>
@@ -26,7 +33,7 @@ function IntroPage() {
                             </div>
                         </div>
                         <div className="col-sm-12 col-lg-4 order-2 order-lg-1 order-sm-1 hero-img" dataAos="zoom-out" dataAosDelay="300">
-                            <img src="assets/img/brand/Logos/PNG/primaryLogos/logo.png" id="hero-logo" className="img-fluid animated slide-in" style={{width:"75%"}}  alt="" />
+                            <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid animated slide-in" style={{ width: "75%" }} alt="" />
                         </div>
                     </div>
                 </div>
@@ -53,8 +60,8 @@ function IntroPage() {
                     <div className="container">
                         <div class="row content">
                             <div class="col-md-4 order-1 order-md-2" dataAos="fade-left">
-                                <img src="assets/img/bluehand.png" class="img-fluid" alt="" style={{borderRadius:'50%'}} />
-                                
+                                <img src="assets/img/bluehand.png" class="img-fluid" alt="" style={{ borderRadius: '50%' }} />
+
                             </div>
                             <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch px-lg-5" dataAos="fade-left">
                                 <h2 style={{ color: '#41A8C5' }}>What is Later Tots?</h2>
@@ -70,12 +77,12 @@ function IntroPage() {
 
                                 </p>
                                 <div class="d-flex justify-content-center">
-                                <img src="assets/img/5kids.png" class="img-fluid main-kids"/>
+                                    <img src="assets/img/5kids.png" class="img-fluid main-kids" />
                                 </div>
 
                             </div>
                         </div>
-                        
+
                     </div>
                 </section>
                 <section id="contact" class="contact">
