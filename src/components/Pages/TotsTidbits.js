@@ -5,6 +5,7 @@ import React from 'react';
 function TotsTidbits() {
     return (
         <div className='bg-white'>
+            
             <section id="tidbits" className="tidbits-hero" >
                 <div className="container">
                     <div className="row justify-content-center">

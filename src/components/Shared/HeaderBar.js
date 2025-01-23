@@ -85,6 +85,8 @@ const HeaderBar = () => {
                 </a>
                 <ul className="dropdown-menu">
                   <li><a className={`nav-link scrollto ${location.pathname === '/totstidbits' ? 'active' : ''}`} href="/totstidbits">Tots & Tidbits</a></li>
+                  {!currentUser ? <li><a id="become-link" className={`nav-link become-link scrollto ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Become a Tot</a></li> : <li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
+                  <li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Play & Stay</a></li>
                 </ul>
               </li>
 
@@ -99,8 +101,7 @@ const HeaderBar = () => {
               <li><a id="team-link" className={`nav-link dropin-link scrollto ${location.pathname === '/admin' ? 'active' : ''}`} href="/admin">Admin Dashboard</a></li>
             </>}
 
-            {!currentUser ? <li><a id="become-link" className={`nav-link become-link scrollto ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Become a Tot</a></li> : <li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
-
+            
             {!currentUser ? '' : (<li><a id="schedule-link" className={`nav-link login-link scrollto ${location.pathname === '/schedule' ? 'active' : ''}`} href="/schedule">My Schedule</a></li>)}
             
             {!currentUser ? (<li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Login</a></li>) : (

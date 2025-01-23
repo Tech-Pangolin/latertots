@@ -164,7 +164,7 @@ a {
   transition: all 0.5s;
   z-index: 997;
   transition: all 0.5s;
-  background-color: #010351;
+  background-color: #FFF;
   /* background: rgba(0, 0, 0, 0.9); */
 }
 
@@ -337,9 +337,7 @@ a {
 #home-link,#become-link{
   color:#41AAC6;
 }
-#team-link{
-  color:#ECE34B;
-}
+
 #big-tots-link,#logout-link{
   color:#9D67E3;
 }
@@ -349,7 +347,7 @@ a {
 #deals-link{
   color:#EF7810;
 }
-#activities-link{
+#activities-link, #team-link{
   color:#E61479;
 }
 
@@ -476,12 +474,13 @@ a {
 --------------------------------------------------------------*/
 #hero {
   width: 100%;
-  background: linear-gradient(rgba(0, 0, 0, 0.6),
-  rgba(0, 0, 0, 0.5)), url("../img/cpattern.png") ;
+  /* background: linear-gradient(rgba(0, 0, 0, 0.6),
+  rgba(0, 0, 0, 0.5)), url("../img/cpattern.png") ; */
+  background: url("../img/cpattern.png") ;
   /* background: url("../img/littlegirlcolors.jpg") ; */
   background-size: cover;
   position: relative;
-  padding: 120px 0 0 0;
+ 
 }
 
 #hero:before {
@@ -510,9 +509,11 @@ a {
 }
 
 #hero h2 {
+  margin-top:50px;  
+  width: 400px;
   font-family: 'Snack', sans-serif;
   letter-spacing: 1px;
-  color: rgba(255, 255, 255,1);
+  color: rgba(0, 0, 0,1);
   margin-bottom: 40px;
   font-size: 24px;
 }
@@ -540,14 +541,14 @@ a {
 
 #hero-logo{
   border-radius: 50%;
-  border:2px solid #9D67E4;
   width: 80%;
+  margin-top:200px;
   background-color: #FFF;
   height:80%;
 }
 
 .main-kids{
-  width: 450px;
+  width:60%;
   text-align: center;
 }
 
@@ -578,7 +579,7 @@ a {
   }
 
   #hero .hero-img img {
-    max-width: 75%;
+    max-width: 50%;
   }
 
   .hero-text{
@@ -601,18 +602,24 @@ a {
 /* Image slide right */
 img.slide-in  {
   animation: 3s slide-right;
-  margin-left: 40%;
+  position:relative;
+  right: 0;
+  display: block;
 }
 @keyframes slide-right {
   from {
-    margin-left: -100%;
+    right: 0%;
   }
   to {
-    margin-left: 40%;
+    right: 200;
   }
 }
 
 @media (max-width: 575px) {
+  .main-kids{
+    width:100%;
+    margin-top:20px;
+  }
   #hero .hero-img img {
     width: 75%;
   }
@@ -647,7 +654,7 @@ img.slide-in  {
   display: block;
   margin-top: 60px;
   width: 100%;
-  height: 60px;
+  height: 120px;
   z-index: 5;
   position: relative;
 }
@@ -786,7 +793,7 @@ Tidbits
 # Sections General
 --------------------------------------------------------------*/
 section {
-  padding: 60px 0;
+  padding: 60px 0 0 0;
   overflow: hidden;
 }
 
@@ -895,7 +902,8 @@ section {
 --------------------------------------------------------------*/
 
 #about{
-  background: url(../img/wpattern.png)
+  /* background: url(../img/wpattern.png) */
+  background-color:#41A8C5;
 }
 .about {
   padding: 40px;
@@ -1742,13 +1750,13 @@ section {
 --------------------------------------------------------------*/
 #footer {
   background: #010351;
-  padding: 0 0 30px 0;
+  padding: 0 0 10px 0;
   color: #fff;
   font-size: 14px;
 }
 
 #footer .footer-top {
-  padding: 60px 0 30px 0;
+  padding: 30px 0 0px 0;
 }
 
 #footer .footer-top .footer-info {
@@ -1780,9 +1788,9 @@ section {
   display: inline-block;
   color: #fff;
   line-height: 1;
-  padding: 8px 0;
+  /* padding: 8px 0; */
   margin-right: 4px;
-  border-radius: 50%;
+  /* border-radius: 50%; */
   text-align: center;
   width: 36px;
   height: 36px;
@@ -1790,7 +1798,7 @@ section {
 }
 
 #footer .footer-top .social-links a:hover {
-  background: #1acc8d;
+  background: #FFF;
   color: #fff;
   text-decoration: none;
 }
@@ -1874,10 +1882,8 @@ section {
   background: #149f6e;
 }
 
-#footer .copyright {
-  border-top: 1px solid #010479;
+#footer .copyright { 
   text-align: center;
-  padding-top: 30px;
 }
 
 #footer .credits {
