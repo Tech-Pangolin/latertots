@@ -10,29 +10,22 @@ const FooterBar = () => {
 
                         <div className="col-lg-4 col-md-6">
                             <div className="footer-info">
-                                <img src="./assets/img/footer/footer.png" className='img-fluid'/>
+                                <img src="./assets/img/footer/footer.png" className='img-fluid' />
 
-                                <div className="social-links mt-3">
-                                    <a href="#" className="twitter"><img src="./assets/img/footer/twitter.png" className='img-fluid'/></a>
-                                
-                                    <a href="#" className="instagram"><img src="./assets/img/footer/ig.png" className='img-fluid'/></a>
-                                        <a href="#" className="facebook"><img src="./assets/img/footer/fb.png" className='img-fluid'/></a>
-                                    <a href="#" className="linkedin"><img src="./assets/img/footer/linkedin.png" className='img-fluid'/></a>
-                                </div>
+
                             </div>
                         </div>
 
-                        <div className="col-lg-2 col-md-6 footer-links">
-                            {/* <h4 className='text-center'>Useful Links</h4>
-                            <ul>
-                                <li><i className="bx bx-chevron-right text-center"></i> <a href="#">Home</a></li>
-                                <li><i className="bx bx-chevron-right text-center"></i> <a href="#">Terms of service</a></li>
-                                <li><i className="bx bx-chevron-right text-center"></i> <a href="#">Privacy policy</a></li>
-                            </ul> */}
-                        </div>
 
-                        <div className="col-lg-2 col-md-6 footer-links">
 
+                        <div className="col-lg-4 col-md-6 footer-links">
+                            <div className="social-links mt-3 text-center">
+                                <a href="#" className="twitter"><img src="./assets/img/footer/twitter.png" className='img-fluid' /></a>
+
+                                <a href="#" className="instagram"><img src="./assets/img/footer/ig.png" className='img-fluid' /></a>
+                                <a href="#" className="facebook"><img src="./assets/img/footer/fb.png" className='img-fluid' /></a>
+                                <a href="#" className="linkedin"><img src="./assets/img/footer/linkedin.png" className='img-fluid' /></a>
+                            </div>
                         </div>
 
                         <div className="col-lg-4 col-md-6 footer-newsletter">
@@ -54,7 +47,7 @@ const FooterBar = () => {
                 </div>
 
             </div>
-                   
+
         </footer >
     );
 };

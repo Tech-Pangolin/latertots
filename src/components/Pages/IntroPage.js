@@ -21,20 +21,18 @@ function IntroPage() {
                         <div style={{width:'100%'}} className='d-flex justify-content-center'><img src="./assets/img/hero/welcome.png" className="img-fluid" /></div>
                         </div>
                     </div>
-                    <div className="row justify-content-between mt-5">
-                        <div className="col-sm-12 col-lg-6 pt-5 pt-lg-0 order-1 order-lg-2 order-sm-2 d-flex align-items-center d-none d-sm-block">
-                            <div dataAos="zoom-out">
-
-                                {/* <h1 >Welcome to LaterTots</h1> */}
-                                <h2>Where every child finds their happy place away.<br /> Discover a world of flexible, fun, and secure child care that fits your busy life.</h2>
-                                <div className="text-center text-lg-start mb-5">
-                                    <a href="/register" className="btn-get-started scrollto">Get Started</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-sm-12 col-lg-4 order-2 order-lg-1 order-sm-1 hero-img" dataAos="zoom-out" dataAosDelay="300">
-                            <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid animated slide-in" style={{ width: "75%" }} alt="" />
-                        </div>
+                    <div className="container">
+                    <div className="row d-flex justify-content-between mt-2">
+                        <div className="col-12 col-md-8 d-flex justify-content-center"> <img src="assets/img/hero/photoline.png" className="img-fluid" style={{height:"84%"}} alt="" /></div>
+                        <div className="col-12 col-md-4 d-flex justify-content-end align-items-end d-none d-sm-block"> <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid slide-in" style={{ width: "300px", height:"300px" }} alt="" /></div>
+                         {/* <div className="col-sm-12 col-lg-6  d-flex align-items-center ">
+                           
+                                <img src="assets/img/hero/photoline.png" className="" alt="" />
+                             </div>
+                        <div className="col-sm-12 col-lg-4 hero-img" dataAos="zoom-out" dataAosDelay="300">
+                            <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid slide-in" style={{ width: "75%" }} alt="" />
+                        </div> */}
+                    </div>
                     </div>
                 </div>
 
@@ -49,7 +47,7 @@ function IntroPage() {
                         <use xlinkHref="#wave-path" x="50" y="0" fill="rgba(255,255,255, .2)" />
                     </g>
                     <g className="wave3">
-                        <use xlinkHref="#wave-path" x="50" y="9" fill="#fff" />
+                        <use xlinkHref="#wave-path" x="50" y="9" fill="#41A8C5" />
                     </g>
                 </svg>
 
@@ -64,7 +62,7 @@ function IntroPage() {
 
                             </div>
                             <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch px-lg-5" dataAos="fade-left">
-                                <h2 style={{ color: '#41A8C5' }}>What is Later Tots?</h2>
+                                <h2 style={{ color: '#FFF' }}>What is Later Tots?</h2>
                                 <p>
                                     Later Tots is more than just a drop-in child care service—it's a passion project born from the desire to support Tot-Tenders who need a few hours to themselves, whether for running errands, enjoying some leisure time, or simply taking a well-deserved break. We know how challenging it can be to find trustworthy, flexible child care that fits your schedule, especially when you don't need full or part-time care. That's where Later Tots comes in.
                                 </p>

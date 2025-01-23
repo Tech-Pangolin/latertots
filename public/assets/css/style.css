@@ -164,7 +164,7 @@ a {
   transition: all 0.5s;
   z-index: 997;
   transition: all 0.5s;
-  background-color: #010351;
+  background-color: #FFF;
   /* background: rgba(0, 0, 0, 0.9); */
 }
 
@@ -337,9 +337,7 @@ a {
 #home-link,#become-link{
   color:#41AAC6;
 }
-#team-link{
-  color:#ECE34B;
-}
+
 #big-tots-link,#logout-link{
   color:#9D67E3;
 }
@@ -349,7 +347,7 @@ a {
 #deals-link{
   color:#EF7810;
 }
-#activities-link{
+#activities-link, #team-link{
   color:#E61479;
 }
 
@@ -543,8 +541,8 @@ a {
 
 #hero-logo{
   border-radius: 50%;
-  border:2px solid #9D67E4;
   width: 80%;
+  margin-top:200px;
   background-color: #FFF;
   height:80%;
 }
@@ -581,7 +579,7 @@ a {
   }
 
   #hero .hero-img img {
-    max-width: 75%;
+    max-width: 50%;
   }
 
   .hero-text{
@@ -604,14 +602,16 @@ a {
 /* Image slide right */
 img.slide-in  {
   animation: 3s slide-right;
-  margin-left: 40%;
+  position:relative;
+  right: 0;
+  display: block;
 }
 @keyframes slide-right {
   from {
-    margin-left: -100%;
+    right: 0%;
   }
   to {
-    margin-left: 40%;
+    right: 200;
   }
 }
 
@@ -898,7 +898,8 @@ section {
 --------------------------------------------------------------*/
 
 #about{
-  background: url(../img/wpattern.png)
+  /* background: url(../img/wpattern.png) */
+  background-color:#41A8C5;
 }
 .about {
   padding: 40px;
