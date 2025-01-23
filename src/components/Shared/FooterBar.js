@@ -15,9 +15,6 @@ const FooterBar = () => {
 
                             </div>
                         </div>
-
-
-
                         <div className="col-lg-4 col-md-6 footer-links">
                             <div className="social-links mt-3 text-center">
                                 <a href="#" className="twitter"><img src="./assets/img/footer/twitter.png" className='img-fluid' /></a>

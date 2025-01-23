@@ -24,7 +24,8 @@ function IntroPage() {
                     <div className="container">
                     <div className="row d-flex justify-content-between mt-2">
                         <div className="col-12 col-md-8 d-flex justify-content-center"> <img src="assets/img/hero/photoline.png" className="img-fluid" style={{height:"84%"}} alt="" /></div>
-                        <div className="col-12 col-md-4 d-flex justify-content-end align-items-end d-none d-sm-block"> <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid slide-in" style={{ width: "300px", height:"300px" }} alt="" /></div>
+                        <div className="col-12 col-md-4 d-flex justify-content-end align-items-end"> <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid slide-in d-none d-sm-block" style={{ width: "300px", height:"300px" }} alt="" /></div>
+                        <div className="col-12 d-block d-sm-none d-flex justify-content-center"><img src="assets/img/hero/logo-cir.png" className="img-fluid text-center" style={{width:'50%'}}/></div>
                          {/* <div className="col-sm-12 col-lg-6  d-flex align-items-center ">
                            
                                 <img src="assets/img/hero/photoline.png" className="" alt="" />
@@ -58,7 +59,9 @@ function IntroPage() {
                     <div className="container">
                         <div class="row content">
                             <div class="col-md-4 order-1 order-md-2" dataAos="fade-left">
-                                <img src="assets/img/bluehand.png" class="img-fluid" alt="" style={{ borderRadius: '50%' }} />
+                                <img src="assets/img/bluehand.png" class="img-fluid" alt="" style={{ borderRadius: '50%', }} />
+                                <br />
+                                {/* <img src="assets/img/homekids.png" class="img-fluid main-kids" /> */}
 
                             </div>
                             <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch px-lg-5" dataAos="fade-left">
@@ -74,12 +77,12 @@ function IntroPage() {
                                     At Later Tots, we truly believe that every child deserves a place where they feel at home, even when they're away. That’s why we’re proud to be your tot’s happy place away—where they can drop, play, and stay.
 
                                 </p>
-                                <div class="d-flex justify-content-center">
-                                    <img src="assets/img/5kids.png" class="img-fluid main-kids" />
-                                </div>
+                               
 
-                            </div>
-                        </div>
+                            </div> 
+                        </div><div class="row d-flex justify-content-center">
+                                    <img src="assets/img/homekids.png" class="img-fluid main-kids" />
+                                </div>
 
                     </div>
                 </section>

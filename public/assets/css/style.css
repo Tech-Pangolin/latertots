@@ -548,7 +548,7 @@ a {
 }
 
 .main-kids{
-  width: 450px;
+  width:60%;
   text-align: center;
 }
 
@@ -616,6 +616,10 @@ img.slide-in  {
 }
 
 @media (max-width: 575px) {
+  .main-kids{
+    width:100%;
+    margin-top:20px;
+  }
   #hero .hero-img img {
     width: 75%;
   }
