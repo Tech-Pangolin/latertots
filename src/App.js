@@ -11,7 +11,7 @@ import Layout from './components/Layout';
 import Calendar from './components/Shared/Calendar';
 import ScheduleChildSitterPage from './components/Pages/ScheduleChildSitterPage';
 import AdminDashboard from './components/Pages/AdminDashboard';
-import AboutPage from './components/Pages/AboutPage';
+import MeetPage from './components/Pages/MeetPage';
 import EventPage from './components/Pages/EventPage';
 import PricingPage from './components/Pages/PricingPage';
 import DealsPage from './components/Pages/DealsPage';
@@ -28,7 +28,7 @@ function App() {
           <Route path="/" element={ <IntroPage /> } />
           <Route path="/home" element={ <PrivateRoute element={ <HomePage /> }/> } />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/teamtots" element={<AboutPage />} />
+          <Route path="/teamtots" element={<MeetPage />} />
           <Route path="/events" element={<EventPage />} />
           <Route path="/activities" element={<PricingPage />} />
           <Route path="/testimonials" element={<TestimonialsPage />} />
