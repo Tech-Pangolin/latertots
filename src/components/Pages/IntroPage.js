@@ -119,7 +119,7 @@ function IntroPage() {
 
                             </div>
 
-                            <div class="col-lg-8 mt-5 mt-lg-0" dataAos="fade-left" dataAosDelay="200">
+                            <div class="col-lg-8 my-5 mt-lg-0" dataAos="fade-left" dataAosDelay="200">
 
                                 <form action="forms/contact.php" method="post" role="form" class="php-email-form">
                                     <div class="row">

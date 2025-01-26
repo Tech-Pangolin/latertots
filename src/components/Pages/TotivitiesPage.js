@@ -2,12 +2,12 @@ import React from 'react';
 
 function AboutPage() {
     return (
-        <div className='bg-white'>
-            <section id="totTivities" className="totTivities" >
+        <div className='bg-white' >
+            {/* <section id="totTivities" className="totTivities" >
                 <div className="container">
                     <div className="row justify-content-center">
                         <div className="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
-                            {/* <img src="./assets/img/crayons.png" className='img-fluid' alt='colorful hands' /> */}
+                          
 
                         </div>
 
@@ -15,7 +15,7 @@ function AboutPage() {
                 </div>
 
 
-            </section>
+            </section> */}
             <section className="container">
                 <div class="section-title" dataAos="fade-up">
                     <h2>So much to do!</h2>
@@ -46,8 +46,6 @@ function AboutPage() {
                         </div>
                         <div class="mb-5">
                             <h3>Tot-ally Fun Saturdays</h3>
-                            <h4>Unleash your tot's creativity and curiosity with our action-packed Saturday Play Classes!
-                            </h4>
                             <p>Imagine a Saturday where your little one explores their artistic side with engaging crafts, dances to fun tunes, and picks up some Spanish along the way—all while making new friends and having a blast. At Later Tots, we believe in creating a balanced mix of fun and learning. Our 3-hour sessions are designed to keep your child entertained and enriched, giving them the perfect blend of play, creativity, and culture.
 
                             </p>

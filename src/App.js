@@ -13,12 +13,13 @@ import ScheduleChildSitterPage from './components/Pages/ScheduleChildSitterPage'
 import AdminDashboard from './components/Pages/AdminDashboard';
 import MeetPage from './components/Pages/MeetPage';
 import EventPage from './components/Pages/EventPage';
-import PricingPage from './components/Pages/PricingPage';
+import TotivitiesPage from './components/Pages/TotivitiesPage';
 import DealsPage from './components/Pages/DealsPage';
-import TestimonialsPage from './components/Pages/TestimonialsPage';
-import CareersPage from './components/Pages/CareersPage';
+import TestimonialsPage from './components/Pages/SharePage';
+import CareersPage from './components/Pages/GrowPage';
 import TotsTidbits from './components/Pages/TotsTidbits';
 import ManageReservationsPage from './components/Dashboard/ManageReservationsPage';
+import PartyPage from './components/Pages/Party';
 
 function App() {
   return (
@@ -30,7 +31,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/teamtots" element={<MeetPage />} />
           <Route path="/events" element={<EventPage />} />
-          <Route path="/activities" element={<PricingPage />} />
+          <Route path="/party" element={<PartyPage />} />
+          <Route path="/totivities" element={<TotivitiesPage />} />
           <Route path="/testimonials" element={<TestimonialsPage />} />
           <Route path="/totstidbits" element={<TotsTidbits />} />
           <Route path="/careers" element={<CareersPage />} />
