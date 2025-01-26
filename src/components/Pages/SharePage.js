@@ -4,30 +4,25 @@ import React from 'react';
 
 function TestimonialsPage() {
     return (
-        <div className='bg-white'>
+        <div className='bg-color'>
             <section id="testimonials" className="testimonials-hero" >
                 <div className="container">
                     <div className="row justify-content-center">
                         <div className="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
-
                         </div>
-
                     </div>
                 </div>
-
-
             </section>
 
 
             <section className="pt-5 pb-5">
                 <div className="container">
                     <div className="section-title" dataAos="fade-up">
-                        <h2>Testimonials</h2>
-                        <p sx={{ color: '#3B38DA' }}>Testimonials</p>
+                        <h1 className='text-center'><span className='wordcircle-white'>Testimonials</span></h1>
                     </div>
                     <div className="row">
                         <div className="col-12">
-                            <h2 className="mb-5 text-center">What people say</h2>
+                            <h3 className="mb-5 text-center"><span className='wordcircle-white'>What people say</span></h3>
                             {/* <p className="mb-5 text-center">Masonry testimonial cards grid</p> */}
                         </div>
                         <div className="col-12 col-md-4">
@@ -147,7 +142,7 @@ function TestimonialsPage() {
                             </div>
 
 
-                            
+
 
 
                         </div>

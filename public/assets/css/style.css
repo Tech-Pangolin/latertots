@@ -14,9 +14,11 @@
   0% {
     opacity: 1;
   }
+
   50% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
@@ -25,10 +27,12 @@
 .blink-text {
   animation: blink 1s ease-in-out 5;
 }
+
 .blink-text:hover {
   animation: none;
 }
-a.pink-text{
+
+a.pink-text {
   color: rgb(230, 19, 120);
 }
 
@@ -40,6 +44,7 @@ a.pink-text{
   font-family: 'Snack';
   src: url(../fonts/snack_omeal/Snack\ Omeal.ttf) format('truetype');
 }
+
 @font-face {
   font-family: 'Manjari';
   src: url(../fonts/manjari-2/Manjari-Bold.ttf) format('truetype');
@@ -51,17 +56,22 @@ body {
   font-style: normal;
   color: #444444;
 }
-body p, body li{
+
+body p,
+body li {
   font-family: "Manjari", sans-serif;
 
 }
+
 a {
   color: #1acc8d;
   text-decoration: none;
 }
-a.nav-link{
-  font-size:24px;
+
+a.nav-link {
+  font-size: 24px;
 }
+
 a:hover {
   color: #34e5a6;
   text-decoration: none;
@@ -226,7 +236,7 @@ a {
   justify-content: space-between;
   padding: 10px 0 10px 30px;
   font-size: 18px;
-  font-weight: 500;  
+  font-weight: 500;
   font-family: "Manjari", sans-serif;
   color: #1acc8d;
   white-space: nowrap;
@@ -334,21 +344,27 @@ a {
   }
 }
 
-#home-link,#become-link{
-  color:#41AAC6;
+#home-link,
+#become-link {
+  color: #41AAC6;
 }
 
-#big-tots-link,#logout-link{
-  color:#9D67E3;
+#big-tots-link,
+#logout-link {
+  color: #9D67E3;
 }
-#dropin-link{
-  color:#87DEBB;
+
+#dropin-link {
+  color: #87DEBB;
 }
-#deals-link{
-  color:#EF7810;
+
+#deals-link {
+  color: #EF7810;
 }
-#activities-link, #team-link{
-  color:#E61479;
+
+#activities-link,
+#team-link {
+  color: #E61479;
 }
 
 /**
@@ -476,11 +492,11 @@ a {
   width: 100%;
   /* background: linear-gradient(rgba(0, 0, 0, 0.6),
   rgba(0, 0, 0, 0.5)), url("../img/cpattern.png") ; */
-  background: url("../img/cpattern.png") ;
+  background: url("../img/cpattern.png");
   /* background: url("../img/littlegirlcolors.jpg") ; */
   background-size: cover;
   position: relative;
- 
+
 }
 
 #hero:before {
@@ -509,11 +525,11 @@ a {
 }
 
 #hero h2 {
-  margin-top:50px;  
+  margin-top: 50px;
   width: 400px;
   font-family: 'Snack', sans-serif;
   letter-spacing: 1px;
-  color: rgba(0, 0, 0,1);
+  color: rgba(0, 0, 0, 1);
   margin-bottom: 40px;
   font-size: 24px;
 }
@@ -539,16 +555,16 @@ a {
   /* animation: up-down 2s ease-in-out infinite alternate-reverse both; */
 }
 
-#hero-logo{
+#hero-logo {
   border-radius: 50%;
   width: 80%;
-  margin-top:200px;
+  margin-top: 200px;
   background-color: #FFF;
-  height:80%;
+  height: 80%;
 }
 
-.main-kids{
-  width:60%;
+.main-kids {
+  width: 60%;
   text-align: center;
 }
 
@@ -559,13 +575,14 @@ a {
 }
 
 @media (max-width: 991px) {
-  #hero-logo{
+  #hero-logo {
     border-radius: 90%;
-    border:2px solid #9D67E4;
+    border: 2px solid #9D67E4;
     width: 100%;
     background-color: #FFF;
-    height:100%;
+    height: 100%;
   }
+
   #hero {
     padding-top: 80px;
   }
@@ -582,8 +599,8 @@ a {
     max-width: 50%;
   }
 
-  .hero-text{
-        margin:0px 400px
+  .hero-text {
+    margin: 0px 400px
   }
 
   #hero h1 {
@@ -600,43 +617,50 @@ a {
 }
 
 /* Image slide right */
-img.slide-in  {
+img.slide-in {
   animation: 3s slide-right;
-  position:relative;
+  position: relative;
   right: 0;
   display: block;
 }
+
 @keyframes slide-right {
   from {
     right: 0%;
   }
+
   to {
     right: 200;
   }
 }
 
 @media (max-width: 575px) {
-  .main-kids{
-    width:100%;
-    margin-top:20px;
+  .main-kids {
+    width: 100%;
+    margin-top: 20px;
   }
+
   #hero .hero-img img {
     width: 75%;
   }
-  .hero-text{
-    margin:0px 400px
+
+  .hero-text {
+    margin: 0px 400px
   }
-  img.slide-in  {
+
+  img.slide-in {
     animation: 3s slide-right-sm;
     margin-left: 00%;
   }
 }
+
 @keyframes slide-right-sm {
   from {
     margin-left: -100%;
   }
+
   to {
-    margin-left:0%;
+    margin-left: 0%;
   }
 }
 
@@ -720,7 +744,7 @@ img.slide-in  {
 /*
 Team Tots
 */
-.teamTots{
+.teamTots {
   background: url("../img/about/teacher.jpg") center center no-repeat;
   background-size: cover;
   /* padding: 60px 0; */
@@ -729,6 +753,7 @@ Team Tots
   /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
   position: relative;
 }
+
 /*  
 # Deals
 */
@@ -745,7 +770,7 @@ Team Tots
 /*
 Testimonials
 */
-.testimonials-hero{
+.testimonials-hero {
   background: url("../img/testimonials/testimonialhero.jpg") top center no-repeat;
   background-size: cover;
   /* padding: 60px 0; */
@@ -754,10 +779,11 @@ Testimonials
   /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
   position: relative;
 }
+
 /*
 Careers
 */
-.careers-hero{
+.careers-hero {
   background: url("../img/careers/careers.jpg") center center no-repeat;
   background-size: cover;
   /* padding: 60px 0; */
@@ -766,10 +792,11 @@ Careers
   /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
   position: relative;
 }
+
 /*
 Tidbits
 */
-.tidbits-hero{
+.tidbits-hero {
   background: url("../img/tidbits.jpg") center center no-repeat;
   background-size: cover;
   /* padding: 60px 0; */
@@ -779,12 +806,12 @@ Tidbits
   position: relative;
 }
 
-.page-img{
-  border-radius:50%;
+.page-img {
+  border-radius: 50%;
 }
 
-.events-title{
-  padding-bottom: 20px!important;
+.events-title {
+  padding-bottom: 20px !important;
 }
 
 
@@ -901,10 +928,11 @@ section {
 # About
 --------------------------------------------------------------*/
 
-#about{
+#about {
   /* background: url(../img/wpattern.png) */
-  background-color:#41A8C5;
+  background-color: #41A8C5;
 }
+
 .about {
   padding: 40px;
 }
@@ -1041,11 +1069,13 @@ section {
   animation: none;
   border-radius: 0;
 }
-.amber-about-img{
-  width:200px;
+
+.amber-about-img {
+  width: 200px;
 }
 
-.losange, .losange div {
+.losange,
+.losange div {
   margin: 0 auto;
   transform-origin: 50% 50%;
   overflow: hidden;
@@ -1066,6 +1096,30 @@ section {
 .losange .los1 img {
   width: 100%;
   height: auto;
+}
+
+.meet h1,
+.meet h3,
+.meet p {
+  color: #FFF;
+}
+
+.meet p {
+  color: #010351;
+}
+
+.meet .amber-photo {
+  width: 200px;
+  height: 200px;
+}
+.meet .subcontainer{
+  margin: 0 200px;
+}
+
+.wordcircle-white{
+  border-radius:30%;
+  background-color: #FFF;
+  padding: 20px;
 }
 
 @keyframes pulsate-btn {
@@ -1225,7 +1279,7 @@ section {
   background-size: cover;
   position: relative;
 } */
-.testimonials{
+.testimonials {
   background: url("../img/cpattern.png") center center no-repeat;
   background-size: cover;
   /* padding: 60px 0; */
@@ -1882,7 +1936,7 @@ section {
   background: #149f6e;
 }
 
-#footer .copyright { 
+#footer .copyright {
   text-align: center;
 }
 
@@ -1900,12 +1954,14 @@ section {
 }
 
 .section-title h2::after {
-  background:#ED54C5;
+  background: #ED54C5;
 
 }
-li{
+
+li {
   font-weight: normal;
 }
+
 .section-title p {
   font-weight: normal;
 }
@@ -1913,32 +1969,33 @@ li{
 /* 
 Events 
 */
-.packages-title{
+.packages-title {
   margin-left: 30px;
 }
-.pricing h4{
+
+.pricing h4 {
   color: #41A8C5;
 }
 
-.pricing .btn-buy{
+.pricing .btn-buy {
   background-color: #EF7811;
 }
 
 /*
 Careers
 */
-.careers ul li
-{
-  font-size:16px
+.careers ul li {
+  font-size: 16px
 }
 
 /*
 Backgrounds
 */
 
-.bg-color{
+.bg-color {
   background: url("../img/cpattern.png");
 }
+
 .bg-white {
   background: url("../img/wpattern.png");
 }
@@ -1949,12 +2006,12 @@ Bootstrap Overrides
 
 */
 
-.form-label{
+.form-label {
   font-family: 'Manjari', sans-serif;
 }
 
 
-figcaption{
+figcaption {
   font-family: 'Snack', sans-serif;
   text-align: center;
   font-size: 14px;
@@ -1964,10 +2021,11 @@ figcaption{
   content: "~  ";
 }
 
-blockquote h5, blockquote p{
+blockquote h5,
+blockquote p {
   text-align: center;
 }
 
-#schedule-link{
-  color:#41A8C5;
+#schedule-link {
+  color: #41A8C5;
 }

@@ -66,7 +66,7 @@ const HeaderBar = () => {
         <nav id="navbar" className={`navbar ${mobileMenu ? 'navbar-mobile' : ''}`}>
           <ul>
             <li><a id="home-link" className={` nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href="/" >Home</a></li>
-            
+
             {/* Show the marketing pages if the current user is not an admin */}
             {(!currentUser || currentUser.role !== 'admin') && <>
               <li className="nav-item dropdown">
@@ -85,25 +85,30 @@ const HeaderBar = () => {
                 </a>
                 <ul className="dropdown-menu">
                   <li><a className={`nav-link scrollto ${location.pathname === '/totstidbits' ? 'active' : ''}`} href="/totstidbits">Tots & Tidbits</a></li>
-                  {!currentUser ? <li><a id="become-link" className={`nav-link become-link scrollto ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Become a Tot</a></li> : <li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
+                  {!currentUser ? <li><a id="" className={`nav-link become-link scrollto ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Become a Tot</a></li> : <li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
                   <li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Play & Stay</a></li>
                 </ul>
               </li>
 
               {/* <li><a className={`nav-link scrollto ${location.pathname === '/teamtots' ? 'active' : ''}`} href="/teamtots">Team Tots</a></li> */}
-              <li><a id="dropin-link" className={`nav-link dropin-link scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Drop-In Fun</a></li>
+              <li className='nav-item dropdown'>
+                <a id="dropin-link" className={`nav-link dropdown-toggle dropin-link scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Drop-In Fun</a>
+                <ul className="dropdown-menu">
+                  <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/totivities' ? 'active' : ''}`} href="/totivities">Tot-tivities</a></li>
+                  <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/party">Party & Play</a></li>
+                </ul>
+              </li>
               <li><a id="deals-link" className={`nav-link deals-link scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/deals">Tot Deals</a></li>
-              <li><a id="activities-link" className={`nav-link activities-link scrollto ${location.pathname === '/activities' ? 'active' : ''}`} href="/activities">Tot-tivities</a></li>
-            </>}
-            
+             </>}
+
             {/* Hide the marketing pages if the current user is an admin */}
             {(currentUser && currentUser.role === 'admin') && <>
               <li><a id="team-link" className={`nav-link dropin-link scrollto ${location.pathname === '/admin' ? 'active' : ''}`} href="/admin">Admin Dashboard</a></li>
             </>}
 
-            
+
             {!currentUser ? '' : (<li><a id="schedule-link" className={`nav-link login-link scrollto ${location.pathname === '/schedule' ? 'active' : ''}`} href="/schedule">My Schedule</a></li>)}
-            
+
             {!currentUser ? (<li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Login</a></li>) : (
               <li><a id="logout-link" className="nav-link scrollto logout-link" onClick={signOut}>Logout</a></li>
             )}

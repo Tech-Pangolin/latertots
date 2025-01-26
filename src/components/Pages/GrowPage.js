@@ -3,25 +3,22 @@ import React from 'react';
 function CareersPage() {
     return (
         <div className='bg-white'>
-            <section id="careers" className="careers-hero" >
+            {/* <section id="careers" className="careers-hero" >
                 <div className="container">
                     <div className="row justify-content-center">
                         <div className="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
-                            {/* <img src="./assets/img/crayons.png" className='img-fluid' alt='colorful hands' /> */}
-
                         </div>
 
                     </div>
                 </div>
 
 
-            </section>
+            </section> */}
 
             <section id="about" className="about careers">
                 <div className="container-fluid">
-                    <div className="section-title" dataAos="fade-up">
-                        <h2>Careers</h2>
-                        <p sx={{ color: '#3B38DA' }}>Join Our Tot-tastic Team at Later Tots!</p>
+                    <div className="section-title" dataAos="fade-up">                       
+                        <p sx={{ color: '#3B38DA' }} className="text-center">Join Our Tot-tastic Team at Later Tots!</p>
                     </div>
                     <div className="row">
 
