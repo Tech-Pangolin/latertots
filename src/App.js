@@ -15,7 +15,7 @@ import MeetPage from './components/Pages/MeetPage';
 import EventPage from './components/Pages/EventPage';
 import TotivitiesPage from './components/Pages/TotivitiesPage';
 import DealsPage from './components/Pages/DealsPage';
-import TestimonialsPage from './components/Pages/SharePage';
+import SharePage from './components/Pages/SharePage';
 import CareersPage from './components/Pages/GrowPage';
 import TotsTidbits from './components/Pages/TotsTidbits';
 import ManageReservationsPage from './components/Dashboard/ManageReservationsPage';
@@ -33,7 +33,7 @@ function App() {
           <Route path="/events" element={<EventPage />} />
           <Route path="/party" element={<PartyPage />} />
           <Route path="/totivities" element={<TotivitiesPage />} />
-          <Route path="/testimonials" element={<TestimonialsPage />} />
+          <Route path="/testimonials" element={<SharePage />} />
           <Route path="/totstidbits" element={<TotsTidbits />} />
           <Route path="/careers" element={<CareersPage />} />
           <Route path="/deals" element={<DealsPage />} />

@@ -123,6 +123,12 @@ a {
     transform: rotate(360deg);
   }
 }
+h1.registration{
+  font-family: "Manjari", sans-serif;
+  font-size: 36px;
+  width:100%;
+  text-align: center;
+}
 
 /*--------------------------------------------------------------
 # Back to top button
@@ -732,14 +738,23 @@ img.slide-in {
 # TotTivities
 */
 .totTivities {
-  background: url("../img/aboutkids.jpg") center center no-repeat;
-  background-size: cover;
+  background-color: #88DFBC;
+  padding: 60px 0 100px 0;
+  /* background: url("../img/aboutkids.jpg") center center no-repeat;
+  background-size: cover; */
   /* padding: 60px 0; */
-  height: 500px;
+  height: 100%;
   width: 100%;
   /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
   position: relative;
+  --mask:
+  radial-gradient(166.13px at 50% calc(100% - 225.15px),#000 99%,#0000 101%) calc(50% - 158px) 0/316px 100%,
+  radial-gradient(166.13px at 50% calc(100% + 146.15px),#0000 99%,#000 101%) 50% calc(100% - 79px)/316px 100% repeat-x;
+-webkit-mask: var(--mask);
+        mask: var(--mask);
 }
+
+
 
 /*
 Team Tots
@@ -1945,6 +1960,10 @@ section {
   text-align: center;
   font-size: 13px;
   color: #fff;
+}
+
+.footer-info img{
+  width:200px;
 }
 
 @media (max-width: 575px) {
