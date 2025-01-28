@@ -55,7 +55,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     const hasNewEvent = events.some(event => event.id.includes('-') && event.extendedProps.fromForm)
 
     if (hasNewEvent) {
-      handleScheduleSave(events, currentUserData)
+      handleScheduleSave(events, currentUserData, dbService)
     }
   }, [events]);
 
@@ -101,29 +101,43 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newEvent = {
-      id: uuidv4(),
-      title: formData.selectedChild.name,
-      start: new Date(formData.date + 'T' + formData.start).toISOString(),
-      end: new Date(formData.date + 'T' + formData.end).toISOString(),
-      allDay: false,
-      extendedProps: {
-        duration: (new Date(formData.date + 'T' + formData.end).toISOString() - new Date(formData.date + 'T' + formData.start).toISOString()) / 3600_000,
-        status: 'pending',
-        childId: formData.selectedChild.id,
-        fromForm: true
+    const newEvents = formData.selectedChild.map(child => {
+      return {
+        id: uuidv4(),
+        title: child.name,
+        start: new Date(formData.date + 'T' + formData.start).toISOString(),
+        end: new Date(formData.date + 'T' + formData.end).toISOString(),
+        allDay: false,
+        locked: false,
+        extendedProps: {
+          duration: (new Date(formData.date + 'T' + formData.end).toISOString() - new Date(formData.date + 'T' + formData.start).toISOString()) / 3600_000,
+          status: 'pending',
+          childId: child.id,
+          fromForm: true
+        }
       }
-    }
-    // Handle form submission logic here
-    let allowSave = false;
-    if (checkAgainstBusinessHours(newEvent) && checkFutureStartTime(newEvent)) {
-      allowSave = dbService.checkReservationAllowability(newEvent);
-    }
-    if (allowSave) {
-      setEvents(prevEvents => [...prevEvents, newEvent]);
-      handleClose();
+    });
+
+    // Check if all events are valid
+    const allValid = newEvents.every((event) => {
+      return checkAgainstBusinessHours(event) && checkFutureStartTime(event);
+    });
+
+    if (allValid) {
+      // Validate all reservations collectively
+      const allowSave = dbService.checkReservationAllowability(newEvents);
+
+      if (allowSave) {
+        // Save all new events to the state
+        setEvents((prevEvents) => [...prevEvents, ...newEvents]);
+        handleClose();
+      } else {
+        alert(
+          'Could not save event(s). Please check the time and try again. Note that only 5 reservations can exist at once.'
+        );
+      }
     } else {
-      alert('Could not save event. Please check the time and try again. Note that only 5 reservations can exist at once.');
+      alert('One or more reservations did not pass validation.');
     }
   };
 
