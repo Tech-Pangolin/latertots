@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, TextField, Dialog, DialogActions, DialogTitle, DialogContent, MenuItem, Select, InputLabel, OutlinedInput, FormControl } from '@mui/material';
+import { Button, TextField, Dialog, DialogActions, DialogTitle, DialogContent, MenuItem, Select, InputLabel, OutlinedInput, FormControl, Checkbox, FormControlLabel } from '@mui/material';
 import { checkAgainstBusinessHours, checkFutureStartTime, getCurrentDate, getCurrentTime } from '../../Helpers/calendar';
 import { v4 as uuidv4 } from 'uuid';
 import { FirebaseDbService } from '../../Helpers/firebase';
@@ -20,7 +20,8 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     selectedChild: [],
     date: `${getCurrentDate()}`,
     start: `${getCurrentTime()}`,
-    end: `${getCurrentTime()}`
+    end: `${getCurrentTime()}`,
+    groupActivity: false
   }
   const [formData, setFormData] = useState(initialState);
 
@@ -30,12 +31,21 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
   };
 
   const childrenOptions = [
-     ...children.map( child => Object.fromEntries([["id", child.id], ["name", child.Name]]) )
+    ...children.map(child => Object.fromEntries([["id", child.id], ["name", child.Name]]))
   ];
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, type, checked, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value, // Use checked to filter for checkboxes
+    });
   };
+  
+
+  useEffect(() => {
+    logger.info('formData changed:', formData);
+  }, [formData]);
 
   useEffect(() => {
     const hasNewEvent = events.some(event => event.id.includes('-') && event.extendedProps.fromForm)
@@ -79,6 +89,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
       <DialogContent>
         <form onSubmit={handleSubmit}>
 
+          {/* This is going to break the submit workflow, since it will create multiple reservations at once */}
           <FormControl fullWidth style={{ marginTop: '1rem' }}>
             <InputLabel id="multiselect-child-label">Name</InputLabel>
             <Select
@@ -103,7 +114,16 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
               ))}
             </Select>
           </FormControl>
-
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={formData.groupActivity}
+                onChange={handleChange}
+                name="groupActivity"
+              />
+            }
+            label="Participate in group activity"
+          />
           <TextField
             name="date"
             label="Date"
