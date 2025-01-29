@@ -112,9 +112,9 @@ const HeaderBar = () => {
             {/* {!currentUser ? (<li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Login</a></li>) : (
               <li><a id="logout-link" className="nav-link scrollto logout-link" onClick={signOut}>Logout</a></li>
             )} */}
-            {currentUser ??(
+            {currentUser && (
               <li><a id="logout-link" className="nav-link scrollto logout-link" style={{cursor:'pointer'}} onClick={signOut}>Logout</a></li>
-            )}
+            ) }
 
           </ul>
           <i className="bi bi-list mobile-nav-toggle" onClick={handleMobileMenu}></i>
