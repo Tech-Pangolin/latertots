@@ -16,3 +16,25 @@ export function calculateAge(dob) {
   return age;
 }
 
+/**
+ * Sets a timeout for a function to be called after a delay.
+ * 
+ * @param {function} fn - The function to be called.
+ * @param {number} delay - The delay in milliseconds.
+ * @returns none
+ */
+export const debounce = (fn, delay) => {
+  let timer = null;
+
+  return (...args) => {
+    // Clear the existing timer
+    if (timer) clearTimeout(timer);
+
+    // Set a new timer
+    timer = setTimeout(() => {
+      fn(...args); // Call the debounced function with the latest arguments
+    }, delay);
+  };
+};
+
+
