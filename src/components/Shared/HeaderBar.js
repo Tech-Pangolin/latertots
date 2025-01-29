@@ -109,8 +109,11 @@ const HeaderBar = () => {
 
             {!currentUser ? '' : (<li><a id="schedule-link" className={`nav-link login-link scrollto ${location.pathname === '/schedule' ? 'active' : ''}`} href="/schedule">My Schedule</a></li>)}
 
-            {!currentUser ? (<li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Login</a></li>) : (
+            {/* {!currentUser ? (<li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Login</a></li>) : (
               <li><a id="logout-link" className="nav-link scrollto logout-link" onClick={signOut}>Logout</a></li>
+            )} */}
+            {currentUser ??(
+              <li><a id="logout-link" className="nav-link scrollto logout-link" style={{cursor:'pointer'}} onClick={signOut}>Logout</a></li>
             )}
 
           </ul>
