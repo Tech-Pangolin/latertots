@@ -8,7 +8,10 @@ function TotsTidbits() {
             <div className="container">
                 <div className="row">
                     <div className="col">
-                        <img src="assets/img/tidbits/starbanner.png" className='img-fluid' />
+                    <h1 className='text-center' style={{position:'relative', top:'40px',color:"#E61378"}}>Tots and Tidbits</h1>
+                    <div className="d-flex justify-content-center">
+                        <img src="assets/img/tidbits/starbanner.png" className='img-fluid' style={{width:"50%",}}/>
+</div>
                     </div>
                 </div>
             
@@ -25,7 +28,7 @@ function TotsTidbits() {
 
             </section> */}
 
-            <section className="mx-1">
+            {/* <section className="mx-1">
                 <div className="container">
                     <div className="section-title" dataAos="fade-up">
                         <h2>Important Information</h2>
@@ -34,15 +37,30 @@ function TotsTidbits() {
 
 
                 </div>
-            </section>
-            <section id="details" className="details" style={{ paddingTop: 0 }}>
+            </section> */}
+            <section id="details" className="details" style={{ paddingTop: 20 }}>
                 <div className="container">
 
-                    <div className="row content">
-                        <div className="col-md-3" dataAos="fade-right">
+                    <div className="row content d-flex justify-content-between">
+                        {/* <div className="col-md-3" dataAos="fade-right">
                             <img src="assets/img/shapes.png" className="img-fluid page-img" alt="" />
+                        </div> */}
+                        <div className="col-md-5">
+                        <h3>Pick-Up & Drop-Off Policies:</h3>
+                            <ul>
+                                <li><i className="bi bi-check"></i> Drop-Off: Sign in upon arrival, and disinfect your tot's hands before entering the play room.
+                                </li>
+                                <li><i className="bi bi-check"></i> Pick-Up: Authorized individuals must show ID at pick-up for security purposes.  </li>
+                                <li><i className="bi bi-check"></i> Timely Pick-Up: Late pick-up fees apply after the scheduled time at $5 per minute.
+                                </li>
+                                <li><i className="bi bi-check"></i>Safety: Tots will only be released to individuals listed on the approved pick-up list.
+                                </li>
+                                <li><i className="bi bi-check"></i> Changes: Update us in advance if someone else will be picking up your child.
+                                </li>
+                            </ul>
                         </div>
-                        <div className="col-md-9" dataAos="fade-up">
+                        
+                        <div className="col-md-5" dataAos="fade-up">
                             <h3>Health and Hygiene</h3>
                             {/* <p className="fst-italic">
                                 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
@@ -61,8 +79,8 @@ function TotsTidbits() {
                         </div>
                     </div>
 
-                    <div className="row content">
-                        <div className="col-md-6 order-1 order-md-2" dataAos="fade-left">
+                    <div className="row content  justify-content-between">
+                        <div className="col-md-5 order-1 order-md-2" dataAos="fade-left">
                             <h3>Food Policy</h3>
                             {/* <p>Cupiditate placeat cupiditate placeat est ipsam culpa. Delectus quia minima quod. Sunt saepe odit aut quia voluptatem hic voluptas dolor doloremque.</p> */}
                             <ul>
@@ -73,7 +91,7 @@ function TotsTidbits() {
                             </ul>
 
                         </div>
-                        <div className="col-md-6 order-2 order-md-1" dataAos="fade-up">
+                        <div className="col-md-5 order-2 order-md-1" dataAos="fade-up">
                             <h3>What to Bring</h3>
 
                             <ul>
@@ -88,25 +106,7 @@ function TotsTidbits() {
 
 
 
-                    <div className="row content">
-                        <div className="col-md-4 order-1 order-md-2" dataAos="fade-left">
-                            <img src="assets/img/kidafro.jpg" className="img-fluid page-img" alt="" />
-                        </div>
-                        <div className="col-md-8 order-2 order-md-1" dataAos="fade-up">
-                            <h3>Pick-Up & Drop-Off Policies:</h3>
-                            <ul>
-                                <li><i className="bi bi-check"></i> Drop-Off: Sign in upon arrival, and disinfect your tot's hands before entering the play room.
-                                </li>
-                                <li><i className="bi bi-check"></i> Pick-Up: Authorized individuals must show ID at pick-up for security purposes.  </li>
-                                <li><i className="bi bi-check"></i> Timely Pick-Up: Late pick-up fees apply after the scheduled time at $5 per minute.
-                                </li>
-                                <li><i className="bi bi-check"></i>Safety: Tots will only be released to individuals listed on the approved pick-up list.
-                                </li>
-                                <li><i className="bi bi-check"></i> Changes: Update us in advance if someone else will be picking up your child.
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                   
 
                 </div>
             </section>

@@ -129,7 +129,12 @@ h1.registration{
   width:100%;
   text-align: center;
 }
-
+.details ul li {
+  /* list-style-type: disc; */
+  list-style-position: inside;
+  text-indent: -1em;
+  padding-left: 1em;
+}
 /*--------------------------------------------------------------
 # Back to top button
 --------------------------------------------------------------*/
@@ -1225,7 +1230,7 @@ section {
   font-size: 36px;
   display: block;
   font-weight: 600;
-  color: #010483;
+  color: #41A8C5;
 }
 
 .counts .count-box p {
