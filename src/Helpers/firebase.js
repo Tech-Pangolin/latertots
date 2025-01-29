@@ -472,8 +472,8 @@ export class FirebaseDbService {
       const docRef = await addDoc(collection(db, "Reservations"), dataWithoutId);
       const userRef = doc(collection(db, "Users"), userId);
 
-      // Add a reference to the user document
-      await updateDoc(docRef, { User: userRef });
+      // Add a reference to the user document and quick reference to the userId
+      await updateDoc(docRef, { User: userRef, userId: userId });
 
       // Add a reference to the child document
       const childRef = doc(collection(db, "Children"), reservationData.extendedProps.childId);
