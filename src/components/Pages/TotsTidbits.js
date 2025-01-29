@@ -5,10 +5,17 @@ import React from 'react';
 function TotsTidbits() {
     return (
         <div className='bg-white'>
-            <section id="tidbits" className="tidbits-hero" >
+            <div className="container">
+                <div className="row">
+                    <div className="col">
+                        <img src="assets/img/tidbits/starbanner.png" className='img-fluid' />
+                    </div>
+                </div>
+            
+            {/* <section id="tidbits" className="tidbits-hero" >
                 <div className="container">
                     <div className="row justify-content-center">
-                        <div className="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
+                        <div className="col-lg-12 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
 
                         </div>
 
@@ -16,7 +23,7 @@ function TotsTidbits() {
                 </div>
 
 
-            </section>
+            </section> */}
 
             <section className="mx-1">
                 <div className="container">
@@ -103,6 +110,7 @@ function TotsTidbits() {
 
                 </div>
             </section>
+        </div>
         </div>
     );
 }

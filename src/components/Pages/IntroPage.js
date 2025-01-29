@@ -14,20 +14,26 @@ function IntroPage() {
             {/* HERO SECTION */}
             <section id="hero">
                 <div className="container-fluid">
-                    <div className="row justify-content-between">
-                        <div className="col-sm-12 col-lg-7 pt-5 pt-lg-0 order-1 order-lg-2 order-sm-2 d-flex align-items-center d-none d-sm-block">
-                            <div dataAos="zoom-out">
-                                
-                                <h1 >Welcome to LaterTots</h1>
-                                <h2>Where every child finds their happy place away.<br /> Discover a world of flexible, fun, and secure child care that fits your busy life.</h2>
-                                <div className="text-center text-lg-start mb-5">
-                                    <a href="/register" className="btn-get-started scrollto">Get Started</a>
-                                </div>
-                            </div>
+                    <div className="row">
+                        <div className="col-12 ">
+
+
+                        <div style={{width:'100%'}} className='d-flex justify-content-center'><img src="./assets/img/hero/welcome.png" className="img-fluid" /></div>
                         </div>
-                        <div className="col-sm-12 col-lg-4 order-2 order-lg-1 order-sm-1 hero-img" dataAos="zoom-out" dataAosDelay="300">
-                            <img src="assets/img/brand/Logos/PNG/primaryLogos/logo.png" id="hero-logo" className="img-fluid animated slide-in" style={{width:"75%"}}  alt="" />
-                        </div>
+                    </div>
+                    <div className="container">
+                    <div className="row d-flex justify-content-between mt-2">
+                        <div className="col-12 col-md-8 d-flex justify-content-center"> <img src="assets/img/hero/photoline.png" className="img-fluid" style={{height:"84%"}} alt="" /></div>
+                        <div className="col-12 col-md-4 d-flex justify-content-end align-items-end"> <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid slide-in d-none d-sm-block" style={{ width: "300px", height:"300px" }} alt="" /></div>
+                        <div className="col-12 d-block d-sm-none d-flex justify-content-center"><img src="assets/img/hero/logo-cir.png" className="img-fluid text-center" style={{width:'50%'}}/></div>
+                         {/* <div className="col-sm-12 col-lg-6  d-flex align-items-center ">
+                           
+                                <img src="assets/img/hero/photoline.png" className="" alt="" />
+                             </div>
+                        <div className="col-sm-12 col-lg-4 hero-img" dataAos="zoom-out" dataAosDelay="300">
+                            <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid slide-in" style={{ width: "75%" }} alt="" />
+                        </div> */}
+                    </div>
                     </div>
                 </div>
 
@@ -42,7 +48,7 @@ function IntroPage() {
                         <use xlinkHref="#wave-path" x="50" y="0" fill="rgba(255,255,255, .2)" />
                     </g>
                     <g className="wave3">
-                        <use xlinkHref="#wave-path" x="50" y="9" fill="#fff" />
+                        <use xlinkHref="#wave-path" x="50" y="9" fill="#41A8C5" />
                     </g>
                 </svg>
 
@@ -53,11 +59,13 @@ function IntroPage() {
                     <div className="container">
                         <div class="row content">
                             <div class="col-md-4 order-1 order-md-2" dataAos="fade-left">
-                                <img src="assets/img/bluehand.png" class="img-fluid" alt="" style={{borderRadius:'50%'}} />
-                                
+                                <img src="assets/img/bluehand.png" class="img-fluid" alt="" style={{ borderRadius: '50%', }} />
+                                <br />
+                                {/* <img src="assets/img/homekids.png" class="img-fluid main-kids" /> */}
+
                             </div>
                             <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch px-lg-5" dataAos="fade-left">
-                                <h2 style={{ color: '#41A8C5' }}>What is Later Tots?</h2>
+                                <h2 style={{ color: '#FFF' }}>What is Later Tots?</h2>
                                 <p>
                                     Later Tots is more than just a drop-in child care service—it's a passion project born from the desire to support Tot-Tenders who need a few hours to themselves, whether for running errands, enjoying some leisure time, or simply taking a well-deserved break. We know how challenging it can be to find trustworthy, flexible child care that fits your schedule, especially when you don't need full or part-time care. That's where Later Tots comes in.
                                 </p>
@@ -69,13 +77,13 @@ function IntroPage() {
                                     At Later Tots, we truly believe that every child deserves a place where they feel at home, even when they're away. That’s why we’re proud to be your tot’s happy place away—where they can drop, play, and stay.
 
                                 </p>
-                                <div class="d-flex justify-content-center">
-                                <img src="assets/img/5kids.png" class="img-fluid main-kids"/>
+                               
+
+                            </div> 
+                        </div><div class="row d-flex justify-content-center">
+                                    <img src="assets/img/homekids.png" class="img-fluid main-kids" />
                                 </div>
 
-                            </div>
-                        </div>
-                        
                     </div>
                 </section>
                 <section id="contact" class="contact">
@@ -111,7 +119,7 @@ function IntroPage() {
 
                             </div>
 
-                            <div class="col-lg-8 mt-5 mt-lg-0" dataAos="fade-left" dataAosDelay="200">
+                            <div class="col-lg-8 my-5 mt-lg-0" dataAos="fade-left" dataAosDelay="200">
 
                                 <form action="forms/contact.php" method="post" role="form" class="php-email-form">
                                     <div class="row">
