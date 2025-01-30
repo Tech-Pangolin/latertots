@@ -55,7 +55,7 @@ function IntroPage() {
             </section>
             {/* END HERO SECTION */}
             <main>
-                <section id="about" className="about">
+                <section id="about" className="about" style={{backgroundColor:'#41A8C5'}}>
                     <div className="container">
                         <div class="row content">
                             <div class="col-md-4 order-1 order-md-2" dataAos="fade-left">

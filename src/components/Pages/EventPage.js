@@ -2,12 +2,12 @@ import React from 'react';
 
 function EventPage() {
     return (
-        <div className="bg-white">
-            <section id="hero" style={{ background: "black", padding: 0 }}>
+        <div className="bg-white" style={{ background: 'url("assets/img/events/eventsbg.png") repeat', backgroundSize: 'contain', width: '100%', }}>
+            <section id="" >
                 <div className="container">
                     <div className="row justify-content-center">
-                        <div className="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
-                            <img src="./assets/img/events/colorhands.jpg" className='img-fluid' alt='colorful hands' />
+                        <div className="col-lg-12 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
+                            <img src="./assets/img/events/eventsheader.png" className='img-fluid' alt='colorful hands' />
                         </div>
 
                     </div>
@@ -17,16 +17,16 @@ function EventPage() {
 
             </section>
             <section id="about" className="about container">
-                <div class="section-title events-title" dataAos="fade-up">
+                {/* <div class="section-title events-title" dataAos="fade-up">
                     <h2>Special Days, Big Fun!</h2>
                     <p style={{ color: '#3B38DA' }}>Exciting Events at Later Tots</p>
-                </div>
+                </div> */}
 
-        <div className="row content">
-            <div className="col">
-            <p>From themed play dates, Tots night in, to birthday bashes, Later Tots is the place to be for all things fun and festive! Check out our upcoming events to see how we’re celebrating each day with creativity, joy, and lots of laughter. Make sure to mark your calendar so your little one doesn't miss out on the fun!</p>
-            </div>
-            </div>
+                <div className="row content">
+                    <div className="col">
+                        <p>From themed play dates, Tots night in, to birthday bashes, Later Tots is the place to be for all things fun and festive! Check out our upcoming events to see how we’re celebrating each day with creativity, joy, and lots of laughter. Make sure to mark your calendar so your little one doesn't miss out on the fun!</p>
+                    </div>
+                </div>
                 <div className="row content">
                     <div className="col-md-4" dataAos="fade-right">
                         {/* <img src="assets/img/events/smileyhair.jpg" className="img-fluid" alt="" /> */}
@@ -34,7 +34,7 @@ function EventPage() {
                         {/* <img src="assets/img/kids3.jpg" className="img-fluid mt-5" alt="" /> */}
                     </div>
                     <div className="col-md-8" dataAos="fade-up">
-                      
+
                         <h3>Tots Night In </h3>
                         <p>We know how important it is for our Tot-tenders to enjoy a tot-free evening, and we’ve got you covered with our Tots Night In package! While you unwind, your little ones will be having a blast with a fun-filled night of music, games, crafts, and movies. We also provide a fun dinner, so you can relax knowing that your tots are in good hands, enjoying every moment. It’s the perfect way to treat yourself to a carefree evening while we take great care of your special little ones. Price:$75 for the first tot additional $10 per tot  (7:00 PM – 11:00 PM)
                         </p>

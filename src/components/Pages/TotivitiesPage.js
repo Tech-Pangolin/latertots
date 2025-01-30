@@ -7,24 +7,20 @@ function AboutPage() {
                 <div className="container">
                     <div className="row justify-content-center">
                         <div className="col-8">
-                            <div className="w-100 d-flex justify-content-start"><img src="assets/img/totivities/orangesquiggle.png" class="img-fluid" style={{width:'50%'}}/></div>
+                            <div className="w-100 d-flex justify-content-start"><img src="assets/img/totivities/orangesquiggle.png" class="img-fluid" style={{width:'30%'}}/></div>
                             <div className="w-100"><h1 style={{fontSize:"57px", color:"#41A8C5",marginRight:"110px"}} className="text-end mr-5">TOT-TIVITIES</h1></div>
-                            <div className="w-100 d-flex justify-content-end"><img src="assets/img/totivities/discovercloud.png" class="img-fluid" style={{width:'50%'}}/></div>
+                            <div className="w-100 d-flex justify-content-start"><img src="assets/img/totivities/discovercloud.png" class="img-fluid" style={{width:'50%'}}/></div>
                         </div>
-                        <div className="col d-flex justify-content-end"><img src="assets/img/totivities/kidscircle.png" class="img-fluid mt-5" style={{}}/></div>
+                        <div className="col d-flex justify-content-end"><img src="assets/img/totivities/kidscircle.png" class="img-fluid" style={{}}/></div>
                     </div>
                 </div>
 
 
             </section>
-            <section className="totivities-container wavy">
-                <div class="section-title" dataAos="fade-up">
-                    <h2>So much to do!</h2>
-                    <p sx={{ color: '#3B38DA' }}>Tot-tivities</p>
-                </div>
-                <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&ctz=UTC&bgcolor=%23C0CA33&title=Later%20Tots&src=aW5mb0BsYXRlcnRvdHNkcm9waW4uY29t&src=YWRkcmVzc2Jvb2sjY29udGFjdHNAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&src=ZW4udXNhI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%23039BE5&color=%23B39DDB" style={{border:"solid 1px #777"}} width="100%" height="700" frameborder="0" scrolling="no"></iframe>
-
-                <div className="row content mt-5">
+            <section className="totivities-container wavy container">
+            
+            
+                <div className="row content">
                     <div className="col-md-4" dataAos="fade-right">
                         {/* <img src="assets/img/events/smileyhair.jpg" className="img-fluid" alt="" /> */}
                         <img src="assets/img/littleboy.png" className="img-fluid mb-5" alt="" style={{ borderRadius: '50%', width: '300px' }} />

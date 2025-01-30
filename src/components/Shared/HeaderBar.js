@@ -94,6 +94,7 @@ const HeaderBar = () => {
               <li className='nav-item dropdown'>
                 <a id="dropin-link" className={`nav-link dropdown-toggle dropin-link scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Drop-In Fun</a>
                 <ul className="dropdown-menu">
+                  <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Events</a></li>
                   <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/totivities' ? 'active' : ''}`} href="/totivities">Tot-tivities</a></li>
                   <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/party">Party & Play</a></li>
                 </ul>

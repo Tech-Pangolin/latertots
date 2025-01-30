@@ -19,7 +19,7 @@ function PartyPage() {
             <section className="container">
                 <div class="section-title" dataAos="fade-up">
                     <h2>So much to do!</h2>
-                    <p sx={{ color: '#3B38DA' }}>Party PAge</p>
+                    <p sx={{ color: '#3B38DA' }}>Party Page</p>
                 </div>
                 <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&ctz=UTC&bgcolor=%23C0CA33&title=Later%20Tots&src=aW5mb0BsYXRlcnRvdHNkcm9waW4uY29t&src=YWRkcmVzc2Jvb2sjY29udGFjdHNAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&src=ZW4udXNhI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%23039BE5&color=%23B39DDB" style={{border:"solid 1px #777"}} width="100%" height="700" frameborder="0" scrolling="no"></iframe>
 

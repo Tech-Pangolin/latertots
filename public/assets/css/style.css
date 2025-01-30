@@ -963,9 +963,9 @@ section {
 
 #about {
   /* background: url(../img/wpattern.png) */
-  background-color: #41A8C5;
+  /* background-color: #41A8C5; */
 }
-
+.about p{color:#FFF}
 .about {
   padding: 40px;
 }

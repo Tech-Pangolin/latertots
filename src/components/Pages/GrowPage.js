@@ -15,7 +15,7 @@ function CareersPage() {
 
             </section> */}
 
-            <section id="about" className="about careers">
+            <section id="about" className="about careers" style={{backgroundColor:'#41A8C5'}}>
                 <div className="container">
                     <div className="section-title" dataAos="fade-up">                       
                         <p sx={{ color: '#3B38DA' }} className="text-center">Join Our Tot-tastic Team at Later Tots!</p>
