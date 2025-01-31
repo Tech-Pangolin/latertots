@@ -26,13 +26,7 @@ function IntroPage() {
                         <div className="col-12 col-md-8 d-flex justify-content-center"> <img src="assets/img/hero/photoline.png" className="img-fluid" style={{height:"84%"}} alt="" /></div>
                         <div className="col-12 col-md-4 d-flex justify-content-end align-items-end"> <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid slide-in d-none d-sm-block" style={{ width: "300px", height:"300px" }} alt="" /></div>
                         <div className="col-12 d-block d-sm-none d-flex justify-content-center"><img src="assets/img/hero/logo-cir.png" className="img-fluid text-center" style={{width:'50%'}}/></div>
-                         {/* <div className="col-sm-12 col-lg-6  d-flex align-items-center ">
-                           
-                                <img src="assets/img/hero/photoline.png" className="" alt="" />
-                             </div>
-                        <div className="col-sm-12 col-lg-4 hero-img" dataAos="zoom-out" dataAosDelay="300">
-                            <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid slide-in" style={{ width: "75%" }} alt="" />
-                        </div> */}
+                        
                     </div>
                     </div>
                 </div>
@@ -57,14 +51,13 @@ function IntroPage() {
             <main>
                 <section id="about" className="about" style={{backgroundColor:'#41A8C5'}}>
                     <div className="container">
-                        <div class="row content">
-                            <div class="col-md-4 order-1 order-md-2" dataAos="fade-left">
-                                <img src="assets/img/bluehand.png" class="img-fluid" alt="" style={{ borderRadius: '50%', }} />
+                        <div className="row content">
+                            <div className="col-md-4 order-1 order-md-2">
+                                <img src="assets/img/bluehand.png" className="img-fluid" alt="" style={{ borderRadius: '50%', }} />
                                 <br />
-                                {/* <img src="assets/img/homekids.png" class="img-fluid main-kids" /> */}
 
                             </div>
-                            <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch px-lg-5" dataAos="fade-left">
+                            <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch px-lg-5">
                                 <h2 style={{ color: '#FFF' }}>What is Later Tots?</h2>
                                 <p>
                                 At Later Tots, every day is a play day! Our indoor play space is designed for tots 18 months to 6 years to drop in and enjoy non-stop fun. From exploring new adventures to creative play and making new friends, every visit is packed with high energy, imagination, and laughter.
@@ -79,37 +72,37 @@ function IntroPage() {
                                
 
                             </div> 
-                        </div><div class="row d-flex justify-content-center">
-                                    <img src="assets/img/homekids.png" class="img-fluid main-kids" />
+                        </div><div className="row d-flex justify-content-center">
+                                    <img src="assets/img/homekids.png" className="img-fluid main-kids" />
                                 </div>
 
                     </div>
                 </section>
-                <section id="contact" class="contact">
-                    <div class="container px-lg-5">
+                <section id="contact" className="contact">
+                    <div className="container px-lg-5">
 
-                        <div class="section-title" dataAos="fade-up">
+                        <div className="section-title">
                             <p>Contact Us</p>
                         </div>
 
-                        <div class="row">
+                        <div className="row">
 
-                            <div class="col-lg-4" dataAos="fade-right" dataAos-delay="100">
-                                <div class="info">
-                                    <div class="address">
-                                        <i class="bi bi-geo-alt"></i>
+                            <div className="col-lg-4">
+                                <div className="info">
+                                    <div className="address">
+                                        <i className="bi bi-geo-alt"></i>
                                         <h4>Location:</h4>
                                         <p>Concord, North Carolina</p>
                                     </div>
 
-                                    <div class="email">
-                                        <i class="bi bi-envelope"></i>
+                                    <div className="email">
+                                        <i className="bi bi-envelope"></i>
                                         <h4>Email:</h4>
                                         <p>info@latertotsdropin.com</p>
                                     </div>
 
-                                    <div class="phone">
-                                        <i class="bi bi-phone"></i>
+                                    <div className="phone">
+                                        <i className="bi bi-phone"></i>
                                         <h4>Hours:</h4>
                                         <p>8:30am - 5:30pm</p>
                                     </div>
@@ -118,29 +111,29 @@ function IntroPage() {
 
                             </div>
 
-                            <div class="col-lg-8 my-5 mt-lg-0" dataAos="fade-left" dataAosDelay="200">
+                            <div className="col-lg-8 my-5 mt-lg-0">
 
-                                <form action="forms/contact.php" method="post" role="form" class="php-email-form">
-                                    <div class="row">
-                                        <div class="col-md-6 form-group">
-                                            <input type="text" name="name" class="form-control" id="name" placeholder="Your Name" required />
+                                <form action="forms/contact.php" method="post" role="form" className="php-email-form">
+                                    <div className="row">
+                                        <div className="col-md-6 form-group">
+                                            <input type="text" name="name" className="form-control" id="name" placeholder="Your Name" required />
                                         </div>
-                                        <div class="col-md-6 form-group mt-3 mt-md-0">
-                                            <input type="email" class="form-control" name="email" id="email" placeholder="Your Email" required />
+                                        <div className="col-md-6 form-group mt-3 mt-md-0">
+                                            <input type="email" className="form-control" name="email" id="email" placeholder="Your Email" required />
                                         </div>
                                     </div>
-                                    <div class="form-group mt-3">
-                                        <input type="text" class="form-control" name="subject" id="subject" placeholder="Subject" required />
+                                    <div className="form-group mt-3">
+                                        <input type="text" className="form-control" name="subject" id="subject" placeholder="Subject" required />
                                     </div>
-                                    <div class="form-group mt-3">
-                                        <textarea class="form-control" name="message" rows="5" placeholder="Message" required></textarea>
+                                    <div className="form-group mt-3">
+                                        <textarea className="form-control" name="message" rows="5" placeholder="Message" required></textarea>
                                     </div>
-                                    <div class="my-3">
-                                        <div class="loading">Loading</div>
-                                        <div class="error-message"></div>
-                                        <div class="sent-message">Your message has been sent. Thank you!</div>
+                                    <div className="my-3">
+                                        <div className="loading">Loading</div>
+                                        <div className="error-message"></div>
+                                        <div className="sent-message">Your message has been sent. Thank you!</div>
                                     </div>
-                                    <div class="text-center"><button type="submit">Send Message</button></div>
+                                    <div className="text-center"><button type="submit">Send Message</button></div>
                                 </form>
 
                             </div>
