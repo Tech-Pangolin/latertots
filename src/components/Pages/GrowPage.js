@@ -15,39 +15,44 @@ function CareersPage() {
 
             </section> */}
 
-            <section id="about" className="about careers" style={{backgroundColor:'#41A8C5'}}>
+            <section id="" className=" careers">
                 <div className="container">
-                    <div className="section-title" dataAos="fade-up">                       
-                        <p sx={{ color: '#3B38DA' }} className="text-center">Join Our Tot-tastic Team at Later Tots!</p>
+                    <div className='row d-flex justify-content-center'>
+                        <div className='col-3'>
+                            <img src="assets/img/lt-logo.png" className="img-fluid" alt="careers" />
+                        </div>
+                    </div>
+                    <div className="section-title mt-1" dataAos="fade-up">
+                        <p style={{ color: '#5E17EB' }} className="text-center">Join Our Tot-tastic Team at Later Tots!</p>
                     </div>
                     <div className="row">
 
                         <div className="col-xl-12 col-lg-12 icon-boxes d-flex flex-column align-items-stretch justify-content-center px-lg-5" dataAos="fade-left">
                             {/* <h3>Enim quis est voluptatibus aliquid consequatur fugiat</h3> */}
-                            <p>Are you passionate about creating a playful and nurturing environment for little ones? At Later Tots, we're on a mission to make every moment a magical experience for tots and their families. We're always looking for dedicated, enthusiastic individuals to join our Tot-tender team. Whether you're a seasoned childcare professional or just beginning your journey in early childhood development, you'll find a rewarding and supportive atmosphere here.
-
-                                Our staff is the heart of what we do, and we believe in fostering a collaborative, fun, and safe space for both our tots and team members. From crafting imaginative play sessions to guiding tots through their daily adventures, every day brings a new opportunity to make a positive impact.
+                            <p className="text-center"><i class="bi bi-balloon-fill"></i> Join the Tot-tastic Fun! <i class="bi bi-balloon-fill"></i></p>
+                            <p>Do you have a knack for making little ones giggle, explore, and create? At Later Tots, we're all about play, imagination, and adventure—and we need fun-loving, energetic team members to bring the magic to life! Whether you're a pro at peekaboo or a master fort builder, there's a place for you on our Tot-tender team.
+                                Here, every day is a chance to spark joy, inspire creativity, and make a difference in the lives of tots and their families. If you love jumping into playful activities, crafting tot-approved fun, and being part of a supportive, exciting environment, we'd love to meet you!
                             </p>
-
-                            <div className="icon-box" dataAos="zoom-in" dataAosDelay="100">
-                                <div className="icon"><i className="bx bx-meteor"></i></div>
-                                <h4 className="title">Why Later Tots?</h4>
-
-                                <p className="description">  <ul><li>Competitive pay and benefits
-                                </li>
-                                    <li>Ongoing training and career development</li>
-                                    <li>A fun, supportive environment that values creativity and teamwork
-                                    </li>
-                                    <li>Flexible scheduling options
-                                    </li>
-                                    <li>Opportunities to work in a variety of roles, from Tot-tenders to event coordinators</li>
-                                </ul></p>
+                            <p className='text-center'>Let’s turn play into purpose—one tot-sized adventure at a time!</p>
+                            <h3 className='text-center mt-3'>Why LaterTots?</h3>
+                            <div className="row">
+                                <div className="col-2"><img src="assets/img/brand/Logos/PNG/submarkLogos/SubmarkPink.png" className='img-fluid' /></div>
+                                <div className="col-10">
+                                    <p><ul>
+                                        <li>Competitive pay and benefits</li>
+                                        <li>Ongoing training and career development</li>
+                                        <li>A fun, supportive environment that values creativity and teamwork
+                                        </li>
+                                        <li>Flexible scheduling options
+                                        </li>
+                                        <li>Opportunities to work in a variety of roles, from Tot-tenders to event coordinators</li>
+                                    </ul></p>
+                                </div>
                             </div>
-
-                            <div className="icon-box" dataAos="zoom-in" dataAosDelay="200">
-                                <div className="icon"><i className="bx bx-briefcase"></i></div>
-                                <h4 className="title">Qualifications</h4>
-                                <p className="description">
+                            <h3 className='text-center mt-3'>Qualifications</h3>
+                            <div className="row mb-5">
+                                <div className="col-2"><img src="assets/img/careers/tree.png" className='img-fluid' /></div>
+                                <div className="col-10"> <p className="description">
                                     <ul>
                                         <li>A love for working with children</li>
                                         <li>CPR and First Aid certification (or willingness to obtain)</li>
@@ -56,12 +61,8 @@ function CareersPage() {
                                         <li>A positive, team-oriented attitude
                                         </li>
                                     </ul>
-                                </p>
+                                </p></div>
                             </div>
-                            <h4 className="title mt-5" style={{ fontSize: '18px', fontWeight: '700' }}>Ready to join the fun?</h4>
-                            <p>
-                                Apply today and become part of the Later Tots family, where play is always in progress, and every tot’s smile is a win!
-                            </p>
                         </div>
 
                     </div>

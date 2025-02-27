@@ -67,14 +67,13 @@ function IntroPage() {
                             <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch px-lg-5" dataAos="fade-left">
                                 <h2 style={{ color: '#FFF' }}>What is Later Tots?</h2>
                                 <p>
-                                    Later Tots is more than just a drop-in child care service—it's a passion project born from the desire to support Tot-Tenders who need a few hours to themselves, whether for running errands, enjoying some leisure time, or simply taking a well-deserved break. We know how challenging it can be to find trustworthy, flexible child care that fits your schedule, especially when you don't need full or part-time care. That's where Later Tots comes in.
+                                At Later Tots, every day is a play day! Our indoor play space is designed for tots 18 months to 6 years to drop in and enjoy non-stop fun. From exploring new adventures to creative play and making new friends, every visit is packed with high energy, imagination, and laughter.
                                 </p>
                                 <p>
-                                    Our drop-in/short-term child care program is designed for children aged 2 months to 6 years, offering a safe, fun, and secure environment where they can thrive. We’re all about creating a space where kids can play, learn, and stay happy while their caregivers enjoy peace of mind. Our flexible scheduling allows you to drop in whenever you need to, making us your go-to option for those rare or random times when childcare is hard to find.
-
+                                We make playtime easy—no schedules, no stress—just a safe and engaging space where tots can move, imagine, and play to their heart's content. And while they're off on their next great adventure, you can enjoy peace of mind knowing your tots are safe, engaged, and having the time of their lives!
                                 </p>
                                 <p>
-                                    At Later Tots, we truly believe that every child deserves a place where they feel at home, even when they're away. That’s why we’re proud to be your tot’s happy place away—where they can drop, play, and stay.
+                                    At Later Tots, we truly believe that every child deserves a place where they feel at home, even when they're away. That's why we're proud to be your tot's happy place away—where they can drop, play, and stay.
 
                                 </p>
                                

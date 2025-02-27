@@ -29,12 +29,19 @@ function AboutPage() {
                 </div>
                 <div className="row">
                     <div className="col-12">
-                        <h3 className='text-center'>Meet Our Amazing Tot-Tenders</h3>
+                        <h3 className='text-center'>Meet Our Tot-Tenders</h3>
                         <div className="subcontainer">
-                        <p className="text-center">Our team is made up of trained professionals who are passionate about creating a nurturing environment where children can thrive. Every tot-tender is certified in First Aid and CPR and has undergone thorough background checks, ensuring the highest standards of safety and care for your tots.
-                            We are dedicated to making every moment at Later Tots a memorable one.
-                            We treat your tots like our own, providing the love and attention they deserve.</p>
-                            </div>
+                            <p className="text-center">At Later Tots, our Tot-Tenders aren't just staff—they're fun-makers,storytellers, and champions of play! Each member of our team is a trained professional who brings energy, creativity, and a whole lot of heart to every tot's day.
+                            </p>
+                            <ul className="meet-list">
+                                <li><i class="bi bi-check-square-fill"></i> <span>Certified in First Aid & CPR</span>—because safety comes first!</li>
+                                <li><i class="bi bi-check-square-fill"></i> <span>Background-checked & trusted</span>—peace of mind for you, endless fun for them!
+                                </li>
+                                <li><i class="bi bi-check-square-fill"></i> <span>Experts in play & engagement</span>—turning every visit into an adventure!
+                                </li>
+                            </ul>
+                            <p>Whether it’s crafting the perfect playtime, leading a silly song, or simply making your tot feel right at home, our Tot-Tenders are here to make every drop, play, and stay unforgettable!</p>
+                        </div>
                     </div>
                 </div>
                 <div className="row">
@@ -45,26 +52,24 @@ function AboutPage() {
                 </div>
                 <div className="row mt-5">
                     <div className="col-12">
-                        <h3 className='text-center'>Amber Brown, Owner & Lead Tot-Tender</h3> 
+                        <h3 className='text-center'>Amber Brown, Owner & Lead Tot-Tender</h3>
                         <div className="d-flex justify-content-center"><img src="assets/img/about/ambercir.png" className='text-center amber-photo img-fluid' /></div>
                         <div className="subcontainer">
-                        <p className="text-center mt-3">
-                            Amber Brown is the heart and soul behind Later Tots. With over twenty years of experience in child care and more than a decade as a dedicated nanny, Amber has made a profound impact on countless families. She holds a degree in Early Childhood Development, which has fueled her passion for bridging the gaps between childcare and the diverse needs of families.
-
-                        </p>
-                        <p className="text-center">
-                            Caring for tots has always been Amber's calling, making her career choice easy and natural. Her hard work, dedication, and genuine love for what she does shine through in every interaction. Amber is committed to creating a safe, nurturing, and joyful environment at Later Tots, where every child can thrive.
-
-                        </p>
-                        <p className="text-center">With high hopes and great enthusiasm, Amber is excited to see Later Tots grow into a beloved community resource, where tots and their families feel supported, cared for, and always welcome.</p>
+                            <p className="text-center mt-3">
+                            Hey there, I'm Amber Brown—the big tot behind Later Tots! With over 20 years of experience in caring for children and a degree in Early Childhood Development, I’ve spent my life creating spaces where little ones can giggle, grow, and explore. From my years as a dedicated nanny to now running Later Tots, play has always been my passion! I dreamed of building a place where tots can dive into endless fun while their grown-ups feel at ease. Later Tots isn’t just a play space—it’s a community, a place where curiosity runs wild, friendships bloom, and every visit is an adventure.
+</p>
+                            <p className="text-center">
+                            I can’t wait to welcome you and your tot—let's make some playful memories together! 
+    </p>
+                        
                         </div>
                     </div>
                     <div className="col-2 d-flex justify-content-center">
-                       
+
                     </div>
                 </div>
 
-               
+
 
             </section>
 

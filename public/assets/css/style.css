@@ -1154,6 +1154,17 @@ section {
   background-color: #FFF;
   padding: 20px;
 }
+ul.meet-list{
+  list-style-type: none;
+  color:#010351;
+}
+ul.meet-list li i{
+  color:green;
+}
+ul.meet-list li span{
+  font-family: "Snack", sans-serif;
+
+}
 
 @keyframes pulsate-btn {
   0% {
@@ -2021,10 +2032,23 @@ Events
 /*
 Careers
 */
+.careers{
+  background: url("../img/careers/careers-bg.png") center center no-repeat;
+  background-size: cover;
+  /* background-color: #BDD853; */
+}
+
 .careers ul li {
   font-size: 16px
 }
-
+.careers p{
+  color:#5E17EB;
+  text-transform: uppercase;
+}
+.careers h3{
+  color:#5E17EB;
+  text-transform: uppercase;
+}
 /*
 Backgrounds
 */
