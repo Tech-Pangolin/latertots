@@ -14,7 +14,7 @@ function UserRegistrationPage() {
           <img src="assets/img/brand/Logos/PNG/Alternate/Alternate.png" className="img-fluid" alt="" style={{width:"50%"}} />
           </div>
           <div className="d-flex justify-content-center mb-5">
-          <h1 className='text-center registration' style={{padding:"0 400px"}}>"Ready to make memories? Let’s get your tot ready to drop, play, and stay!"</h1>
+          <h1 className='text-center registration' >"Ready to make memories? Let’s get your tot ready to drop, play, and stay!"</h1>
           </div>
           <div className="row">
             <div className="col"> <p>Register your tot today and become part of the Later Tots community! </p>
