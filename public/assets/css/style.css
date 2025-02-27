@@ -829,6 +829,15 @@ Careers
 /*
 Tidbits
 */
+.tidbits ul li{ 
+  line-height: 2rem;
+  font-size: 1.2em;
+}
+.tidbits-bg{
+  background: url("../img/tidbits/background.png") top center no-repeat;
+  background-size: cover;
+}
+
 .tidbits-hero {
   background: url("../img/tidbits.jpg") center center no-repeat;
   background-size: cover;

@@ -4,113 +4,58 @@ import React from 'react';
 
 function TotsTidbits() {
     return (
-        <div className='bg-white'>
+        <div className='tidbits-bg' >
             <div className="container">
                 <div className="row">
-                    <div className="col">
-                    <h1 className='text-center' style={{position:'relative', top:'40px',color:"#E61378"}}>Tots and Tidbits</h1>
-                    <div className="d-flex justify-content-center">
-                        <img src="assets/img/tidbits/starbanner.png" className='img-fluid' style={{width:"50%",}}/>
-</div>
+                    <div className="col-2">
+                        <img src="assets/img/tidbits/important.png" className='img-fluid' style={{ width: "100%" }} />
+                    </div>
+                    <div className="col-10 d-flex justify-content-center">
+                        <img src="assets/img/tidbits/totstidbitsheader.png" className='img-fluid' style={{ width: "80%" }} />
                     </div>
                 </div>
-            
-            {/* <section id="tidbits" className="tidbits-hero" >
+            </div>
+            <section id="details" className="tidbits mt-5" style={{ paddingTop: '20px' }}>
                 <div className="container">
-                    <div className="row justify-content-center">
-                        <div className="col-lg-12 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
-
-                        </div>
-
-                    </div>
-                </div>
-
-
-            </section> */}
-
-            {/* <section className="mx-1">
-                <div className="container">
-                    <div className="section-title" dataAos="fade-up">
-                        <h2>Important Information</h2>
-                        <p sx={{ color: '#3B38DA' }}>Tots & Tidbits</p>
-                    </div>
-
-
-                </div>
-            </section> */}
-            <section id="details" className="details" style={{ paddingTop: 20 }}>
-                <div className="container">
-
                     <div className="row content d-flex justify-content-between">
-                        {/* <div className="col-md-3" dataAos="fade-right">
-                            <img src="assets/img/shapes.png" className="img-fluid page-img" alt="" />
-                        </div> */}
-                        <div className="col-md-5">
-                        <h3>Pick-Up & Drop-Off Policies:</h3>
+                        <div className="col-md-12">
+                            <h4>Tot-ally Prepared <i class="bi bi-backpack2" style={{ color: "green" }}></i></h4>
                             <ul>
-                                <li><i className="bi bi-check"></i> Drop-Off: Sign in upon arrival, and disinfect your tot's hands before entering the play room.
+                                <li>Please pack any essentials your tot might need, such as diapers, wipes, and a change of clothes.</li>
+                                <li>Tots who aren’t potty trained will be changed standing when needed.</li>
+                                <li>A $1.50 per item charge will apply for the use of our diapers or wipes.</li>
+                            </ul>
+                            <h4>Pick-Up & Drop-Off Made Easy!  <i class="bi bi-car-front" style={{ color: "blue" }}></i></h4>
+                            <ul>
+                                <li>Drop-Off: Sign in when you arrive and give your tot's hands a quick clean before they jump into playtime!</li>
+                                <li>Pick-Up: For safety, ID is required for all authorized pick-ups. <i class="bi bi-person-vcard-fill"></i></li>
+                                <li>Safety First: Tots will only be released to approved individuals on the pick-up list. <i class="bi bi-check-circle-fill"></i></li>
+                                <li>Plan Ahead: Let us know in advance if someone new will be picking up your tot! <i class="bi bi-chat-left-dots"></i></li>
+                                <li>4-hour daily play limit per day. <i class="bi bi-patch-exclamation-fill"></i></li>
+                            </ul>
+                            <h4>Snack Time & Food Policy <i class="bi bi-cup-hot" style={{ color: "red" }}></i> <i class="bi bi-ban" style={{ color: "red" }}></i></h4>
+                            <ul>
+                                <li>To keep our space safe and tidy, outside food and drinks are not permitted.
                                 </li>
-                                <li><i className="bi bi-check"></i> Pick-Up: Authorized individuals must show ID at pick-up for security purposes.  </li>
-                                <li><i className="bi bi-check"></i> Timely Pick-Up: Late pick-up fees apply after the scheduled time at $5 per minute.
-                                </li>
-                                <li><i className="bi bi-check"></i>Safety: Tots will only be released to individuals listed on the approved pick-up list.
-                                </li>
-                                <li><i className="bi bi-check"></i> Changes: Update us in advance if someone else will be picking up your child.
+                                <li>We provide small, tot-friendly snacks to keep little ones fueled for play!
                                 </li>
                             </ul>
-                        </div>
-                        
-                        <div className="col-md-5" dataAos="fade-up">
-                            <h3>Health and Hygiene</h3>
-                            {/* <p className="fst-italic">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-                                magna aliqua.
-                            </p> */}
+                            <h4>Sparkling Clean Playtime! <i class="bi bi-stars" style={{ color: "orange" }}></i></h4>
                             <ul>
-                                <li><i className="bi bi-check"></i> If your child is unwell, please keep them at home until they are symptom-free for at least 24 hours, without the aid of medication.</li>
-                                <li><i className="bi bi-check"></i> We follow a strict "No Sick Tots" policy to protect all children in our care.</li>
-                                <li><i className="bi bi-check"></i> For the health and safety of all children, Later Tots only accepts children who are up to date on their vaccinations.
-                                </li>
-                                <li><i className="bi bi-check"></i> Cleaning Procedures: Play areas, toys, and high-touch surfaces are cleaned and disinfected several times a day using safe, non-toxic products. Rooms are deep-cleaned daily, and shared items like toys are sanitized between uses. Staff follow strict sanitization practices to keep the environment healthy, and children and staff wash their hands before and after meals,and bathroom use.</li>
+                                <li>Play areas, toys, and high-touch surfaces are cleaned throughout the day using safe, non-toxic products.</li>
+                                <li>Shared toys are sanitized between uses, and our play space gets a deep clean daily.</li>
+                                <li>Everyone washes their hands before and after snacks and bathroom use to keep the fun germ-free!</li>
                             </ul>
-                            {/* <p>
-                                Voluptas nisi in quia excepturi nihil voluptas nam et ut. Expedita omnis eum consequatur non. Sed in asperiores aut repellendus. Error quisquam ab maiores. Quibusdam sit in officia
-                            </p> */}
-                        </div>
+                            <h4>Healthy & Happy Tots! <i class="bi bi-star-fill" style={{ color: "orange" }}></i></h4>
+                            <ul>
+                                <li>If your tot is feeling under the weather, please keep them home until they're symptom-free for 24 hours.</li>
+                                <li>To keep playtime safe for everyone, we have a No Sick Tots policy.</li>
+                                <li>All tots must be up to date on vaccinations to join the fun.</li>
+                            </ul>                            
+                        </div>                       
                     </div>
-
-                    <div className="row content  justify-content-between">
-                        <div className="col-md-5 order-1 order-md-2" dataAos="fade-left">
-                            <h3>Food Policy</h3>
-                            {/* <p>Cupiditate placeat cupiditate placeat est ipsam culpa. Delectus quia minima quod. Sunt saepe odit aut quia voluptatem hic voluptas dolor doloremque.</p> */}
-                            <ul>
-                                <li><i className="bi bi-check"></i> Outside food and drinks are permitted, but must not contain peanuts, gum, or candy.
-                                </li>
-                                <li><i className="bi bi-check"></i> We offer lunch and dinner for an additional fee. A microwave and refrigerator are available for use.
-                                </li>
-                            </ul>
-
-                        </div>
-                        <div className="col-md-5 order-2 order-md-1" dataAos="fade-up">
-                            <h3>What to Bring</h3>
-
-                            <ul>
-                                <li><i className="bi bi-check"></i>
-                                    Please pack any items your tot might need, such as diapers, wipes, extra clothes, stuffy, and sippy cups.</li>
-
-                                <li><i className="bi bi-check"></i>
-                                    Use of our wipes or diapers will result in a $1.50 charge per use.</li>
-                            </ul>
-                        </div>
-                    </div>
-
-
-
-                   
-
                 </div>
             </section>
-        </div>
         </div>
     );
 }
