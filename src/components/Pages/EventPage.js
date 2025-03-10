@@ -44,68 +44,7 @@ function EventPage() {
                         <p>Join us for an exciting way to connect with your tot while getting familiar with everything Later Tots has to offer!</p>
                     </div>
                 </div>
-                <section id="pricing" class="pricing">
-                    <div class="container">
-
-                        <div class="section-title" dataAos="fade-up">
-                            <h2>Tot-tastic Parties</h2>
-                            <p>Party Packages</p>
-                        </div>
-
-                        <div class="row" dataAos="fade-left">
-
-                            <div class="col-lg-4 col-md-12 mt-3">
-                                <div class="box" dataAos="zoom-in" dataAosDelay="100">
-                                    <h3>Express Tot Party <br />(1 hour 30 minutes)</h3>
-                                    <h4><sup>$</sup>200 <br /><span>(weekday discount: $170)</span></h4>
-                                    <ul>
-                                        <li><i className="bi bi-check"></i> Basic decorations</li>
-                                        <li><i className="bi bi-check"></i> Simple theme selection</li>
-                                        <li><i className="bi bi-check"></i> Fun & fast-paced</li>
-                                    </ul>
-                                    <div class="btn-wrap">
-                                        <a href="#" class="btn-buy">Sign Up Now</a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-12 mt-3">
-                                <div class="box" dataAos="zoom-in" dataAosDelay="100">
-                                    <h3>Tot's Celebration Bash <br />(2 hours)</h3>
-                                    <h4><sup>$</sup>280</h4>
-                                    <ul>
-                                        <li><i className="bi bi-check"></i> Enhanced decorations</li>
-                                        <li><i className="bi bi-check"></i> Multiple themes to choose from</li>
-                                        <li><i className="bi bi-check"></i> Two activities and games
-                                        </li>
-                                    </ul>
-                                    <div class="btn-wrap">
-                                        <a href="#" class="btn-buy">Sign Up Now</a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-12 mt-3">
-                                <div class="box" dataAos="zoom-in" dataAosDelay="100">
-                                    <h3>Tot's Ultimate Party <br />(2 hours 30 minutes)</h3>
-                                    <h4><sup>$</sup>350</h4>
-                                    <ul>
-                                        <li><i className="bi bi-check"></i> Themed decorations</li>
-                                        <li><i className="bi bi-check"></i> Fun tot-friendly music</li>
-                                        <li><i className="bi bi-check"></i> Custom gift for the birthday tot</li>
-                                        <li><i className="bi bi-check"></i> Party favors for each child</li>
-                                    </ul>
-                                    <div class="btn-wrap">
-                                        <a href="#" class="btn-buy">Sign Up Now</a>
-                                    </div>
-                                </div>
-                            </div>
-
-
-
-
-                        </div>
-
-                    </div>
-                </section>
+                
 
             </section>
 

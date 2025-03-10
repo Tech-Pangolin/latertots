@@ -756,11 +756,11 @@ img.slide-in {
 # TotTivities
 */
 .totTivities {
-  background-color: #88DFBC;
-  padding: 60px 0 100px 0;
+  /* background-color: #88DFBC;
+  padding: 60px 0 100px 0; */
   /* background: url("../img/aboutkids.jpg") center center no-repeat;
   background-size: cover; */
-  /* padding: 60px 0; */
+  padding: 20px 0;
   height: 100%;
   width: 100%;
   /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
@@ -771,6 +771,8 @@ img.slide-in {
 -webkit-mask: var(--mask);
         mask: var(--mask);
 }
+
+
 
 
 
@@ -1522,8 +1524,51 @@ ul.meet-list li span{
 }
 
 /*--------------------------------------------------------------
-# Pricing
+# Pricing/Party Packages
 --------------------------------------------------------------*/
+#party-packages, #upcoming-events{
+  background-color:#9D65E2; 
+  width:430px; 
+  color: #FFF; 
+  border-radius:15px;
+  font-size:50px;
+}
+ #upcoming-events{
+  background-color:#EB21A6; 
+  width:500px; 
+  color: #FFF; 
+  border-radius:15px;
+  font-size:42px;
+  text-align: center;
+}
+#party1, #party1 h3, #party1 h4, #party1 p{
+  background-color: #BDD853;
+  color: #FFF
+}
+
+#party1 h3, #party2 h3, #party3 h3{
+  font-family: "Snack", sans-serif;
+  text-transform: uppercase;
+  font-size: 36px;
+}
+#party2, #party2 h3, #party2 h4, #party2 p{
+  background-color: #EB21A6;
+  color: #FFF
+}
+
+#party3, #party3 h3, #party3 h4, #party3 p{
+  background-color: #1D93FF;
+  color: #FFF
+} 
+
+#party1 ul{
+  margin-bottom: 35px;
+}
+
+#party2 ul{
+  margin-bottom: 32px;
+}
+
 .pricing .box {
   padding: 20px;
   background: #fff;
@@ -1547,7 +1592,7 @@ ul.meet-list li span{
 
 .pricing h4 {
   font-size: 36px;
-  color: #1acc8d;
+  color: #BDD853;
   font-weight: 600;
   font-family: "Snack", sans-serif;
   margin-bottom: 20px;
@@ -1571,7 +1616,8 @@ ul.meet-list li span{
   color: #444444;
   text-align: center;
   line-height: 20px;
-  font-size: 14px;
+  font-size: 20px;
+  text-transform: uppercase;
 }
 
 .pricing ul li {
@@ -1589,10 +1635,22 @@ ul.meet-list li span{
   text-decoration: line-through;
 }
 
-.pricing .btn-wrap {
+#party1 .pricing .btn-wrap {
   margin: 20px -20px -20px -20px;
   padding: 20px 15px;
-  background: #f8f8f8;
+  background: #BDD853;
+  text-align: center;
+}
+#party2 .pricing .btn-wrap {
+  margin: 20px -20px -20px -20px;
+  padding: 20px 15px;
+  background: #EB21A6;
+  text-align: center;
+}
+#party3 .pricing .btn-wrap {
+  margin: 20px -20px -20px -20px;
+  padding: 20px 15px;
+  background: #1D93FF;
   text-align: center;
 }
 
@@ -1613,6 +1671,7 @@ ul.meet-list li span{
 
 .pricing .btn-buy:hover {
   background: #149f6e;
+  color:#FFF;
 }
 
 .pricing .featured h3 {
@@ -2035,7 +2094,8 @@ Events
 }
 
 .pricing .btn-buy {
-  background-color: #EF7811;
+  background-color: #FFF;
+  color:grey
 }
 
 /*
