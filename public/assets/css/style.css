@@ -792,6 +792,11 @@ Team Tots
 /*  
 # Deals
 */
+.bg-deals{
+  background: url(../img/deals/dealsbg.png) top center no-repeat;
+  background-size: cover;
+}
+
 .deals {
   background: url("../img/deals/piggybank.jpg") center center no-repeat;
   background-size: cover;

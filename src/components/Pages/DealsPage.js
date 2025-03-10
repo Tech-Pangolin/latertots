@@ -2,20 +2,13 @@ import React from 'react';
 
 function DealsPage() {
     return (
-        <div className='bg-white'>
-            <section id="deals" className="deals" >
-                <div className="container">
-                    <div className="row justify-content-center">
-                        <div className="col-lg-7 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
-                            {/* <img src="./assets/img/crayons.png" className='img-fluid' alt='colorful hands' /> */}
-
-                        </div>
-
-                    </div>
-                </div>
-
-
-            </section>
+        <div className='bg-deals'>
+           
+    <div className="row">
+        <div className="col d-flex justify-content-center">
+            <img src="assets/img/deals/header.png" className='img-fluid mt-5' />
+            </div>
+    </div>
             <section  className="mx-5">
                 <div className="container">
                     <div className="section-title" dataAos="fade-up">
