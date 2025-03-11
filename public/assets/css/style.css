@@ -800,11 +800,62 @@ Team Tots
 .deals {
   background: url("../img/deals/piggybank.jpg") center center no-repeat;
   background-size: cover;
-  /* padding: 60px 0; */
+  /* padding: 60px 0; */  
   height: 500px;
   width: 100%;
   /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(../img/kids2.jpg); */
   position: relative;
+}
+
+.drop-in-box{
+  border:5px solid #E61378;
+  border-radius: 10px;
+   padding:10px;
+   width: 70%;
+}
+.drop-in-box h2{
+  text-align: center;
+  color:#0066FF;
+
+}
+.drop-in-box p{
+  color:#0066FF;
+  text-transform: uppercase;
+  margin: 5px 20px;
+}
+
+.classes-box{
+  margin-top:40px;
+  border:5px solid #BDD853;
+  border-radius: 10px;
+  margin-left:25%;
+   padding:10px;
+}
+.classes-box h2{
+  text-align: center;
+  color:#F8049C;
+
+}
+.classes-box h3{
+  color:#F8049C;
+  text-transform: uppercase;
+}
+.classes-box p{
+  color:#F8049C;
+  text-transform: uppercase;
+}
+.classes-box .indent-class{
+  margin-left:25%;
+}
+
+.bonus{
+  font-family: "Snack", sans-serif;
+  font-size: 16px;
+  color: #5E17EB;
+  margin: 40px 0;
+  text-align: right;
+  width: 60%;
+  float: right;
 }
 
 /*
