@@ -38,11 +38,11 @@ function DealsPage() {
 
                         </div>
                     </div>
-                    <div className='row content'>   
+                    <div className='row content'>
                         <div className='col'>
-<p className="bonus">Bonus: A choice between a Later Tots shirt or tote bag as a thank-you for your commitment. Inculded in both packages</p>
-                            </div>
-                            </div>
+                            <p className="bonus">Bonus: A choice between a Later Tots shirt or tote bag as a thank-you for your commitment. Inculded in both packages</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 

@@ -11,26 +11,31 @@ function UserRegistrationPage() {
         </div> */}
         <div className="col order-2 order-md-1" >
           <div className='d-flex justify-content-center'>
-          <img src="assets/img/brand/Logos/PNG/Alternate/Alternate.png" className="img-fluid" alt="" style={{width:"50%"}} />
+            <img src="assets/img/brand/Logos/PNG/Alternate/Alternate.png" className="img-fluid" alt="" style={{ width: "50%" }} />
           </div>
           <div className="d-flex justify-content-center mb-5">
-          <h1 className='text-center registration' >"Ready to make memories? Let’s get your tot ready to drop, play, and stay!"</h1>
+            <h1 className='text-center registration' >Ready to Play? Register Your Tot Today!</h1>
           </div>
           <div className="row">
-            <div className="col"> <p>Register your tot today and become part of the Later Tots community! </p>
-          <p>You can simply register online. It only takes a few minutes.</p>
-          <p>Once you have registered online, you may book a reservation.</p>
-          <p>For your first visit, we will provide a tour to familiarize you with our facility. Parents will upload photos of the tots when creating their profile on our website. ID checks will be conducted at pick-up to ensure the safety of our tots and families.
-          </p>
-          <p>Each tot will get a cubby to store all their belongings upon arrival</p>
-          <p>Payment will be collected during pick-up time.</p>
-          <p>​We ask that all total-minders be advised of the 4-hour limit per day.  </p></div>
+            <div className="col register-text"> 
+              <p>Joining the Later Tots fun is as easy as drop, play, and stay!</p>
+              <ul>
+                <li>Quick & Simple Online Registration – It only takes a few minutes!</li>
+                <li>Reserve Your Tot’s Spot – You can book playtime in advance once registered.</li>
+                <li>First-Time Fun Tour – We’ll show you around so you and your tot feel right at home!</li>
+                <li>Cubbies for Tots – Each tot gets a special spot to store their belongings.</li>
+                <li>Safe & Secure – Parents upload a tot photo, and ID checks are required at pick-up.</li>
+                <li>Pay at Pick-Up – Payment is collected when you come to grab your happy, played-out tot!</li>
+                <li>4-Hour Play Limit – To keep the fun fair for everyone, tots can enjoy up to 4 hours of play per day.</li>
+              </ul>
+              <p>Let’s get ready to giggle, explore, and create lasting memories! </p>
+              </div>
             <div className="col">
-              <h3 className='text-center'>Register</h3>
-               <UserForm />
+              <h3 className='text-center' style={{color:'#e51377', fontSize:'40px'}}>Register</h3>
+              <UserForm />
             </div>
           </div>
-         
+
 
           {/*  */}
 
@@ -39,12 +44,12 @@ function UserRegistrationPage() {
       </div>
       <div className="row">
         <div className="col d-flex justify-content-center">
-          
+
         </div></div>
       <div className="row">
         <div className="col d-flex justify-content-center">
 
-         
+
         </div>
 
       </div>

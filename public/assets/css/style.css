@@ -124,10 +124,29 @@ a {
   }
 }
 h1.registration{
-  font-family: "Manjari", sans-serif;
+  font-family: "Snack", sans-serif;
+  color:#8B73FF;
   font-size: 36px;
   width:100%;
   text-align: center;
+}
+
+.register-text{
+  color: #e51377;
+  font-size: 20px;
+}
+.register-start{
+  width: 100%;
+  background-color: #e51377;
+  font-size: 24px;
+  font-family: "Snack", sans-serif;
+}
+
+.register-start:hover{
+  background-color: #8B73FF;
+}
+.register-form label{
+  font-size: 20px;
 }
 .details ul li {
   /* list-style-type: disc; */

@@ -109,7 +109,7 @@ const UserForm = ({ reloadUserData }) => {
   return (
     <div className="container" style={{}}>
       <div className="row justify-content-center">
-        <div className="col">
+        <div className="col register-form">
           {!hasAccount && <form onSubmit={createUser}>
             <div className="mb-3">
               <label htmlFor="email" className="form-label">Email:</label>
@@ -144,7 +144,7 @@ const UserForm = ({ reloadUserData }) => {
             {passwordMismatch && <p>Passwords do not match</p>}
             {error && <p className="mt-3">{error}</p>}
             <div className="d-flex justify-content-center">
-              <button type="submit" className="btn btn-primary my-3 ">Next</button>
+              <button type="submit" className="btn btn-primary my-3 register-start">Next</button>
             </div>
           </form>}
         {hasAccount && (

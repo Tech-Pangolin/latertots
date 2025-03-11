@@ -48,9 +48,6 @@ const UserProfile = () => {
       </div>
       
       <div className="row">
-        {/* <div className="col-md-3 border-right">
-         
-        </div> */}
         <div className="col-md-6 border-right">
           <div className="p-3 py-5">
 
