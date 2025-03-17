@@ -678,6 +678,26 @@ img.slide-in {
 }
 
 @media (max-width: 575px) {
+  .totTivities h1 {
+  font-size: 30px!important;
+  }
+  .totTivities .squiggle{
+    height:150px!important;
+  }
+  .totTivities .cloud{
+    padding-bottom:80px!important;
+  }
+  .totTivities .photo{
+    align-items: center;
+  }
+  .totivities-container{
+    padding-top:0;
+  }
+  .totivities-container .col-md-2{
+    display:flex;
+    justify-content: center;
+  }
+  
   .main-kids {
     width: 100%;
     margin-top: 20px;
@@ -775,8 +795,8 @@ img.slide-in {
 # TotTivities
 */
 .totTivities {
-  /* background-color: #88DFBC;
-  padding: 60px 0 100px 0; */
+  background-color: #88DFBC;
+  /* padding: 60px 0 100px 0; */
   /* background: url("../img/aboutkids.jpg") center center no-repeat;
   background-size: cover; */
   padding: 20px 0;
@@ -791,6 +811,17 @@ img.slide-in {
         mask: var(--mask);
 }
 
+.totTivities h1{
+  font-size: 80px;
+  color: #8B73FF; 
+  padding-top:100px 
+}
+
+.totTivities .squiggle{
+  height:200px;
+  background: url(../img/totivities/orangesquiggle.png) top center no-repeat;
+  background-size:contain;
+}
 
 
 

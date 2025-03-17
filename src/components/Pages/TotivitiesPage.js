@@ -8,10 +8,11 @@ function AboutPage() {
                     <div className="row justify-content-center">
                         <div className="col-7">
                             {/* <div className="w-100 d-flex justify-content-center"><img src="assets/img/totivities/orangesquiggle.png" class="img-fluid" style={{ width: '30%' }} /></div> */}
-                            <div className="w-100" style={{height:'200px',background:'url(assets/img/totivities/orangesquiggle.png) top center no-repeat', backgroundSize:'contain'}}><h1 style={{ fontSize: "80px", color: "#8B73FF", }} className="text-center pt-5-5 mr-5">TOT-TIVITIES</h1></div>
-                            <div className="w-100 d-flex justify-content-center"><img src="assets/img/totivities/discovercloud.png" class="img-fluid" style={{ width: '80%' }} /></div>
+                            <div className="w-100 squiggle" style={{}}>
+                            <h1 className="text-center mr-5">TOT-TIVITIES</h1></div>
+                            <div className="w-100 d-flex justify-content-center cloud"><img src="assets/img/totivities/discovercloud.png" class="img-fluid" /></div>
                         </div>
-                        <div className="col d-flex justify-content-end"><img src="assets/img/totivities/kidscircle.png" class="img-fluid" style={{}} /></div>
+                        <div className="col d-flex justify-content-end photo"><img src="assets/img/totivities/kidscircle.png" class="img-fluid" style={{}} /></div>
                     </div>
                 </div>
 
