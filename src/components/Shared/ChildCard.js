@@ -45,7 +45,7 @@ function ChildCard({ child, onNameClick }) {
         <Typography gutterBottom variant="h5" component="div" onClick={ () => onNameClick(child) }>
           {child.Name}
         </Typography>
-        <Rating name="read-only" value={3} readOnly />
+        {/* <Rating name="read-only" value={3} readOnly /> */}
         <Typography variant="body2" color="text.secondary">
           Age: { calculateAge(child.DOB)} years
         </Typography>
