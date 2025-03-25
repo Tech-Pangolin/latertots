@@ -138,7 +138,22 @@ h1.registration{
 .register-start{
   width: 100%;
   background-color: #e51377;
+  border: 1px solid #e51377;
   font-size: 24px;
+  font-family: "Snack", sans-serif;
+}
+.login-btn{
+  /* width: 100%; */
+  background-color: #e51377;
+  border: 1px solid #e51377;
+  font-size: 20px;
+  font-family: "Snack", sans-serif;
+}
+.login-google-btn{
+  /* width: 100%; */
+  background-color: #0066FF;
+  border: 1px solid #0066FF;
+  font-size: 20px!important;
   font-family: "Snack", sans-serif;
 }
 

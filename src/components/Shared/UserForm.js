@@ -234,7 +234,7 @@ const UserForm = ({ reloadUserData }) => {
                 {errors.Zip && <p>{errors.Zip.message}</p>}
               </div>
 
-              <button type="submit" className="btn btn-primary mt-5">{mode === 'create' ? "Create" : "Update"} User</button>
+              <button type="submit" className="btn btn-primary mt-5  register-start">{mode === 'create' ? "Create" : "Update"} User</button>
             </form>)}
         </div>
       </div>

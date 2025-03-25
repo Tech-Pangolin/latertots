@@ -7,7 +7,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firestore';
 
 const ChildRegistration = () => {
-  const { register, handleSubmit, formState: {errors}, reset } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const { currentUser } = useAuth();
   const [dbService, setDbService] = useState(null);
 
@@ -46,38 +46,38 @@ const ChildRegistration = () => {
   };
 
   return (
-    <div className='container'>
-      <h1>Child Registration</h1>
-      <p>Add your child here!</p>
-      <div className="row">
-      <form onSubmit={handleSubmit(onSubmit)} className='col-md-6'>
-        <label htmlFor="Name" className="form-label">Name:</label>
-        <input type="text" id="Name" {...register('Name', {required: true})} className="form-control" />
-        {errors.Name && <p>Name is required</p>}
+    <div className='container bg-white'>
+      <h1 className="text-center pt-5">Child Registration</h1>
+      <p className="text-center">Add your child here!</p>
+      <div className="row d-flex justify-content-center">
+        <form onSubmit={handleSubmit(onSubmit)} className='col-md-6'>
+          <label htmlFor="Name" className="form-label">Name:</label>
+          <input type="text" disabled={child?.Name} id="Name" {...register('Name', { required: true })} className="form-control" />
+          {errors.Name && <p>Name is required</p>}
 
-        <label htmlFor="DOB" className="form-label">DOB:</label>
-        <input type="date" id="DOB" {...register('DOB', {required: true})} className="form-control" />
-        {errors.DOB && <p>DOB is required</p>}
+          <label htmlFor="DOB" className="form-label">DOB:</label>
+          <input type="date" id="DOB" {...register('DOB', { required: true })} className="form-control" />
+          {errors.DOB && <p>DOB is required</p>}
 
-        <label htmlFor="Gender" className="form-label">Gender:</label>
-        <select id="Gender" {...register('Gender', {required: true})} className="form-control">
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Unspecified</option>
-        </select>
-        {errors.Gender && <p>Gender is required</p>}
+          <label htmlFor="Gender" className="form-label">Gender:</label>
+          <select id="Gender" {...register('Gender', { required: true })} className="form-control">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Unspecified</option>
+          </select>
+          {errors.Gender && <p>Gender is required</p>}
 
-        <label htmlFor="Allergies" className="form-label">Allergies:</label>
-        <input type="text" id="Allergies" {...register('Allergies')} className="form-control" />
+          <label htmlFor="Allergies" className="form-label">Allergies:</label>
+          <input type="text" id="Allergies" {...register('Allergies')} className="form-control" />
 
-        <label htmlFor="Medications" className="form-label">Medications:</label>
-        <input type="text" id="Medications" {...register('Medications')} className="form-control" />
+          <label htmlFor="Medications" className="form-label">Medications:</label>
+          <input type="text" id="Medications" {...register('Medications')} className="form-control" />
 
-        <label htmlFor="Notes" className="form-label">Notes:</label>
-        <input type="text" id="Notes" {...register('Notes')} className="form-control" />
+          <label htmlFor="Notes" className="form-label">Notes:</label>
+          <input type="text" id="Notes" {...register('Notes')} className="form-control" />
 
-        <button type="submit" className="mt-5 btn btn-primary">Submit</button>
-      </form>
+          <button type="submit" className="my-5 btn btn-primary login-btn w-100">Submit</button>
+        </form>
       </div>
     </div>
   );
