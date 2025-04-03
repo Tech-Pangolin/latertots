@@ -2288,3 +2288,9 @@ blockquote p {
 #schedule-link {
   color: #41A8C5;
 }
+
+/** Profile Page **/
+#home-tab, #profile-tab, #contact-tab{
+  font-size:22px;
+  font-family: 'Manjari', sans-serif;
+}

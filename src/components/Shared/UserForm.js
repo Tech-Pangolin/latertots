@@ -178,7 +178,7 @@ const UserForm = ({ reloadUserData }) => {
               {errors.Password && <p>{errors.Password.message}</p>}
             </div>
           )} */}
-              <div className="col-8">
+              <div className="col-10 mb-3">
                 <label htmlFor="Image" className="form-label">Photo</label>
                 <input
                   type="file"
@@ -187,6 +187,7 @@ const UserForm = ({ reloadUserData }) => {
                 />
                 {errors.Image && <p>{errors.Image.message}</p>}
               </div>
+              {/* <div className="col-6"></div> */}
               <div className="mb-3  col-4">
                 <label htmlFor="CellNumber" className="form-label">Cell #</label>
                 <input
@@ -197,7 +198,7 @@ const UserForm = ({ reloadUserData }) => {
                 {errors.CellNumber && <p>{errors.CellNumber.message}</p>}
               </div>
 
-              <div className="mb-3 col-4">
+              <div className="mb-3 col-6">
                 <label htmlFor="StreetAddress" className="form-label">Street Address</label>
                 <input
                   className="form-control"
@@ -215,7 +216,7 @@ const UserForm = ({ reloadUserData }) => {
                 />
                 {errors.City && <p>{errors.City.message}</p>}
               </div>
-              <div className="mb-3 col-2">
+              <div className="mb-3 col-4">
                 <label htmlFor="State" className="form-label">State</label>
                 <input
                   className="form-control"
