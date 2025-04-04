@@ -6,6 +6,7 @@ import ChildCard from '../Shared/ChildCard';
 import UserForm from '../Shared/UserForm';
 import { logger } from '../../Helpers/logger';
 import { db } from '../../config/firestore';
+import ChildRegistration from './ChildRegistration';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
@@ -41,7 +42,7 @@ const UserProfile = () => {
   }, [currentUser.email, reloadUserDataToggle, dbService]);
 
   return (
-    <div className="container rounded mt-5 mb-5 bg-white">
+    <div className="container-fluid rounded bg-blue">
 
       <div className="row">
         <div className='col-md-4'>
@@ -65,7 +66,7 @@ const UserProfile = () => {
                 </ul>
               </div> */}
             </div>
-          
+
 
             <div className='col-12'>
 
@@ -91,16 +92,42 @@ const UserProfile = () => {
                 <UserForm reloadUserData={[reloadUserDataToggle, setReloadUserDataToggle]} /></div>
             </div>
             <div className="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-              <div className='mt-5'>
-                <h4>Children</h4>
-                <a href="/addChild" className="border px-3 p-1 add-experience">Add Children&nbsp;<i className="bi bi-person-plus-fill"></i></a>
+              <div className='px-5 py-5'>
+                <div className='row'>
+                  <div className="col-2"> <h3 className="mt-2">Children</h3></div>
+                  <div className="col-9">
+                    {/* <a href="/addChild" className="border px-3 p-1 add-experience">Add Children&nbsp;<i className="bi bi-person-plus-fill"></i></a> */}
+                    <button type="button" className="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    Add Children&nbsp;<i className="bi bi-person-plus-fill"></i>
+                    </button></div>
+                </div>
+
+
+
+                <div className="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div className="modal-dialog">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                        <h1 className="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                        <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div className="modal-body">
+                        <ChildRegistration />
+                      </div>
+                      <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" className="btn btn-primary">Save changes</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div className="mt-3 d-flex justify-content-between-start align-items-center experience">
                   {children.length > 0 && children.map((child) => (<ChildCard key={child.id} child={child} onNameClick={handleNameClick} />))}
                 </div>
               </div>
             </div>
             <div className="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
-              <div className="mt-5"  > 
+              <div className="mt-5"  >
                 <h4>Contacts</h4>
                 <a href="/addContact" className="border px-3 p-1 add-experience">Add Contacts&nbsp;<i className="bi bi-person-plus-fill"></i></a>
               </div>

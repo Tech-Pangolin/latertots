@@ -2258,7 +2258,10 @@ Backgrounds
 .bg-white {
   background: url("../img/wpattern.png");
 }
-
+.bg-blue{
+  background-color: #41A8C5;
+  padding: 40px 0;
+}
 /*
 
 Bootstrap Overrides
