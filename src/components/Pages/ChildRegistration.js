@@ -50,7 +50,7 @@ const ChildRegistration = () => {
       <h1 className="text-center pt-5">Child Registration</h1>
       <p className="text-center">Add your child here!</p>
       <div className="row d-flex justify-content-center">
-        <form onSubmit={handleSubmit(onSubmit)} className='col-md-6'>
+        <form onSubmit={handleSubmit(onSubmit)} className='col-md-12'>
           <label htmlFor="Name" className="form-label">Name:</label>
           <input type="text" disabled={child?.Name} id="Name" {...register('Name', { required: true })} className="form-control" />
           {errors.Name && <p>Name is required</p>}

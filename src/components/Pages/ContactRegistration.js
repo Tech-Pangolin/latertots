@@ -28,7 +28,7 @@ function ContactRegistration() {
     <div className="container">
       <h1>Contact Registration</h1>
       <div className="row">
-      <form onSubmit={handleSubmit(onSubmit)} className='col-6'>
+      <form onSubmit={handleSubmit(onSubmit)} className='col-12'>
         <label htmlFor="Name" className="form-label">Name:</label>
         <input type="text" id="Name" {...register('Name', { required: true })} className="form-control" />
 

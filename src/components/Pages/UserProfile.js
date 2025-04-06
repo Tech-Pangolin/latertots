@@ -7,6 +7,7 @@ import UserForm from '../Shared/UserForm';
 import { logger } from '../../Helpers/logger';
 import { db } from '../../config/firestore';
 import ChildRegistration from './ChildRegistration';
+import ContactRegistration from './ContactRegistration';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
@@ -73,7 +74,7 @@ const UserProfile = () => {
             </div>
           </div>
         </div>
-        <div className='col-md-8'>
+        <div className='col-md-7 profile'>
           <ul className="nav nav-tabs mt-5" id="myTab" role="tablist">
             <li className="nav-item" role="presentation">
               <button className="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">User Info</button>
@@ -107,17 +108,19 @@ const UserProfile = () => {
                 <div className="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                   <div className="modal-dialog">
                     <div className="modal-content">
-                      <div className="modal-header">
+                      {/* <div className="modal-header">
                         <h1 className="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
-                        <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
+                        
+                      </div> */}
                       <div className="modal-body">
+                       <div className="d-flex justify-content-end"> <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                       </div>
                         <ChildRegistration />
                       </div>
-                      <div className="modal-footer">
+                      {/* <div className="modal-footer">
                         <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="button" className="btn btn-primary">Save changes</button>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
@@ -129,10 +132,32 @@ const UserProfile = () => {
             <div className="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
               <div className="mt-5"  >
                 <h4>Contacts</h4>
+                <button type="button" className="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#contactsModal">
+                    Add Contact&nbsp;<i className="bi bi-person-plus-fill"></i>
+                    </button>
                 <a href="/addContact" className="border px-3 p-1 add-experience">Add Contacts&nbsp;<i className="bi bi-person-plus-fill"></i></a>
               </div>
               <ContactsTable contacts={contacts} />
             </div>
+            <div className="modal fade" id="contactsModal" tabindex="-1" aria-labelledby="contactsModalLabel" aria-hidden="true">
+                  <div className="modal-dialog">
+                    <div className="modal-content">
+                      {/* <div className="modal-header">
+                        <h1 className="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                        
+                      </div> */}
+                      <div className="modal-body">
+                       <div className="d-flex justify-content-end"> <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                       </div>
+                        <ContactRegistration />
+                      </div>
+                      {/* <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" className="btn btn-primary">Save changes</button>
+                      </div> */}
+                    </div>
+                  </div>
+                </div>
           </div>
         </div>
       </div>
