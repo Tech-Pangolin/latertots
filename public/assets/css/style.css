@@ -25,7 +25,9 @@
 }
 
 .blink-text {
-  animation: blink 1s ease-in-out 5;
+  animation: blink 2s ease-in-out 5;
+  border-radius:10px;
+  background-color: #FFF;
 }
 
 .blink-text:hover {
@@ -34,6 +36,7 @@
 
 a.pink-text {
   color: rgb(230, 19, 120);
+  font-size: 25px;
 }
 
 
@@ -2296,6 +2299,11 @@ blockquote p {
 #home-tab, #profile-tab, #contact-tab{
   font-size:22px;
   font-family: 'Manjari', sans-serif;
+  color: #FFF;
+}
+#home-tab.active, #profile-tab.active, #contact-tab.active{
+ 
+  color: #000;
 }
 
 .profile .tab-content{

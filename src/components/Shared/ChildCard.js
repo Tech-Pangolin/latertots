@@ -53,7 +53,7 @@ function ChildCard({ child, onNameClick }) {
           </Typography>
         </CardContent>
         <CardActions>
-          <Button size="small" startIcon={<AddIcon />}>
+          <Button size="small" startIcon={<AddIcon />} onClick={() => navigate(`/schedule/`)}>
             Schedule
           </Button>
         </CardActions>

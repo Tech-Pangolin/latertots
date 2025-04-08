@@ -51,10 +51,10 @@ const UserProfile = () => {
             <h1 className="text-center">{currentUser?.displayName}</h1>
           </div>
             <div className="col-12 d-flex justify-content-center">
-              <img className="rounded-circle" width="300px" height="300px" src={currentUser.photoURL ? currentUser.photoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
+              <img className="rounded-circle" width="250px" height="250px" src={currentUser.photoURL ? currentUser.photoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
             </div>
             <div className='col-12 d-flex justify-content-center mt-5'>
-              <a href="/schedule" className="border px-3 p-1 pink-text blink-text">Book Now</a>
+              <a href="/schedule" className="border px-5 py-3 p-1 pink-text blink-text">Book Now</a>
             </div>
             <div className='col-12'>
 
@@ -108,19 +108,11 @@ const UserProfile = () => {
                 <div className="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                   <div className="modal-dialog">
                     <div className="modal-content">
-                      {/* <div className="modal-header">
-                        <h1 className="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
-                        
-                      </div> */}
                       <div className="modal-body">
                        <div className="d-flex justify-content-end"> <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                        </div>
                         <ChildRegistration />
                       </div>
-                      {/* <div className="modal-footer">
-                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" className="btn btn-primary">Save changes</button>
-                      </div> */}
                     </div>
                   </div>
                 </div>
@@ -130,41 +122,32 @@ const UserProfile = () => {
               </div>
             </div>
             <div className="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
-              <div className="mt-5"  >
-                <h4>Contacts</h4>
-                <button type="button" className="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#contactsModal">
+            <div className='px-5 py-5'>
+              <div className=" row"  >
+                <div className="col-2"><h4 className="mt-2">Contacts</h4></div>
+                <div className="col-3"><button type="button" className="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#contactsModal">
                     Add Contact&nbsp;<i className="bi bi-person-plus-fill"></i>
                     </button>
-                <a href="/addContact" className="border px-3 p-1 add-experience">Add Contacts&nbsp;<i className="bi bi-person-plus-fill"></i></a>
+                </div> 
               </div>
               <ContactsTable contacts={contacts} />
+              </div>
             </div>
             <div className="modal fade" id="contactsModal" tabindex="-1" aria-labelledby="contactsModalLabel" aria-hidden="true">
                   <div className="modal-dialog">
                     <div className="modal-content">
-                      {/* <div className="modal-header">
-                        <h1 className="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
-                        
-                      </div> */}
                       <div className="modal-body">
                        <div className="d-flex justify-content-end"> <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                        </div>
                         <ContactRegistration />
                       </div>
-                      {/* <div className="modal-footer">
-                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" className="btn btn-primary">Save changes</button>
-                      </div> */}
                     </div>
                   </div>
                 </div>
           </div>
         </div>
       </div>
-      {/* <h1 className="text-center">User Profile</h1> */}
-      {/* <div className="d-flex justify-content-center align-items-center">
-        <a href="/schedule" className="border px-3 p-1 pink-text blink-text">Book Now</a>
-      </div> */}
+     
 
       {/* <div className="row">
         <div className="col-md-6 border-right">
