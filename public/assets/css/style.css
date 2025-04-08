@@ -25,7 +25,9 @@
 }
 
 .blink-text {
-  animation: blink 1s ease-in-out 5;
+  animation: blink 2s ease-in-out 5;
+  border-radius:10px;
+  background-color: #FFF;
 }
 
 .blink-text:hover {
@@ -34,6 +36,7 @@
 
 a.pink-text {
   color: rgb(230, 19, 120);
+  font-size: 25px;
 }
 
 
@@ -138,7 +141,22 @@ h1.registration{
 .register-start{
   width: 100%;
   background-color: #e51377;
+  border: 1px solid #e51377;
   font-size: 24px;
+  font-family: "Snack", sans-serif;
+}
+.login-btn{
+  /* width: 100%; */
+  background-color: #e51377;
+  border: 1px solid #e51377;
+  font-size: 20px;
+  font-family: "Snack", sans-serif;
+}
+.login-google-btn{
+  /* width: 100%; */
+  background-color: #0066FF;
+  border: 1px solid #0066FF;
+  font-size: 20px!important;
   font-family: "Snack", sans-serif;
 }
 
@@ -526,6 +544,14 @@ Login
 .navbar-mobile .dropdown>.dropdown-active,
 .navbar-mobile .dropdown .dropdown>.dropdown-active {
   display: block;
+}
+
+input::file-selector-button {
+  font-weight: bold;
+  color: dodgerblue;
+  padding: 0.5em;
+  border: thin solid grey;
+  border-radius: 3px;
 }
 
 /*--------------------------------------------------------------
@@ -2235,7 +2261,10 @@ Backgrounds
 .bg-white {
   background: url("../img/wpattern.png");
 }
-
+.bg-blue{
+  background-color: #41A8C5;
+  padding: 40px 0;
+}
 /*
 
 Bootstrap Overrides
@@ -2264,4 +2293,22 @@ blockquote p {
 
 #schedule-link {
   color: #41A8C5;
+}
+
+/** Profile Page **/
+#home-tab, #profile-tab, #contact-tab{
+  font-size:22px;
+  font-family: 'Manjari', sans-serif;
+  color: #FFF;
+}
+#home-tab.active, #profile-tab.active, #contact-tab.active{
+ 
+  color: #000;
+}
+
+.profile .tab-content{
+  padding: 20px;
+  background-color: #FFF;
+  border-radius: 0 10px 10px 10px;
+  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.12);
 }

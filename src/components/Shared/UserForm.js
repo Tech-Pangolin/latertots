@@ -90,10 +90,11 @@ const UserForm = ({ reloadUserData }) => {
       const user = userRef || currentUser;
 
       const userDocRef = doc(db, 'Users', user.uid);
-      let photoURL = await dbService.uploadProfilePhoto(user.uid, userImage);
-      
-      // Add the photoURL to the user document data
-      dataWithoutPassword.PhotoURL = photoURL;
+      if (userImage) {
+        let photoURL = await dbService.uploadProfilePhoto(user.uid, userImage);
+        // Add the photoURL to the user document data
+        dataWithoutPassword.PhotoURL = photoURL;
+      }
       await updateDoc(userDocRef, dataWithoutPassword);
 
       // Navigate on success
@@ -110,8 +111,8 @@ const UserForm = ({ reloadUserData }) => {
     <div className="container" style={{}}>
       <div className="row justify-content-center">
         <div className="col register-form">
-          {!hasAccount && <form onSubmit={createUser}>
-            <div className="mb-3">
+          {!hasAccount && <form onSubmit={createUser} className="row">
+            <div className="mb-3 col-6">
               <label htmlFor="email" className="form-label">Email:</label>
               <input className="form-control"
                 type="email"
@@ -121,7 +122,7 @@ const UserForm = ({ reloadUserData }) => {
                 required
               />
             </div>
-            <div className="mb-3">
+            <div className="mb-3 col-6">
               <label htmlFor="password" className="form-label">Password:</label>
               <input className="form-control"
                 type="password"
@@ -147,9 +148,9 @@ const UserForm = ({ reloadUserData }) => {
               <button type="submit" className="btn btn-primary my-3 register-start">Next</button>
             </div>
           </form>}
-        {hasAccount && (
-          <form onSubmit={handleSubmit(onSubmit)} className="col-12 col-md-8">
-            <div className="mb-3">
+          {hasAccount && (
+            <form onSubmit={handleSubmit(onSubmit)} className="row">
+              {/* <div className="mb-3">
               <label htmlFor="Name" className="form-label">Name *</label>
               <input type="text" className="form-control" {...register("Name", { required: "Name is required" })} />
               {errors.Name && <div className="">{errors.Name.message}</div>}
@@ -163,9 +164,9 @@ const UserForm = ({ reloadUserData }) => {
                 {...register("Email")}
               />
               {errors.Email && <p>{errors.Email.message}</p>}
-            </div>
+            </div> */}
 
-            {/* {mode === 'create' && (
+              {/* {mode === 'create' && (
             <div className="mb-3">
               <label htmlFor="Password" className="form-label">Password</label>
               <input
@@ -177,63 +178,65 @@ const UserForm = ({ reloadUserData }) => {
               {errors.Password && <p>{errors.Password.message}</p>}
             </div>
           )} */}
+              <div className="col-10 mb-3">
+                <label htmlFor="Image" className="form-label">Photo</label>
+                <input
+                  type="file"
+                  {...register("Image")}
+                  className="form-control"
+                />
+                {errors.Image && <p>{errors.Image.message}</p>}
+              </div>
+              {/* <div className="col-6"></div> */}
+              <div className="mb-3  col-4">
+                <label htmlFor="CellNumber" className="form-label">Cell #</label>
+                <input
+                  className="form-control"
+                  type="text"
+                  {...register("CellNumber", { required: "Cell is required" })}
+                />
+                {errors.CellNumber && <p>{errors.CellNumber.message}</p>}
+              </div>
 
-            <div className="mb-3">
-              <label htmlFor="CellNumber" className="form-label">Cell #</label>
-              <input
-                className="form-control"
-                type="text"
-                {...register("CellNumber", { required: "Cell is required" })}
-              />
-              {errors.CellNumber && <p>{errors.CellNumber.message}</p>}
-            </div>
-            <div className="mb-3">
-              <label htmlFor="StreetAddress" className="form-label">Street Address</label>
-              <input
-                className="form-control"
-                type="text"
-                {...register("StreetAddress", { required: "Street Address is required" })}
-              />
-              {errors.StreetAddress && <p>{errors.StreetAddress.message}</p>}
-            </div>
-            <div className="mb-3">
-              <label htmlFor="City" className="form-label">City</label>
-              <input
-                className="form-control"
-                type="text"
-                {...register("City", { required: "City is required" })}
-              />
-              {errors.City && <p>{errors.City.message}</p>}
-            </div>
-            <div className="mb-3">
-              <label htmlFor="State" className="form-label">State</label>
-              <input
-                className="form-control"
-                type="text"
-                {...register("State", { required: "State is required" })}
-              />
-              {errors.State && <p>{errors.State.message}</p>}
-            </div>
-            <div className="mb-3">
-              <label htmlFor="Zip" className="form-label">Zip</label>
-              <input
-                className="form-control"
-                type="text"
-                {...register("Zip", { required: "Zip is required" })}
-              />
-              {errors.Zip && <p>{errors.Zip.message}</p>}
-            </div>
-            <div>
-              <label htmlFor="Image">Image</label>
-              <input
-                type="file"
-                {...register("Image")}
-                className="form-control"
-              />
-              {errors.Image && <p>{errors.Image.message}</p>}
-            </div>
-            <button type="submit" className="btn btn-primary mt-5">{mode === 'create' ? "Create" : "Update"} User</button>
-          </form>)}
+              <div className="mb-3 col-6">
+                <label htmlFor="StreetAddress" className="form-label">Street Address</label>
+                <input
+                  className="form-control"
+                  type="text"
+                  {...register("StreetAddress", { required: "Street Address is required" })}
+                />
+                {errors.StreetAddress && <p>{errors.StreetAddress.message}</p>}
+              </div>
+              <div className="mb-3 col-4">
+                <label htmlFor="City" className="form-label">City</label>
+                <input
+                  className="form-control"
+                  type="text"
+                  {...register("City", { required: "City is required" })}
+                />
+                {errors.City && <p>{errors.City.message}</p>}
+              </div>
+              <div className="mb-3 col-4">
+                <label htmlFor="State" className="form-label">State</label>
+                <input
+                  className="form-control"
+                  type="text"
+                  {...register("State", { required: "State is required" })}
+                />
+                {errors.State && <p>{errors.State.message}</p>}
+              </div>
+              <div className="mb-3 col-2">
+                <label htmlFor="Zip" className="form-label">Zip</label>
+                <input
+                  className="form-control"
+                  type="text"
+                  {...register("Zip", { required: "Zip is required" })}
+                />
+                {errors.Zip && <p>{errors.Zip.message}</p>}
+              </div>
+              <div className="col-12">
+                <button type="submit" className="btn btn-primary mt-5  register-start">{mode === 'create' ? "Create" : "Update"} User</button></div>
+            </form>)}
         </div>
       </div>
       {/* {mode === 'update' && (

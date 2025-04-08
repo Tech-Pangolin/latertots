@@ -9,7 +9,7 @@ function ChildCard({ child, onNameClick }) {
   const navigate = useNavigate();
 
   const getAvatarImgName = () => {
-    switch(child.Gender) {
+    switch (child.Gender) {
       case 'male':
         return 'boy_avatar.png';
       case 'female':
@@ -23,39 +23,42 @@ function ChildCard({ child, onNameClick }) {
     // Navigate to the child registration page with the child object in the location state
     navigate(`/addChild/${child.id}`, { state: { child: child } });
   }
-  
+
 
   return (
-    <Card sx={{ maxWidth: 275, mx: '20px' }}>
-      <div style={{ position: 'relative' }}>
-        <CardMedia
-          component="img"
-          height="140"
-          image={process.env.PUBLIC_URL + getAvatarImgName()}
-          alt="Image description"
-          sx={{ objectFit: 'contain' }}
-        />
-        <div style={{ position: 'absolute', top: 0, right: 0 }}>
-          <IconButton aria-label="favorite" onClick={handleEditClick}>
-            <EditIcon />
-          </IconButton>
+    <>
+      
+      <Card sx={{ maxWidth: 275, mx: '20px' }}>
+        <div style={{ position: 'relative' }}>
+          <CardMedia
+            component="img"
+            height="140"
+            image={process.env.PUBLIC_URL + getAvatarImgName()}
+            alt="Image description"
+            sx={{ objectFit: 'contain' }}
+          />
+          <div style={{ position: 'absolute', top: 0, right: 0 }}>
+            <IconButton aria-label="favorite" onClick={handleEditClick}>
+              <EditIcon />
+            </IconButton>
+          </div>
         </div>
-      </div>
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="div" onClick={ () => onNameClick(child) }>
-          {child.Name}
-        </Typography>
-        <Rating name="read-only" value={3} readOnly />
-        <Typography variant="body2" color="text.secondary">
-          Age: { calculateAge(child.DOB)} years
-        </Typography>
-      </CardContent>
-      <CardActions>
-        <Button size="small" startIcon={<AddIcon />}>
-          Schedule
-        </Button>
-      </CardActions>
-    </Card>
+        <CardContent>
+          <Typography gutterBottom variant="h5" component="div" onClick={() => onNameClick(child)}>
+            {child.Name}
+          </Typography>
+          {/* <Rating name="read-only" value={3} readOnly /> */}
+          <Typography variant="body2" color="text.secondary">
+            Age: {calculateAge(child.DOB)} years
+          </Typography>
+        </CardContent>
+        <CardActions>
+          <Button size="small" startIcon={<AddIcon />} onClick={() => navigate(`/schedule/`)}>
+            Schedule
+          </Button>
+        </CardActions>
+      </Card>
+    </>
   );
 }
 

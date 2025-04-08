@@ -62,7 +62,7 @@ export const handleScheduleSave = async (events, currentUserData, dbService) => 
   if (currentUserData.Role === 'admin') {
     return;
   }
-  window.location.href = '/profile';
+  window.location.href = '/schedule';
 }
 
 async function checkReservationExists(event) {
