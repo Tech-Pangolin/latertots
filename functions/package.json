@@ -15,7 +15,8 @@
   "dependencies": {
     "firebase-admin": "^12.1.0",
     "firebase-functions": "^5.0.0",
-    "joi": "^17.13.3"
+    "joi": "^17.13.3",
+    "xstate": "^5.19.2"
   },
   "devDependencies": {
     "firebase-functions-test": "^3.1.0"
