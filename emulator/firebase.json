@@ -1,0 +1,13 @@
+{
+  "emulators": {
+    "firestore": { "port": 8080 },
+    "functions": { "port": 5001 }
+  },
+  "functions": {
+    "source": "../functions"
+  },
+  "firestore": {
+    "rules": "./firestore/firestore.rules",
+    "indexes": "./firestore/firestore.indexes.json"
+  }
+}
