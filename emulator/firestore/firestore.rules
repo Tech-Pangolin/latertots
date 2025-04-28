@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /Users/{userId} {
+    	allow write: if request.auth != null && request.auth.uid == userId;
+    	
+      // Handle when new /Users document is being created
+  		allow read, update: if request.auth.uid == userId && (!('archived' in resource.data) || resource.data.archived != true);
+
+  		allow read: if request.auth.token.role == 'admin' && resource.data.archived == true;
+      allow read: if request.auth.token.role == 'admin';
+      allow delete: if request.auth.token.role == 'admin';
+    }
+    match /Reservations/{reservationId} {
+    	// Allow the user who created the reservation to write if it is not locked
+      allow write: if request.auth != null &&
+                   request.auth.uid == resource.data.userId &&
+                   (!('locked' in resource.data) || resource.data.locked == false);
+                   
+      // Allow the user who created the reservation to read it
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      // Allow admins to read any reservation document
+      allow read: if request.auth.token.role == 'admin';
+    }
+    match /{document=**} {
+      allow create: if request.auth != null;
+      allow read: if request.auth.token.role == 'admin';
+
+      allow read, update: if request.auth != null && resource.data.archived != true;
+
+      allow delete: if request.auth.token.role == 'admin';
+    }
+  }
+}

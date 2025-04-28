@@ -35,6 +35,8 @@ npm test
 
 ## Editing db schema and access rules
 
+There are two copies of the schema and rules files (`root` and `/emulator`). KEEP THEM SYNCHRONIZED. ONLY PUSH FROM THE ROOT COPY.
+
 Local --> Cloud
 ```sh
 # Push rules

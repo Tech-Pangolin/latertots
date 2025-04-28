@@ -44,7 +44,8 @@
     "test:coverage": "react-scripts test --coverage",
     "test:watch": "react-scripts test --watchAll",
     "eject": "react-scripts eject",
-    "todo-check": "eslint --no-eslintrc -c .eslintrc-todo.json \"src/**/*.{js,jsx}\""
+    "todo-check": "eslint --no-eslintrc -c .eslintrc-todo.json \"src/**/*.{js,jsx}\"",
+    "emulator:start": "firebase emulators:start --config emulator/firebase.json --project latertots-a6694"
   },
   "eslintConfig": {
     "extends": [
