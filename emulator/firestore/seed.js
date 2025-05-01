@@ -27,7 +27,7 @@ function startEnd(past = true) {
     ? nowUtc
     : nowUtc.plus({ days: 7 });
 
-  // 2. Pick a random weekday within that window
+  
   let dt;
   do {
     const randMillis = faker.date.between({
@@ -37,19 +37,12 @@ function startEnd(past = true) {
     dt = DateTime.fromMillis(randMillis, { zone: 'utc' });
   } while (dt.weekday === 6 || dt.weekday === 7); // Luxon: 6=Sat,7=Sun
 
-  // 3. Snap to UTC–6 date and set a random hour/minute in that zone
   const local = dt.setZone('America/Denver').startOf('day')
     .plus({ hours: _.random(7, 19), minutes: _.sample([0,15,30,45]) });
 
-  // Generate offset in milliseconds up to 4 hours
   const maxMs = 4 * 60 * 60 * 1000;
   const offsetMs = Math.random() * maxMs;             // 0 ≤ offsetMs < 4h
   const end = local.plus({ milliseconds: offsetMs });
-
-
-  console.log('fullDate:', formatDate(local));
-  console.log('start  :', local.toISO()); // e.g. 2025-04-30T08:15:00.000-06:00
-  console.log('end    :', end.toISO());   // within 4h
 
   return { start: new Date(local), end: new Date(end) };
 }
@@ -93,7 +86,6 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     })
     childRefs.push(childRef)
   }
-  console.log("Child refs:", childRefs.length)
 
   // Create Contacts
   let contactRefs = []
@@ -108,7 +100,6 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     })
     contactRefs.push(contactRef)
   }
-  console.log("Contact refs:", contactRefs.length)
 
   // Create parent users
   const parentUserRefs = []
@@ -129,7 +120,6 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     })
     parentUserRefs.push(userRef)
   }
-  console.log("Parent User refs:", parentUserRefs.length)
 
   // ----------------------------------------------------------------------------
 
@@ -162,4 +152,5 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
   }
 
 });
-console.log('Emulator seeded');  
+
+console.log('Emulator seeded with dummy test data.');  
