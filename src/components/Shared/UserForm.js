@@ -112,7 +112,7 @@ const UserForm = ({ reloadUserData }) => {
       <div className="row justify-content-center">
         <div className="col register-form">
           {!hasAccount && <form onSubmit={createUser} className="row">
-            <div className="mb-3 col-6">
+            <div className="mb-3 col-12 col-md-6">
               <label htmlFor="email" className="form-label">Email:</label>
               <input className="form-control"
                 type="email"
@@ -122,7 +122,7 @@ const UserForm = ({ reloadUserData }) => {
                 required
               />
             </div>
-            <div className="mb-3 col-6">
+            <div className="mb-3 col-12 col-md-6">
               <label htmlFor="password" className="form-label">Password:</label>
               <input className="form-control"
                 type="password"

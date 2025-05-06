@@ -33,15 +33,11 @@ function LoginPage() {
       <div className="container">
         <div className="row ">
           <div className="col d-flex justify-content-center mt-5">
-            <img src="assets/img/login/playandstay.png" className="img-fluid" alt="" style={{ width: '30%', marginTop: "30px" }} />
+            <img src="assets/img/login/playandstay.png" className="img-fluid play-stay" alt=""/>
           </div>
         </div>
         <div className="row">
           <div className="col-12 d-flex justify-content-center">
-            {/* <div className="section-title" dataAos="fade-up">
-              <h2>Login Page</h2>
-              <p sx={{ color: '#3B38DA' }}>Access your account, manage your schedule, and keep up with your tot’s fun-filled days at Later Tots.</p>
-            </div> */}
 
             <form onSubmit={handleSubmit(onSubmit)} className="login" style={{width:'400px'}} >
               <div className="mb-3">

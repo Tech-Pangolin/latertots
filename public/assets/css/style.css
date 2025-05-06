@@ -2194,11 +2194,41 @@ ul.meet-list li span{
 .footer-info img{
   width:200px;
 }
+.play-stay{
+  width: 30%; 
+  margin-top: 30px;
+}
+
 
 @media (max-width: 575px) {
   #footer .footer-top .footer-info {
     margin: -20px 0 30px 0;
   }
+  .meet .subcontainer {
+    margin: 0 20px;
+  }
+  .play-stay{
+    width: 100%;
+    margin-top: 0;
+  }
+  .drop-in-box{
+    width: 100%;
+    padding:0;
+  }
+  .classes-box{
+    width: 100%;
+    padding:0;
+    margin-left:0;
+  }
+  .classes-box .indent-class {
+    margin-left: 0;
+}
+.classes-box p, .classes-box h3{
+  text-align: center;
+}
+.deals-text{
+  font-size: large;
+}
 }
 
 .section-title h2::after {

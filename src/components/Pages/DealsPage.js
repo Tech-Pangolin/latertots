@@ -11,8 +11,8 @@ function DealsPage() {
             </div>
             <section className="mx-5">
                 <div className="container">
-                    <div className="row content mx-5">
-                        <p>You can explore our flexible pricing options designed to fit your schedule. Whether it’s a quick drop-in or a longer stay, we’ve got you covered at just $20 per hour per child, $7 extra per child, snacks included! Be sure to check out our different ways to save for even more value.</p>
+                    <div className="row content mx-0 mx-md-5">
+                        <p class="deals-text">You can explore our flexible pricing options designed to fit your schedule. Whether it’s a quick drop-in or a longer stay, we’ve got you covered at just $20 per hour per child, $7 extra per child, snacks included! Be sure to check out our different ways to save for even more value.</p>
                     </div>
 
                     <div className="row content">

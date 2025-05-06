@@ -39,7 +39,7 @@ function PartyPage() {
                                     <li><i className="bi bi-check"></i> Fun & fast-paced</li>
                                 </ul>
                                 <div class="btn-wrap">
-                                    <a href="#" class="btn-buy">Book Now</a>
+                                    <a href="/profile" class="btn-buy">Book Now</a>
                                 </div>
                             </div>
                         </div>
@@ -56,7 +56,7 @@ function PartyPage() {
                                     </li>
                                 </ul>
                                 <div class="btn-wrap">
-                                    <a href="#" class="btn-buy">Book Now</a>
+                                    <a href="/profile" class="btn-buy">Book Now</a>
                                 </div>
                             </div>
                         </div>
@@ -72,7 +72,7 @@ function PartyPage() {
                                     <li><i className="bi bi-check"></i> Party favors for each child</li>
                                 </ul>
                                 <div class="btn-wrap">
-                                    <a href="#" class="btn-buy">Book Now</a>
+                                    <a href="/profile" class="btn-buy">Book Now</a>
                                 </div>
                             </div>
                         </div>

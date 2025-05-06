@@ -6,9 +6,6 @@ function UserRegistrationPage() {
   return (
     <div className="container">
       <div className="row content">
-        {/* <div className="col-md-5 order-1 order-md-2" >
-          <img src="assets/img/play.png" className="img-fluid mt-5 page-img" alt="" />
-        </div> */}
         <div className="col order-2 order-md-1" >
           <div className='d-flex justify-content-center'>
             <img src="assets/img/brand/Logos/PNG/Alternate/Alternate.png" className="img-fluid" alt="" style={{ width: "50%" }} />
@@ -17,7 +14,7 @@ function UserRegistrationPage() {
             <h1 className='text-center registration' >Ready to Play? Register Your Tot Today!</h1>
           </div>
           <div className="row">
-            <div className="col register-text"> 
+            <div className="col-12 col-md-6 register-text"> 
               <p>Joining the Later Tots fun is as easy as drop, play, and stay!</p>
               <ul>
                 <li>Quick & Simple Online Registration – It only takes a few minutes!</li>
@@ -30,7 +27,7 @@ function UserRegistrationPage() {
               </ul>
               <p>Let’s get ready to giggle, explore, and create lasting memories! </p>
               </div>
-            <div className="col">
+            <div className="col-12 col-md-6 ">
               <h3 className='text-center' style={{color:'#e51377', fontSize:'40px'}}>Register</h3>
               <UserForm />
             </div>

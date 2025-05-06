@@ -4,7 +4,7 @@ import React from 'react';
 
 function TotsTidbits() {
     return (
-        <div className='tidbits-bg' >
+        <div className='tidbits-bg py-5' >
             <div className="container">
                 <div className="row">
                     <div className="col-2">
