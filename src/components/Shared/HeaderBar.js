@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
 import { getAuth, signOut } from "firebase/auth";
+import { set } from 'react-hook-form';
 
 const HeaderBar = () => {
   const { currentUser, logout } = useAuth();
   const location = useLocation();
 
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [showTeamTots, setShowTeamTots] = useState(false);
+  const [showBigTots, setShowBigTots] = useState(false);
+  const [showDropIn, setShowDropIn] = useState(false);
   const signOut = async () => {
     const auth = getAuth();
     try {
@@ -19,6 +23,26 @@ const HeaderBar = () => {
   }
   const handleMobileMenu = () => {
     setMobileMenu(!mobileMenu);
+  }
+  const expandChildren = (link) => {
+    setShowTeamTots(false);
+    setShowBigTots(false);
+    setShowDropIn(false);
+    switch (link) {
+      case 'teamtots':
+        setShowTeamTots(!showTeamTots);
+        break;
+      case 'dropin':
+        setShowDropIn(!showDropIn);
+        break;
+      case 'bigtots':
+        setShowBigTots(!showBigTots);
+        break;
+      default:
+        break;
+    }
+
+
   }
 
   const dropdownActiveTeam = () => {
@@ -70,37 +94,37 @@ const HeaderBar = () => {
             {/* Show the marketing pages if the current user is not an admin */}
             {(!currentUser || currentUser.role !== 'admin') && <>
               <li className="nav-item dropdown">
-                <a id="team-link" className={`nav-link team-link dropdown-toggle scrollto ${dropdownActiveTeam()}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <a id="team-link" className={`nav-link team-link dropdown-toggle scrollto ${dropdownActiveTeam()}`} onClick={() => expandChildren('teamtots')} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   Team Tots
                 </a>
-                <ul className="dropdown-menu">
+                <ul className={`dropdown-menu ${showTeamTots ? 'd-block' : ''}`}>
                   <li><a className={`nav-link scrollto ${location.pathname === '/teamtots' ? 'active' : ''}`} href="/teamtots">Meet</a></li>
                   <li><a className="dropdown-item" href="/testimonials">Share</a></li>
                   <li><a className="dropdown-item" href="/careers">Grow</a></li>
                 </ul>
               </li>
               <li className="nav-item dropdown">
-                <a id="big-tots-link" className={`nav-link big-tots-link dropdown-toggle scrollto ${dropdownActiveTots()}`} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <a id="big-tots-link" className={`nav-link big-tots-link dropdown-toggle scrollto ${dropdownActiveTots()}`} onClick={() => expandChildren('bigtots')} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   Big Tots
                 </a>
-                <ul className="dropdown-menu">
+                <ul className={`dropdown-menu ${showBigTots ? 'd-block' : ''}`}>
                   <li><a className={`nav-link scrollto ${location.pathname === '/totstidbits' ? 'active' : ''}`} href="/totstidbits">Tots & Tidbits</a></li>
                   {!currentUser ? <li><a id="" className={`nav-link become-link scrollto ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Become a Tot</a></li> : <li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
-                 {!currentUser?? <li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Play & Stay</a></li>}
+                  {!currentUser ?? <li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Play & Stay</a></li>}
                 </ul>
               </li>
 
               {/* <li><a className={`nav-link scrollto ${location.pathname === '/teamtots' ? 'active' : ''}`} href="/teamtots">Team Tots</a></li> */}
               <li className='nav-item dropdown'>
-                <a id="dropin-link" className={`nav-link dropdown-toggle dropin-link scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Drop-In Fun</a>
-                <ul className="dropdown-menu">
+                <a id="dropin-link" className={`nav-link dropdown-toggle dropin-link scrollto ${location.pathname === '/events' ? 'active' : ''}`} onClick={() => expandChildren('dropin')} href="/events">Drop-In Fun</a>
+                <ul className={`dropdown-menu ${showDropIn ? 'd-block' : ''}`}>
                   <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Events</a></li>
                   <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/totivities' ? 'active' : ''}`} href="/totivities">Tot-tivities</a></li>
                   <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/party">Party & Play</a></li>
                 </ul>
               </li>
               <li><a id="deals-link" className={`nav-link deals-link scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/deals">Tot Deals</a></li>
-             </>}
+            </>}
 
             {/* Hide the marketing pages if the current user is an admin */}
             {(currentUser && currentUser.role === 'admin') && <>
@@ -114,8 +138,8 @@ const HeaderBar = () => {
               <li><a id="logout-link" className="nav-link scrollto logout-link" onClick={signOut}>Logout</a></li>
             )} */}
             {currentUser && (
-              <li><a id="logout-link" className="nav-link scrollto logout-link" style={{cursor:'pointer'}} onClick={signOut}>Logout</a></li>
-            ) }
+              <li><a id="logout-link" className="nav-link scrollto logout-link" style={{ cursor: 'pointer' }} onClick={signOut}>Logout</a></li>
+            )}
 
           </ul>
           <i className="bi bi-list mobile-nav-toggle" onClick={handleMobileMenu}></i>

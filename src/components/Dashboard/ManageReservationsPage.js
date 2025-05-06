@@ -20,8 +20,8 @@ const ManageReservationsPage = () => {
   const [dialogReservationContext, setDialogReservationContext] = useState(null);
   const [dialogValue, setDialogValue] = useState('pending'); // Only to track the status of the selected reservation
   const [refreshReservations, setRefreshReservations] = useState(false);
-
-  const { state: { date: initialDateValue } } = useLocation();  
+const initialDateValue = null;
+  // const { state: { date: initialDateValue } } = useLocation();  
 
   // get the dbService instance
   useEffect(() => {
