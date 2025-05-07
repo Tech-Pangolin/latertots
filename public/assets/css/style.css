@@ -404,6 +404,55 @@ Login
     left: -100%;
   }
 }
+ 
+input[type="submit"], button[type="submit"]{
+  font-family: "Snack", sans-serif;
+}
+
+.signup-btn{  
+    background: #E61378;
+    border: 0;
+    font-size: 22px;
+    padding: 20px 40px;
+    color: #fff;
+    transition: 0.4s;
+    border-radius: 50px;
+
+}
+.signup-btn:hover{
+  color :#9D66E3;
+}
+
+.login-btn{  
+  background: #E61378;
+  border: 0;
+  font-size: 20px;
+  padding: 10px 30px;
+  color: #fff;
+  transition: 0.4s;
+  border-radius: 50px;
+
+}
+.register-btn{  
+  background: #0066FF;
+  border: 0;
+  font-size: 20px;
+  padding: 10px 30px;
+  color: #fff;
+  transition: 0.4s;
+  border-radius: 50px;
+
+}
+.google-btn{  
+  background: #41A8C5;
+  border: 0;
+  font-size: 20px;
+  padding: 10px 30px;
+  color: #fff;
+  transition: 0.4s;
+  border-radius: 50px;
+  font-family: "Snack", sans-serif;
+}
 
 #home-link,
 #become-link {

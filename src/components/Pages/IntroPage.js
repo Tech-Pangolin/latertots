@@ -18,16 +18,16 @@ function IntroPage() {
                         <div className="col-12 ">
 
 
-                        <div style={{width:'100%'}} className='d-flex justify-content-center'><img src="./assets/img/hero/welcome.png" className="img-fluid" /></div>
+                            <div style={{ width: '100%' }} className='d-flex justify-content-center'><img src="./assets/img/hero/welcome.png" className="img-fluid" /></div>
                         </div>
                     </div>
                     <div className="container">
-                    <div className="row d-flex justify-content-between mt-2">
-                        <div className="col-12 col-md-8 d-flex justify-content-center"> <img src="assets/img/hero/photoline.png" className="img-fluid" style={{height:"84%"}} alt="" /></div>
-                        <div className="col-12 col-md-4 d-flex justify-content-end align-items-end"> <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid slide-in d-none d-sm-block" style={{ width: "300px", height:"300px" }} alt="" /></div>
-                        <div className="col-12 d-block d-sm-none d-flex justify-content-center"><img src="assets/img/hero/logo-cir.png" className="img-fluid text-center" style={{width:'50%'}}/></div>
-                        
-                    </div>
+                        <div className="row d-flex justify-content-between mt-2">
+                            <div className="col-12 col-md-8 d-flex justify-content-center"> <img src="assets/img/hero/photoline.png" className="img-fluid" style={{ height: "84%" }} alt="" /></div>
+                            <div className="col-12 col-md-4 d-flex justify-content-end align-items-end"> <img src="assets/img/hero/logo-cir.png" id="hero-logo" className="img-fluid slide-in d-none d-sm-block" style={{ width: "300px", height: "300px" }} alt="" /></div>
+                            <div className="col-12 d-block d-sm-none d-flex justify-content-center"><img src="assets/img/hero/logo-cir.png" className="img-fluid text-center" style={{ width: '50%' }} /></div>
+
+                        </div>
                     </div>
                 </div>
 
@@ -49,7 +49,7 @@ function IntroPage() {
             </section>
             {/* END HERO SECTION */}
             <main>
-                <section id="about" className="about" style={{backgroundColor:'#41A8C5'}}>
+                <section id="about" className="about" style={{ backgroundColor: '#41A8C5' }}>
                     <div className="container">
                         <div className="row content">
                             <div className="col-md-4 order-1 order-md-2">
@@ -60,21 +60,26 @@ function IntroPage() {
                             <div className="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch px-lg-5">
                                 <h2 style={{ color: '#FFF' }}>What is Later Tots?</h2>
                                 <p>
-                                At Later Tots, every day is a play day! Our indoor play space is designed for tots 18 months to 6 years to drop in and enjoy non-stop fun. From exploring new adventures to creative play and making new friends, every visit is packed with high energy, imagination, and laughter.
+                                    At Later Tots, every day is a play day! Our indoor play space is designed for tots 18 months to 6 years to drop in and enjoy non-stop fun. From exploring new adventures to creative play and making new friends, every visit is packed with high energy, imagination, and laughter.
                                 </p>
                                 <p>
-                                We make playtime easy—no schedules, no stress—just a safe and engaging space where tots can move, imagine, and play to their heart's content. And while they're off on their next great adventure, you can enjoy peace of mind knowing your tots are safe, engaged, and having the time of their lives!
+                                    We make playtime easy—no schedules, no stress—just a safe and engaging space where tots can move, imagine, and play to their heart's content. And while they're off on their next great adventure, you can enjoy peace of mind knowing your tots are safe, engaged, and having the time of their lives!
                                 </p>
                                 <p>
                                     At Later Tots, we truly believe that every child deserves a place where they feel at home, even when they're away. That's why we're proud to be your tot's happy place away—where they can drop, play, and stay.
 
                                 </p>
-                               
 
-                            </div> 
-                        </div><div className="row d-flex justify-content-center">
-                                    <img src="assets/img/homekids.png" className="img-fluid main-kids" />
-                                </div>
+
+                            </div>
+                        </div>
+                        <div className="row d-flex justify-content-center">
+                            <img src="assets/img/homekids.png" className="img-fluid main-kids" />
+                        </div>
+                        <div className="row d-flex justify-content-center mt-5">
+                            <div className='col text-center'><a className='signup-btn' href="/login">Sign Up Now</a></div>
+                         
+                            </div>
 
                     </div>
                 </section>
