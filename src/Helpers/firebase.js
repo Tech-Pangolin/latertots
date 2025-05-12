@@ -36,7 +36,7 @@ export class FirebaseDbService {
         const roleRef = userDoc.data().Role;
         return await this.fetchUserRole(roleRef); 
       } catch (error) {
-        throw new Error("Failed to retrieve User's Role")
+        throw new Error(`Failed to retrieve User's Role: ${error.message}`)
       }
     }
     return null;

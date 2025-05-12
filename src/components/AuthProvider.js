@@ -10,7 +10,7 @@ export const signInWithGoogle = async () => {
   try {
     await signInWithPopup(auth, new GoogleAuthProvider());
   } catch (error) {
-    console.error("Error signing in with Google: ", error.message);
+    logger.error("Error signing in with Google: ", error.message);
   }
 };
 
@@ -18,7 +18,7 @@ export const signInWithEmail = async (email, password) => {
   try {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
-    console.error("Error signing in with email and password: ", error.message);
+    logger.error("Error signing in with email and password: ", error.message);
   }
 };
 
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
         setCurrentUser(loggedInUser);
         setLoading(false);
       } catch (err) {
-        console.error("Error during post-auth user fetch:", err);
+        logger.error("Error during post-auth user fetch:", err);
 
         // Flag for debugging if it's a permissions issue
         const isPermissionError =
@@ -76,9 +76,9 @@ export const AuthProvider = ({ children }) => {
           err?.message?.includes("PERMISSION_DENIED");
       
         if (isPermissionError) {
-          console.warn("Permission denied while accessing user data. User will be signed out.");
+          logger.warn("Permission denied while accessing user data. User will be signed out.");
         } else {
-          console.warn("Unexpected error during post-auth load. User will be signed out.");
+          logger.warn("Unexpected error during post-auth load. User will be signed out.");
         }
       
         // Always sign the user out on error
