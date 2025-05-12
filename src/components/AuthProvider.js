@@ -10,7 +10,7 @@ export const signInWithGoogle = async () => {
   try {
     await signInWithPopup(auth, new GoogleAuthProvider());
   } catch (error) {
-    console.error("Error signing in with Google: ", error.message);
+    logger.error("Error signing in with Google: ", error.message);
   }
 };
 
@@ -18,7 +18,7 @@ export const signInWithEmail = async (email, password) => {
   try {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
-    console.error("Error signing in with email and password: ", error.message);
+    logger.error("Error signing in with email and password: ", error.message);
   }
 };
 
@@ -30,36 +30,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [dbService, setDbService] = useState(null);
   const auth = getAuth(app);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        setCurrentUser(null);
-        setLoading(false);
-        return;
-      }
-      
-      const tempDbService = new FirebaseDbService(user);
-
-      const userRole = await tempDbService.fetchRoleByUserId(user.uid)
-      const userPhoto = await tempDbService.fetchAvatarPhotoByUserId(user.uid)
-
-      const loggedInUser = {
-        ...user,
-        role: userRole,
-        photoURL: userPhoto
-      }
-
-      setDbService(new FirebaseDbService(loggedInUser));
-      setCurrentUser(loggedInUser);
-      setLoading(false);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [auth]);
-
+  
   const logout = async () => {
     try {
       await auth.signOut();
@@ -68,6 +39,58 @@ export const AuthProvider = ({ children }) => {
       logger.error("Error logging out: ", error);
     }
   };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setCurrentUser(null);
+        setLoading(false);
+        return;
+      }
+  
+      try {
+        const tempDbService = new FirebaseDbService(user);
+  
+        // Try to fetch user role
+        const userRole = await tempDbService.fetchRoleByUserId(user.uid);
+  
+        // Try to fetch avatar
+        const userPhoto = await tempDbService.fetchAvatarPhotoByUserId(user.uid);
+  
+        const loggedInUser = {
+          ...user,
+          role: userRole,
+          photoURL: userPhoto
+        };
+  
+        setDbService(new FirebaseDbService(loggedInUser));
+        setCurrentUser(loggedInUser);
+        setLoading(false);
+      } catch (err) {
+        logger.error("Error during post-auth user fetch:", err);
+
+        // Flag for debugging if it's a permissions issue
+        const isPermissionError =
+          err?.code === "permission-denied" ||
+          err?.message?.includes("Missing or insufficient permissions") ||
+          err?.message?.includes("PERMISSION_DENIED");
+      
+        if (isPermissionError) {
+          logger.warn("Permission denied while accessing user data. User will be signed out.");
+        } else {
+          logger.warn("Unexpected error during post-auth load. User will be signed out.");
+        }
+      
+        // Always sign the user out on error
+        await logout()
+        setCurrentUser(null);
+        setLoading(false);
+      }
+    });
+  
+    return () => unsubscribe();
+  }, [auth]);
+  
 
   return (
     <AuthContext.Provider value={{ currentUser, logout, dbService }}>
