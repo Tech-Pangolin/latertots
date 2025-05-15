@@ -65,7 +65,7 @@ const DashboardCalendar = () => {
 
     const unpaidEvents = dayEvents.filter((event) => {
       return ['unpaid', 'late'].includes(event.status)
-    })
+    });
 
     const chipClickHandler = () => {
       navigate('/admin/manageReservations', {state: {date: dayCellInfo.date} });
