@@ -63,6 +63,10 @@ const DashboardCalendar = () => {
       return event.status === 'confirmed';
     });
 
+    const unpaidEvents = dayEvents.filter((event) => {
+      return ['unpaid', 'late'].includes(event.status)
+    });
+
     const chipClickHandler = () => {
       navigate('/admin/manageReservations', {state: {date: dayCellInfo.date} });
     }
@@ -91,6 +95,12 @@ const DashboardCalendar = () => {
             num={approvedEvents.length.toString()}
             clickHandler={chipClickHandler} 
           />
+          <ChipBadge 
+            text={'Unpaid'}
+            color={'aqua'}
+            num={unpaidEvents.length.toString()}
+            clickHandler={chipClickHandler}
+          />
 
           {/* TODO: Display a percentage of capacity (which should be configurable in settings) */}
           {/* ie. If there are 12 hours and 12 child capacity, how many hours of 144 are filled? */}
@@ -104,6 +114,7 @@ const DashboardCalendar = () => {
       <FullCalendar
         // TODO: Specify a timezone prop and tie into admin settings
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        height={'auto'}
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
