@@ -21,15 +21,15 @@ export default function DashHome() {
     window.addEventListener('resize', measure);
 
     // Observe the calendar card itself for any size changes (zoom, reflow, etc.)
-    let ro;
+    let resizeObserver;
     if (calCardRef.current && window.ResizeObserver) {
-      ro = new ResizeObserver(measure);
-      ro.observe(calCardRef.current);
+      resizeObserver = new ResizeObserver(measure);
+      resizeObserver.observe(calCardRef.current);
     }
 
     return () => {
       window.removeEventListener('resize', measure);
-      if (ro) ro.disconnect();
+      if (resizeObserver) resizeObserver.disconnect();
     };
   }, [measure]);
 
