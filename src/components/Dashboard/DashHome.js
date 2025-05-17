@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import DashboardCalendar from '../Shared/DashboardCalendar';
+import AdminDashReservationCard from './AdminDashReservationCard';
 
 export default function DashHome() {
   const calCardRef = useRef(null);
@@ -115,16 +116,21 @@ export default function DashHome() {
         <div className="col-12 col-xl-4 mb-4 d-flex flex-column">
           <div
             className="card flex-fill d-flex flex-column"
-            style={{ maxHeight: calHeight }}
+            style={{ maxHeight: calHeight, minHeight: calHeight }}
           >
-            <h5 className="card-header">Traffic last 6 months</h5>
+            <h5 className="card-header">All Pending Reservations</h5>
             <div
               className="card-body overflow-auto flex-fill"
               style={{ minHeight: 0 }}
             >
-              <div style={{ backgroundColor: 'red', height: 555 }} />
-              <div style={{ backgroundColor: 'blue', height: 555 }} />
-              <div style={{ backgroundColor: 'green', height: 555 }} />
+              <AdminDashReservationCard />
+              <AdminDashReservationCard />
+              <AdminDashReservationCard />
+              <AdminDashReservationCard />
+              <AdminDashReservationCard />
+              <AdminDashReservationCard />
+              <AdminDashReservationCard />
+              <AdminDashReservationCard />
             </div>
           </div>
         </div>
