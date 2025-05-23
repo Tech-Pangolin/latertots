@@ -1,10 +1,13 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import DashboardCalendar from '../Shared/DashboardCalendar';
-import AdminDashReservationCard from './AdminDashReservationCard';
+import AdminCalendarInteractionColumn from './AdminCalendarInteractionColumn';
 
 export default function DashHome() {
+  // For measuring the calendar's height
   const calCardRef = useRef(null);
   const [calHeight, setCalHeight] = useState(0);
+
+  
 
   // Measure the calendar card’s full height
   const measure = useCallback(() => {
@@ -17,17 +20,14 @@ export default function DashHome() {
   useEffect(() => {
     // Initial measurement
     measure();
-
     // Re-measure on window resize
     window.addEventListener('resize', measure);
-
     // Observe the calendar card itself for any size changes (zoom, reflow, etc.)
     let resizeObserver;
     if (calCardRef.current && window.ResizeObserver) {
       resizeObserver = new ResizeObserver(measure);
       resizeObserver.observe(calCardRef.current);
     }
-
     return () => {
       window.removeEventListener('resize', measure);
       if (resizeObserver) resizeObserver.disconnect();
@@ -113,27 +113,7 @@ export default function DashHome() {
           </div>
         </div>
 
-        <div className="col-12 col-xl-4 mb-4 d-flex flex-column">
-          <div
-            className="card flex-fill d-flex flex-column"
-            style={{ maxHeight: calHeight, minHeight: calHeight }}
-          >
-            <h5 className="card-header">All Pending Reservations</h5>
-            <div
-              className="card-body overflow-auto flex-fill"
-              style={{ minHeight: 0 }}
-            >
-              <AdminDashReservationCard />
-              <AdminDashReservationCard />
-              <AdminDashReservationCard />
-              <AdminDashReservationCard />
-              <AdminDashReservationCard />
-              <AdminDashReservationCard />
-              <AdminDashReservationCard />
-              <AdminDashReservationCard />
-            </div>
-          </div>
-        </div>
+        <AdminCalendarInteractionColumn calHeight={calHeight} />
       </div>
     </>
   );
