@@ -2,6 +2,7 @@ import React from "react";
 import InteractionColumnNavHeader from "./InteractionColumnNavHeader";
 import { useAdminPanelContext } from "./AdminPanelContext";
 import AdminDashNotificationsFeed from "./AdminDashNotificationsFeed";
+import ManageReservationsPage from "./ManageReservationsPage";
 
 export default function AdminCalendarInteractionColumn({ calHeight }) {
   const { interactionColumnMode } = useAdminPanelContext();
@@ -13,7 +14,7 @@ export default function AdminCalendarInteractionColumn({ calHeight }) {
         style={{ maxHeight: calHeight, minHeight: calHeight }}
       >
         <InteractionColumnNavHeader>
-          {interactionColumnMode === 'notifications' ? <AdminDashNotificationsFeed /> : <p>Daily View Calendar goes here</p>}
+          {interactionColumnMode === 'notifications' ? <AdminDashNotificationsFeed /> : <ManageReservationsPage />}
           
         </InteractionColumnNavHeader>
       </div>
