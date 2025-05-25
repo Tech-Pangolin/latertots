@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const AdminPanelContext = createContext();
 
@@ -12,6 +12,12 @@ export function AdminPanelContextProvider({ children }) {
     interactionColumnMode,
     setMode,
   };
+
+  useEffect(() => {
+    if (selectedDate != null) {
+      setMode('daily')
+    }
+  }, [selectedDate]);
 
   return (
     <AdminPanelContext.Provider value={value}>
