@@ -8,8 +8,10 @@ import { useAuth } from '../AuthProvider';
 import ChipBadge from './ChipBadge';
 import { logger } from '../../Helpers/logger';
 import { useNavigate } from 'react-router-dom';
+import { useAdminPanelContext } from '../Dashboard/AdminPanelContext';
 
 const DashboardCalendar = () => {
+  const {setSelectedDate} = useAdminPanelContext();
   const businessHours = useSelector(state => state.settings.businessHours);
   const [reservations, setReservations] = useState([]);
   const { currentUser, dbService } = useAuth();
@@ -63,6 +65,7 @@ const DashboardCalendar = () => {
       return event.status === 'confirmed';
     });
 
+    // TODO: We aren't using the manageReservations page anymore. Safe to pull all references to it.
     const chipClickHandler = () => {
       navigate('/admin/manageReservations', {state: {date: dayCellInfo.date} });
     }
@@ -99,6 +102,11 @@ const DashboardCalendar = () => {
     );
   }
 
+  // Update daily view calendar when a date is clicked
+  const handleDateClick = info => {
+    setSelectedDate(info.dateStr);
+  }
+
   return (
     <>
       <FullCalendar
@@ -109,6 +117,7 @@ const DashboardCalendar = () => {
           center: 'title',
           right: ''
         }}
+        dateClick={handleDateClick}
         businessHours={businessHours}
         showNonCurrentDates={false}
         datesSet={getViewDates}

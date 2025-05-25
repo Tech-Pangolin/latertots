@@ -5,7 +5,7 @@ import AdminDashNotificationsFeed from "./AdminDashNotificationsFeed";
 import ManageReservationsPage from "./ManageReservationsPage";
 
 export default function AdminCalendarInteractionColumn({ calHeight }) {
-  const { interactionColumnMode } = useAdminPanelContext();
+  const { interactionColumnMode, selectedDate, setSelectedDate } = useAdminPanelContext();
 
   return (
     <div className="col-12 col-xl-4 mb-4 d-flex flex-column">
@@ -14,7 +14,7 @@ export default function AdminCalendarInteractionColumn({ calHeight }) {
         style={{ maxHeight: calHeight, minHeight: calHeight }}
       >
         <InteractionColumnNavHeader>
-          {interactionColumnMode === 'notifications' ? <AdminDashNotificationsFeed /> : <ManageReservationsPage />}
+          {interactionColumnMode === 'notifications' ? <AdminDashNotificationsFeed /> : <ManageReservationsPage initialDateValue={selectedDate} contextDateSetter={setSelectedDate} />}
           
         </InteractionColumnNavHeader>
       </div>

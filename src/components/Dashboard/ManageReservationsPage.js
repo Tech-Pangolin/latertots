@@ -8,9 +8,8 @@ import { useAuth } from '../AuthProvider';
 import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import { logger } from '../../Helpers/logger';
 import ReservationStatusDialog from '../Shared/ReservationStatusDialog';
-import { useLocation } from 'react-router-dom';
 
-const ManageReservationsPage = () => {
+const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
   const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
   const { currentUser } = useAuth();
   const [currentUserData, setCurrentUserData] = useState({});
@@ -20,8 +19,7 @@ const ManageReservationsPage = () => {
   const [dialogReservationContext, setDialogReservationContext] = useState(null);
   const [dialogValue, setDialogValue] = useState('pending'); // Only to track the status of the selected reservation
   const [refreshReservations, setRefreshReservations] = useState(false);
-  const initialDateValue = null;
-  // const { state: { date: initialDateValue } } = useLocation();  
+  // const initialDateValue = null; 
 
   // get the dbService instance
   useEffect(() => {
@@ -75,6 +73,9 @@ const ManageReservationsPage = () => {
 
   const handleDatesSet = (dateInfo) => {
     setCurrentDate(dateInfo.start);
+    if (contextDateSetter) {
+      contextDateSetter(dateInfo.start);
+    }
   }
 
   const handleEventResize = (resizeInfo) => {
@@ -173,6 +174,7 @@ const ManageReservationsPage = () => {
   return (
     <>
       <FullCalendar
+        key={initialDateValue}
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView="timeGridDay"
         views={{
