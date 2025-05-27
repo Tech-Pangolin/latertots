@@ -7,15 +7,13 @@ import { useSelector } from 'react-redux';
 import { useAuth } from '../AuthProvider';
 import ChipBadge from './ChipBadge';
 import { logger } from '../../Helpers/logger';
-import { useNavigate } from 'react-router-dom';
 import { useAdminPanelContext } from '../Dashboard/AdminPanelContext';
 
 const DashboardCalendar = () => {
-  const {setSelectedDate} = useAdminPanelContext();
+  const { setSelectedDate } = useAdminPanelContext();
   const businessHours = useSelector(state => state.settings.businessHours);
   const [reservations, setReservations] = useState([]);
   const { currentUser, dbService } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     logger.info('reservations:', reservations);
@@ -40,7 +38,6 @@ const DashboardCalendar = () => {
     } catch (error) {
       logger.error('Error in getReservationsByCurrentViewMonth:', error);
     }
-    
   }
 
   const getViewDates = (args) => {

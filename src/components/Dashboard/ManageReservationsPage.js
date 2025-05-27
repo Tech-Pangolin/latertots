@@ -16,7 +16,7 @@ const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
   const [currentDate, setCurrentDate] = useState(null);
   const [dialogOpenState, setDialogOpenState] = useState(false);
   const [dialogReservationContext, setDialogReservationContext] = useState(null);
-  const [dialogValue, setDialogValue] = useState('pending'); // Only to track the status of the selected reservation
+  const [dialogValue, setDialogValue] = useState(null); // Only to track the status of the selected reservation
   const [refreshReservations, setRefreshReservations] = useState(false);
 
   // get the dbService instance
@@ -223,7 +223,8 @@ const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
         options={{
           Confirm: 'confirmed',
           Decline: 'declined',
-          Refund: 'refunded'
+          Refund: 'refunded',
+          Complete: 'completed',
         }}
         title="Update Reservation Status"
         reservationContext={dialogReservationContext}
