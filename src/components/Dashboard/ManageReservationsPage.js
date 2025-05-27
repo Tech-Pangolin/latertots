@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Grid } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -19,7 +18,6 @@ const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
   const [dialogReservationContext, setDialogReservationContext] = useState(null);
   const [dialogValue, setDialogValue] = useState('pending'); // Only to track the status of the selected reservation
   const [refreshReservations, setRefreshReservations] = useState(false);
-  // const initialDateValue = null; 
 
   // get the dbService instance
   useEffect(() => {
