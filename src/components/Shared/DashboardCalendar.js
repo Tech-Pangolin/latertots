@@ -90,20 +90,18 @@ const DashboardCalendar = () => {
             text={'Pending'} 
             color={'tomato'} 
             num={pendingEvents.length.toString()}
-            clickHandler={chipClickHandler} 
           />
           <ChipBadge 
             text={'Approved'} 
             color={'mediumseagreen'} 
             num={approvedEvents.length.toString()}
-            clickHandler={chipClickHandler} 
           />
-          <ChipBadge 
+          <ChipBadge
             text={'Unpaid'}
-            color={'aqua'}
+            color={'darkorange'}
             num={unpaidEvents.length.toString()}
-            clickHandler={chipClickHandler}
           />
+          
 
           {/* TODO: Display a percentage of capacity (which should be configurable in settings) */}
           {/* ie. If there are 12 hours and 12 child capacity, how many hours of 144 are filled? */}
