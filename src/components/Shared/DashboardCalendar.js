@@ -69,11 +69,6 @@ const DashboardCalendar = () => {
       return ['unpaid', 'late'].includes(event.status)
     })
 
-    // TODO: We aren't using the manageReservations page anymore. Safe to pull all references to it.
-    const chipClickHandler = () => {
-      navigate('/admin/manageReservations', {state: {date: dayCellInfo.date} });
-    }
-
     if (dayEvents.length === 0 || !isBusinessDay(dayCellInfo.date)) {
       return (
         <div className="fc-daygrid-day-number">
