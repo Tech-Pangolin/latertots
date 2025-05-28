@@ -33,10 +33,13 @@ export const renderEventContent = (eventInfo) => {
   let backgroundColor;
   switch (event.extendedProps.status) {
     case 'confirmed':
-      backgroundColor = 'green';
+      backgroundColor = 'mediumseagreen';
       break;
     case 'pending':
-      backgroundColor = 'orange';
+      backgroundColor = 'tomato';
+      break;
+    case 'unpaid':
+      backgroundColor = 'darkorange';
       break;
     default:
       backgroundColor = 'gray';
@@ -89,4 +92,12 @@ export const getCurrentTime = () => {
   const hours = today.getHours().toString().padStart(2, '0');
   const minutes = today.getMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
+}
+
+export const monthNumberToDisplayName = (monthNumber) => {
+  const monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+  return monthNames[monthNumber];
 }

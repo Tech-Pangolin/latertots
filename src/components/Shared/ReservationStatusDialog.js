@@ -1,10 +1,6 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import List from '@mui/material/List';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemText from '@mui/material/ListItemText';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
@@ -20,7 +16,7 @@ export default function ReservationStatusDialog(props) {
   const radioGroupRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (!open) {
+    if (open) {
       setValue(valueProp);
     }
   }, [valueProp, open]);
@@ -73,8 +69,6 @@ export default function ReservationStatusDialog(props) {
         </>}
         <RadioGroup
           ref={radioGroupRef}
-          aria-label="ringtone"
-          name="ringtone"
           value={value}
           onChange={handleChange}
         >
@@ -92,7 +86,7 @@ export default function ReservationStatusDialog(props) {
         <Button autoFocus onClick={handleCancel}>
           Cancel
         </Button>
-        <Button onClick={handleOk}>Ok</Button>
+        <Button onClick={handleOk} disabled={value === valueProp}>Ok</Button>
       </DialogActions>
     </Dialog>
   );
@@ -101,5 +95,5 @@ export default function ReservationStatusDialog(props) {
 ReservationStatusDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   open: PropTypes.bool.isRequired,
-  value: PropTypes.string.isRequired,
+  value: PropTypes.string,
 };

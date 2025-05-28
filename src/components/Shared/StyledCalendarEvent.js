@@ -18,6 +18,12 @@ const StyledCalendarEvent = ({event, backgroundColor}) => {
         {event.extendedProps.status === 'pending' && (
             <i style={{ marginLeft: '5px' }}>Pending</i>
         )}
+        {event.extendedProps.status === 'confirmed' && (
+            <i style={{ marginLeft: '5px' }}>Approved</i>
+        )}
+        {event.extendedProps.status === 'unpaid' && (
+            <i style={{ marginLeft: '5px' }}>Unpaid</i>
+        )}
     </div>
   )
 };
