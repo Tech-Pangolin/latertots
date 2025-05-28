@@ -23,27 +23,25 @@ export default function DashHome() {
     dbService.getTotalUsers().then((total) => setTotalUsers(total));
 
     const date = new Date();
+    let thisMonthTotal = [];
+    let lastMonthTotal = [];
+    const monthName = monthNumberToDisplayName(date.getMonth());
+
     dbService.fetchAllReservationsByMonthDay(date.getFullYear(), date.getMonth())
     .then((data) => {
-      setReservationsWidgetData({thisMonthTotal: data, monthName: monthNumberToDisplayName(date.getMonth())});
+      thisMonthTotal = data;
+      return dbService.fetchAllReservationsByMonthDay(date.getFullYear(), date.getMonth() - 1);
     })
-    .then(() => {
-      dbService.fetchAllReservationsByMonthDay(date.getFullYear(), date.getMonth() - 1)
-      .then((data) => {
-        setReservationsWidgetData((prevData) => ({
-          ...prevData,
-          lastMonthTotal: data
-        }));
-      });
-    })
-    .then(() => {
-      const percentage = (reservationsWidgetData.thisMonthTotal.length - reservationsWidgetData.lastMonthTotal.length) / reservationsWidgetData.lastMonthTotal.length * 100
-      setReservationsWidgetData((prevData) => ({
+    .then((data) => {
+      lastMonthTotal = data;
+      const percentage = (thisMonthTotal.length - lastMonthTotal.length) / lastMonthTotal.length * 100;
+      setReservationsWidgetData({
+        thisMonthTotal,
+        lastMonthTotal,
+        monthName,
         percentageChange: percentage.toFixed(1),
-        thisMonthTotal: prevData.thisMonthTotal,
-        monthName: prevData.monthName
-      }));
-    })
+      });
+    });
 
   }, [dbService]);
 
