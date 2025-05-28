@@ -17,6 +17,7 @@ export default function DashHome() {
     setDbService(new FirebaseDbService(currentUser));
   }, [currentUser]);
 
+  // Fetch data for widgets
   useEffect(() => {
     if (!dbService) return;
 
@@ -27,21 +28,21 @@ export default function DashHome() {
     let lastMonthTotal = [];
     const monthName = monthNumberToDisplayName(date.getMonth());
 
-    dbService.fetchAllReservationsByMonthDay(date.getFullYear(), date.getMonth())
-    .then((data) => {
-      thisMonthTotal = data;
-      return dbService.fetchAllReservationsByMonthDay(date.getFullYear(), date.getMonth() - 1);
-    })
-    .then((data) => {
-      lastMonthTotal = data;
-      const percentage = (thisMonthTotal.length - lastMonthTotal.length) / lastMonthTotal.length * 100;
+    Promise.all([
+      dbService.fetchAllReservationsByMonthDay(date.getFullYear(), date.getMonth()),
+      dbService.fetchAllReservationsByMonthDay(date.getFullYear(), date.getMonth() - 1)
+    ])
+    .then(([thisMonthData, lastMonthData]) => {
+      thisMonthTotal = thisMonthData;
+      lastMonthTotal = lastMonthData;
+      const percentageChange = ((thisMonthTotal.length - lastMonthTotal.length) / lastMonthTotal.length * 100).toFixed(1);
       setReservationsWidgetData({
         thisMonthTotal,
         lastMonthTotal,
         monthName,
-        percentageChange: percentage.toFixed(1),
+        percentageChange,
       });
-    });
+    })
 
   }, [dbService]);
 
