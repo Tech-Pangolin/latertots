@@ -93,3 +93,11 @@ export const getCurrentTime = () => {
   const minutes = today.getMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
 }
+
+export const monthNumberToDisplayName = (monthNumber) => {
+  const monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+  return monthNames[monthNumber];
+}

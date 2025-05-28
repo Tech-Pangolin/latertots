@@ -637,4 +637,18 @@ export class FirebaseDbService {
     }
     throw new Error('User document not found after maximum retries.');
   };
+
+
+  getTotalUsers = async () => {
+    this.validateAuth('admin');
+    try {
+      const snapshot = await getDocs(collection(db, "Users"));
+      return snapshot.size;
+    } catch (error) {
+      logger.error("Error fetching total users:", error);
+      return 0;
+    }
+  };
+
 }
+

@@ -3,8 +3,51 @@ import DashboardCalendar from '../Shared/DashboardCalendar';
 import AdminCalendarInteractionColumn from './AdminCalendarInteractionColumn';
 import { AdminPanelContextProvider } from './AdminPanelContext';
 import AdminDashWidget from './AdminDashWidget';
+import { FirebaseDbService } from '../../Helpers/firebase';
+import { useAuth } from '../AuthProvider';
+import { monthNumberToDisplayName } from '../../Helpers/calendar';
 
 export default function DashHome() {
+  const { currentUser } = useAuth();
+  const [dbService, setDbService] = useState(null);
+  const [totalUsers, setTotalUsers] = useState(null);
+  const [reservationsWidgetData, setReservationsWidgetData] = useState(null);
+
+  useEffect(() => {
+    setDbService(new FirebaseDbService(currentUser));
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!dbService) return;
+
+    dbService.getTotalUsers().then((total) => setTotalUsers(total));
+
+    const date = new Date();
+    dbService.fetchAllReservationsByMonthDay(date.getFullYear(), date.getMonth())
+    .then((data) => {
+      setReservationsWidgetData({thisMonthTotal: data, monthName: monthNumberToDisplayName(date.getMonth())});
+    })
+    .then(() => {
+      dbService.fetchAllReservationsByMonthDay(date.getFullYear(), date.getMonth() - 1)
+      .then((data) => {
+        setReservationsWidgetData((prevData) => ({
+          ...prevData,
+          lastMonthTotal: data
+        }));
+      });
+    })
+    .then(() => {
+      const percentage = (reservationsWidgetData.thisMonthTotal.length - reservationsWidgetData.lastMonthTotal.length) / reservationsWidgetData.lastMonthTotal.length * 100
+      setReservationsWidgetData((prevData) => ({
+        percentageChange: percentage.toFixed(1),
+        thisMonthTotal: prevData.thisMonthTotal,
+        monthName: prevData.monthName
+      }));
+    })
+
+  }, [dbService]);
+
+
   // For measuring the calendar's height
   const calCardRef = useRef(null);
   const [calHeight, setCalHeight] = useState(0);
@@ -41,33 +84,35 @@ export default function DashHome() {
       {/* Top-row statistic cards */}
       <div className="row my-4">
 
-        <AdminDashWidget 
-          title="Customers"
-          totalValue="345k"
-          dateRange="Feb 1 - Apr 1, United States"
-          percentageChange="18.2"  
-        />
-        
         <AdminDashWidget
-          title="Revenue"
-          totalValue="$2.4k"
+          title="Homepage Views (example)"
+          totalValue="64k"
           dateRange="Feb 1 - Apr 1, United States"
-          percentageChange="4.6"
+          percentageChange="2.5"
         />
 
         <AdminDashWidget
-          title="Purchases"
+          title="Total Users"
+          totalValue={totalUsers ? totalUsers : "Loading..."}
+          dateRange="All Time"
+        // percentageChange="18.2"  
+        />
+
+        <AdminDashWidget
+          title="Reservations"
+          totalValue={reservationsWidgetData ? reservationsWidgetData.thisMonthTotal.length : "Loading..."}
+          dateRange={`${reservationsWidgetData ? reservationsWidgetData.monthName : 'Jan'} 1 - Now`}
+          percentageChange={reservationsWidgetData?.percentageChange ? reservationsWidgetData.percentageChange : "Loading..."}
+        />
+
+        <AdminDashWidget
+          title="Unpaid Invoices (example)"
           totalValue="43"
           dateRange="Feb 1 - Apr 1, United States"
           percentageChange="-2.6"
         />
 
-        <AdminDashWidget
-          title="Traffic"
-          totalValue="64k"
-          dateRange="Feb 1 - Apr 1, United States"
-          percentageChange="2.5"
-        />
+
 
       </div>
 
@@ -91,7 +136,7 @@ export default function DashHome() {
           <AdminCalendarInteractionColumn calHeight={calHeight} />
         </div>
       </AdminPanelContextProvider>
-      
+
     </>
   );
 }

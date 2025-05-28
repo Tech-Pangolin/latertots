@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function AdminDashWidget( props ) {
+export default function AdminDashWidget(props) {
   const { title, totalValue, dateRange, percentageChange } = props;
 
   const formatPercentageChange = (change) => {
@@ -14,9 +14,12 @@ export default function AdminDashWidget( props ) {
         <div className="card-body">
           <h5 className="card-title">{totalValue}</h5>
           <p className="card-text">{dateRange}</p>
-          <p className={`card-text ${percentageChange >= 0 ? 'text-success' : 'text-danger'}`}>
-            {formatPercentageChange(percentageChange)} since last month
-          </p>
+          
+          {percentageChange &&
+            <p className={`card-text ${percentageChange >= 0 ? 'text-success' : 'text-danger'}`}>
+              {formatPercentageChange(percentageChange)} since last month
+            </p>
+          }
         </div>
       </div>
     </div>
