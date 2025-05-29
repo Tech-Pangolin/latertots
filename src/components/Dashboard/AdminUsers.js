@@ -1,21 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useAuth } from "../AuthProvider";
+import { useQuery } from "@tanstack/react-query";
 
 const AdminUsers = () => {
-  const [users, setUsers] = useState(null);
   const { dbService } = useAuth();
 
-  useEffect(() => {
-    if (!dbService) return;
-    const getUsers = async () => dbService.fetchAllUsers()
-      .then((data) => {
-        setUsers(data);
-      }).catch((error) => {
-        console.error(error);
-      });
-
-    getUsers();
-  }, [dbService]);
+  const { 
+    data: users = [],
+    isLoading,
+    isError
+  } = useQuery({queryKey: ['adminAllUsers'], queryFn: dbService.fetchAllUsers})
 
   const formatTableRow = (user) => {
     return (
@@ -35,6 +29,8 @@ const AdminUsers = () => {
             <h5 className="card-header">Users</h5>
             <div className="card-body">
               <div className="table-responsive">
+                {isLoading && <p>Loading...</p>}
+                {!isLoading && !isError && (
                 <table className="table">
                   <thead>
                     <tr>
@@ -47,6 +43,7 @@ const AdminUsers = () => {
                     {users && users.map((user) => formatTableRow(user))}
                   </tbody>
                 </table>
+                )}
               </div>
               {/* <a href="#" className="btn btn-block btn-light">View all</a> */}
             </div>

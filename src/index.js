@@ -6,15 +6,28 @@ import reportWebVitals from './reportWebVitals';
 import { AuthProvider } from './components/AuthProvider';
 import { Provider as ReduxProvider } from 'react-redux';
 import store from './redux/store';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: true,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    }
+  }
+})
+
 root.render(
   <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
     <ReduxProvider store={store}>
       <AuthProvider>
         <App />
       </AuthProvider>
     </ReduxProvider>
+    </QueryClientProvider>
   </React.StrictMode>
 );
 
