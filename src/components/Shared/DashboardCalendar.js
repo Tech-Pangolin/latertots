@@ -66,6 +66,7 @@ const DashboardCalendar = () => {
       return ['unpaid', 'late'].includes(event.status)
     })
 
+
     if (dayEvents.length === 0 || !isBusinessDay(dayCellInfo.date)) {
       return (
         <div className="fc-daygrid-day-number">
@@ -88,6 +89,7 @@ const DashboardCalendar = () => {
             color={'mediumseagreen'} 
             num={approvedEvents.length.toString()}
           />
+
           <ChipBadge
             text={'Unpaid'}
             color={'darkorange'}
