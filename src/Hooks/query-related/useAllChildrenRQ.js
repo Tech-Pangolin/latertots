@@ -8,7 +8,7 @@ import { COLLECTIONS } from "../../Helpers/constants";
 export function useAllChildrenRQ() {
   const { dbService } = useAuth();
   const queryClient = useQueryClient();
-  const queryKey = ['adminAllChildren'];
+  const queryKey = useMemo(() => ['adminAllChildren']);
 
   // First, build the query
   const collectionRef = useMemo(() => collection(db, COLLECTIONS.CHILDREN));
