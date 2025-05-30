@@ -3,6 +3,7 @@ import { useAuth } from "../../components/AuthProvider";
 import { collection } from "firebase/firestore";
 import { db } from "../../config/firestore";
 import { useEffect } from "react";
+import { COLLECTIONS } from "../../Helpers/constants";
 
 
 export function useAllChildrenRQ() {
@@ -11,7 +12,7 @@ export function useAllChildrenRQ() {
   const queryKey = ['adminAllChildren'];
 
   // First, build the query
-  const collectionRef = collection(db, 'Children');
+  const collectionRef = collection(db, COLLECTIONS.CHILDREN);
 
   // Second, get the initial fetch of data
   const queryResult = useQuery({
