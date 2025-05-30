@@ -1,15 +1,12 @@
 import React from "react";
-import { useAuth } from "../AuthProvider";
-import { useQuery } from "@tanstack/react-query";
+import { useAllUsersRQ } from "../../Hooks/query-related/useAllUsersRQ";
 
 const AdminUsers = () => {
-  const { dbService } = useAuth();
-
-  const { 
+  const {
     data: users = [],
     isLoading,
     isError
-  } = useQuery({queryKey: ['adminAllUsers'], queryFn: dbService.fetchAllUsers})
+  } = useAllUsersRQ()
 
   const formatTableRow = (user) => {
     return (
@@ -31,18 +28,18 @@ const AdminUsers = () => {
               <div className="table-responsive">
                 {isLoading && <p>Loading...</p>}
                 {!isLoading && !isError && (
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Name</th>
-                      <th scope="col">Email</th>
-                      <th scope="col">Phone</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users && users.map((user) => formatTableRow(user))}
-                  </tbody>
-                </table>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Phone</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users && users.map((user) => formatTableRow(user))}
+                    </tbody>
+                  </table>
                 )}
               </div>
               {/* <a href="#" className="btn btn-block btn-light">View all</a> */}
