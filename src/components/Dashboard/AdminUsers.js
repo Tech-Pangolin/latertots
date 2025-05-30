@@ -1,21 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../AuthProvider";
+import React from "react";
+import { useAllUsersRQ } from "../../Hooks/query-related/useAllUsersRQ";
 
 const AdminUsers = () => {
-  const [users, setUsers] = useState(null);
-  const { dbService } = useAuth();
-
-  useEffect(() => {
-    if (!dbService) return;
-    const getUsers = async () => dbService.fetchAllUsers()
-      .then((data) => {
-        setUsers(data);
-      }).catch((error) => {
-        console.error(error);
-      });
-
-    getUsers();
-  }, [dbService]);
+  const {
+    data: users = [],
+    isLoading,
+    isError
+  } = useAllUsersRQ()
 
   const formatTableRow = (user) => {
     return (
@@ -35,18 +26,21 @@ const AdminUsers = () => {
             <h5 className="card-header">Users</h5>
             <div className="card-body">
               <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Name</th>
-                      <th scope="col">Email</th>
-                      <th scope="col">Phone</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users && users.map((user) => formatTableRow(user))}
-                  </tbody>
-                </table>
+                {isLoading && <p>Loading...</p>}
+                {!isLoading && !isError && (
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Phone</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users && users.map((user) => formatTableRow(user))}
+                    </tbody>
+                  </table>
+                )}
               </div>
               {/* <a href="#" className="btn btn-block btn-light">View all</a> */}
             </div>
