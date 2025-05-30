@@ -8,7 +8,7 @@ const AdminChildren = () => {
     return (
       <tr key={child.id}>
         <th scope="row">{child.Name || '--'}</th>
-        <td>{child.DOB?.seconds ? new Date(child.DOB.seconds).toLocaleDateString() : '--'}</td>
+        <td>{child.DOB?.seconds ? new Date(child.DOB.toDate()).toLocaleDateString() : '--'}</td>
         <td>{child.Gender || '--'}</td>
         <td>{child.Medications || '--'}</td>
         <td>{child.Allergies || '--'}</td>
