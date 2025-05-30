@@ -2,9 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../components/AuthProvider";
 import { collection } from "firebase/firestore";
 import { db } from "../../config/firestore";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { COLLECTIONS } from "../../Helpers/constants";
-
 
 export function useAllChildrenRQ() {
   const { dbService } = useAuth();
@@ -12,7 +11,7 @@ export function useAllChildrenRQ() {
   const queryKey = ['adminAllChildren'];
 
   // First, build the query
-  const collectionRef = collection(db, COLLECTIONS.CHILDREN);
+  const collectionRef = useMemo(() => collection(db, COLLECTIONS.CHILDREN));
 
   // Second, get the initial fetch of data
   const queryResult = useQuery({
