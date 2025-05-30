@@ -1,4 +1,4 @@
-import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, setDoc, deleteDoc, Timestamp } from "@firebase/firestore";
+import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, setDoc, deleteDoc, Timestamp, onSnapshot } from "@firebase/firestore";
 import { db } from "../config/firestore";
 import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
@@ -67,6 +67,31 @@ export class FirebaseDbService {
     }
   }
 
+  #mapSnapshotToData(snapshot) {
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  async fetchDocs(ref, adminOnly = false) {
+    if (adminOnly) {
+      this.validateAuth('admin');
+    } else {
+      this.validateAuth();
+    }
+    const data = await getDocs(ref).then(snapshot => this.#mapSnapshotToData(snapshot))
+    return data;
+  }
+
+  subscribeDocs(ref, callback, adminOnly = false) {
+    if (adminOnly) {
+      this.validateAuth('admin');
+    } else {
+      this.validateAuth();
+    }
+    return onSnapshot(ref, (snapshot) => {
+      callback(this.#mapSnapshotToData(snapshot));
+    });
+  }
+
   /**
    * Fetches all users from the "Users" collection.
    * 
@@ -76,7 +101,7 @@ export class FirebaseDbService {
     this.validateAuth('admin');
     try {
       const snapshot = await getDocs(collection(db, "Users"));
-      const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const users = this.#mapSnapshotToData(snapshot);
       for (const user of users) {
         const roleRef = user.Role;
         user.Role = await this.fetchUserRole(roleRef);
@@ -87,6 +112,19 @@ export class FirebaseDbService {
       return [];
     }
   };
+
+  /**
+   * Subscribes to real-time updates of all users in the "Users" collection.
+   * 
+   * @param {function} callback - The callback function to execute when the data changes.
+   * @returns {function} - A function to unsubscribe from the real-time updates.
+   */
+  subscribeAllUsersRQ = (callback) => {
+    return onSnapshot(collection(db, "Users"), (snapshot) => {
+      const fresh = this.#mapSnapshotToData(snapshot);
+      callback(fresh);
+    })
+  }
 
   /**
    * Fetches all contacts from the "Contacts" collection.

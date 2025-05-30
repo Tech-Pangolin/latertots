@@ -1,19 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../AuthProvider";
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
+import { useAllChildrenRQ } from "../../Hooks/query-related/useAllChildrenRQ";
 
 const AdminChildren = () => {
-  const { dbService } = useAuth();
-
-  const {
-    data: children = [],
-    isLoading,
-    isError
-  } = useQuery({
-    queryKey: ['adminAllChildren'],
-    queryFn: dbService.fetchAllChildren
-  })
-
+  const { data: children = [], isLoading, isError } = useAllChildrenRQ();
 
   const formatTableRow = (child) => {
     return (
