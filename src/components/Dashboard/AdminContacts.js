@@ -1,23 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../AuthProvider";
 import { logger } from "../../Helpers/logger";
+import { useAllContactsRQ } from "../../Hooks/query-related/useAllContactsRQ";
 
 const AdminContacts = () => {
-  const [users, setUsers] = useState(null);
-  const { dbService } = useAuth();
-
-  useEffect(() => {
-    if (!dbService) return;
-    const getUsers = async () => dbService.fetchAllContacts()
-      .then((data) => {
-        logger.info("Fetched all contacts: ", data);
-        setUsers(data);
-      }).catch((error) => {
-        console.error(error);
-      });
-
-    getUsers();
-  }, [dbService]);
+  const { data: allContacts = [], isLoading, isError } = useAllContactsRQ();
 
   const formatTableRow = (user) => {
     return (
@@ -38,7 +25,8 @@ const AdminContacts = () => {
             <h5 className="card-header">All Contacts</h5>
             <div className="card-body">
               <div className="table-responsive">
-                <table className="table">
+                {isLoading && <p>Loading...</p>}
+                {!isLoading && !isError && <table className="table">
                   <thead>
                     <tr>
                       <th scope="col">Name</th>
@@ -48,9 +36,10 @@ const AdminContacts = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users && users.map((user) => formatTableRow(user))}
+                    {allContacts && allContacts.map((user) => formatTableRow(user))}
                   </tbody>
                 </table>
+                }
               </div>
               {/* <a href="#" className="btn btn-block btn-light">View all</a> */}
             </div>
