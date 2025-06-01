@@ -40,7 +40,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "emulator:start": "firebase emulators:start --config emulator/firebase.json --project latertots-a6694",
-    "emulator:seed": "node emulator/firestore/seed.js"
+    "emulator:seed": "node emulator/firestore/seed.js",
+    "emulator:export-seed": "ts=$(date +%Y%m%d%H%M%S) && mkdir -p \"./emulator/firestore/exports/$ts\" && npm run emulator:seed && firebase emulators:export \"./emulator/firestore/exports/$ts\" --only firestore"
   },
   "eslintConfig": {
     "extends": [

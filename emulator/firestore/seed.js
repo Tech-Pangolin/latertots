@@ -96,14 +96,14 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
       "Email": flipCoin() ? null : faker.internet.email(),
       "Phone": faker.phone.number({ style: 'national'}),
       "Relation": _.sample(["Family", "Friend", "Parent", "Doctor"]),
-      "archived": "false"
+      "archived": false
     })
     contactRefs.push(contactRef)
   }
 
   // Create parent users
   const parentUserRefs = []
-  for (let x = 0; x < 4; x++ ){
+  for (let x = 0; x < 6; x++ ){
     const userRef = db.collection('Users').doc()
     const lastName = faker.person.lastName(); 
     await userRef.set({
@@ -116,21 +116,32 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
       "City": flipCoin() ? faker.location.city() : null,
       "State": flipCoin() ? faker.location.state() : null,
       "StreetAddress": flipCoin() ? faker.location.streetAddress() : null,
-      "Zip": flipCoin() ? faker.location.zipCode() : null
+      "Zip": flipCoin() ? faker.location.zipCode() : null,
+      "Role": db.collection('Roles').doc('parent-user'),
     })
     parentUserRefs.push(userRef)
   }
+
+  // Create a simple admin user
+  const adminUserRef = db.collection('Users').doc('adminTest');
+  adminUserRef.set({
+    "Name": "Admin User",
+    "Email": faker.internet.email({ firstName: 'Admin', lastName: 'User' }),
+    "CellNumber": faker.phone.number(),
+    "archived": false,
+    "Role": db.collection('Roles').doc('admin'),
+  })
 
   // ----------------------------------------------------------------------------
 
   // create reservations
   const parentsWithKidsSnap = await (await db.collection('Users').where('Children', '!=', []).get()).docs
 
-  for ( let x = 0; x < 4; x++) {
+  for ( let x = 0; x < 15; x++) {
     const parent = _.sample(parentsWithKidsSnap)
     const childRef = _.sample(parent.data().Children)
     const childData = ( await childRef.get()).data()
-    const { start, end } = startEnd()
+    const { start, end } = startEnd(_.sample([true, false]))
 
     const reservRef = db.collection('Reservations').doc()
     await reservRef.set({
