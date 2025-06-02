@@ -1,15 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../components/AuthProvider";
 import { collection, query, where } from "firebase/firestore";
 import { db } from "../../config/firestore";
 import { COLLECTIONS } from "../../Helpers/constants";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { logger } from "../../Helpers/logger";
 
 export function useReservationsByMonthRQ() {
   const { dbService } = useAuth();
-  const [monthYear, setMonthYear] = useState({ month: new Date().getMonth(), year: new Date().getFullYear() });
+  const [monthYear, setMonthYearRaw] = useState({ month: new Date().getMonth(), year: new Date().getFullYear() });
   const queryKey = useMemo(() => ['adminCalendarReservationsByMonth', monthYear.month, monthYear.year], [monthYear]);
   const queryClient = useQueryClient();
+
+  const setMonthYear = useCallback((newMonthYear) => {
+    if (newMonthYear.month != monthYear.month || newMonthYear.year != monthYear.year) {
+      setMonthYearRaw(newMonthYear);
+    }
+  }, [monthYear]);
 
   const monthlyReservationQuery = useMemo(() => {
     const dateStart = new Date(monthYear.year, monthYear.month, 1);
@@ -23,24 +30,42 @@ export function useReservationsByMonthRQ() {
     )
   }, [monthYear]);
 
-  const transformReservationData = (res) => ({
-    status: res.extendedProps.status,
-    title: res.title,
-    start: new Date(res.start.seconds * 1000),
-  })
+  const transformReservationData = (res) => {
+    // If any required field is missing, skip this entry
+    if (
+      !res ||
+      !res.extendedProps ||
+      typeof res.extendedProps.status !== 'string' ||
+      !res.start ||
+      typeof res.start.seconds !== 'number'
+    ) {
+      return null;
+    }
+    return {
+      status: res.extendedProps.status,
+      title: res.title || "",
+      start: new Date(res.start.seconds * 1000),
+    };
+  };
 
   const queryResult = useQuery({
     queryKey,
     queryFn: () => dbService.fetchDocs(monthlyReservationQuery, true),
-    select: rawData => rawData.map(transformReservationData),
     onError: (error) => {
       console.error("Error fetching monthly reservations:", error);
     },
   })
 
+  logger.info(
+    "useReservationsByMonthRQ – queryKey:", queryKey,
+    " status:", queryResult.status,
+    " data:", queryResult.data
+  );
+
+
   useEffect(() => {
     const unsubscribe = dbService.subscribeDocs(monthlyReservationQuery, fresh => {
-      queryClient.setQueryData(queryKey, fresh.map(transformReservationData));
+      queryClient.setQueryData(queryKey, fresh.map(transformReservationData).filter(Boolean));
     }, true);
     return () => unsubscribe();
   }, [queryKey, monthlyReservationQuery, queryClient]);

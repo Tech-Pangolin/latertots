@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -12,25 +12,27 @@ const DashboardCalendar = () => {
   const { setSelectedDate } = useAdminPanelContext();
   const businessHours = useSelector(state => state.settings.businessHours);
   const {
-    data: reservations = [],
+    data: rawReservations = [],
     isLoading,
     isError,
     setMonthYear
   } = useReservationsByMonthRQ();
 
-  const getViewDates = (args) => {
+  const reservations = useMemo(() => rawReservations, [JSON.stringify(rawReservations)]);
+
+  const getViewDates = useCallback((args) => {
     const date = new Date(args.startStr);
     setMonthYear({
       month: date.getMonth(),
       year: date.getFullYear()
     })
-  };
+  }, [setMonthYear]);
 
-  const isBusinessDay = (date) => {
+  const isBusinessDay = useCallback((date) => {
     return businessHours.daysOfWeek.includes(date.getDay());
-  };
+  }, [businessHours]);
 
-  const renderDayContent = (dayCellInfo) => {
+  const renderDayContent = useCallback((dayCellInfo) => {
     const dayEvents = reservations.filter((event) => {
       return event.start.getDate() === dayCellInfo.date.getDate();
     })
@@ -60,14 +62,14 @@ const DashboardCalendar = () => {
       <div className="fc-daygrid-day-number">
         {dayCellInfo.dayNumberText}
         <div className="event-summary">
-          <ChipBadge 
-            text={'Pending'} 
-            color={'tomato'} 
+          <ChipBadge
+            text={'Pending'}
+            color={'tomato'}
             num={pendingEvents.length.toString()}
           />
-          <ChipBadge 
-            text={'Approved'} 
-            color={'mediumseagreen'} 
+          <ChipBadge
+            text={'Approved'}
+            color={'mediumseagreen'}
             num={approvedEvents.length.toString()}
           />
 
@@ -76,31 +78,34 @@ const DashboardCalendar = () => {
             color={'darkorange'}
             num={unpaidEvents.length.toString()}
           />
-          
+
 
           {/* TODO: Display a percentage of capacity (which should be configurable in settings) */}
           {/* ie. If there are 12 hours and 12 child capacity, how many hours of 144 are filled? */}
         </div>
       </div>
     );
-  }
+  }, [reservations, businessHours]);
 
   // Update daily view calendar when a date is clicked
-  const handleDateClick = info => {
+  const handleDateClick = useCallback(info => {
     setSelectedDate(info.dateStr);
-  }
+  }, [setSelectedDate]);
+
+  const pluginsConfig = useMemo(() => [dayGridPlugin, timeGridPlugin, interactionPlugin], [])
+  const headerToolbarConfig = useMemo(() => ({
+    left: 'prev,next today',
+    center: 'title',
+    right: ''
+  }), []);
 
   return (
     <>
       <FullCalendar
         // TODO: Specify a timezone prop and tie into admin settings
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        plugins={pluginsConfig}
         height={'auto'}
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: ''
-        }}
+        headerToolbar={headerToolbarConfig}
         dateClick={handleDateClick}
         businessHours={businessHours}
         showNonCurrentDates={false}
