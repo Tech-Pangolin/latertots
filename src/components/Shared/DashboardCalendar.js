@@ -1,48 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useSelector } from 'react-redux';
-import { useAuth } from '../AuthProvider';
 import ChipBadge from './ChipBadge';
-import { logger } from '../../Helpers/logger';
 import { useAdminPanelContext } from '../Dashboard/AdminPanelContext';
+import { useReservationsByMonthRQ } from '../../Hooks/query-related/useReservationsByMonthRQ';
 
 const DashboardCalendar = () => {
   const { setSelectedDate } = useAdminPanelContext();
   const businessHours = useSelector(state => state.settings.businessHours);
-  const [reservations, setReservations] = useState([]);
-  const { currentUser, dbService } = useAuth();
-
-  useEffect(() => {
-    logger.info('reservations:', reservations);
-    logger.info('currentUser:', currentUser);
-  }, [reservations]);
-
-  const getReservationsByCurrentViewMonth = (month, year) => {
-    try {
-      dbService.fetchAllReservationsByMonthDay(year, month)
-      .then((resp) => {
-        return setReservations(resp.map((reservation) => {
-          return {
-            status: reservation.extendedProps.status,
-            title: reservation.title,
-            start: new Date(reservation.start.seconds * 1000),
-          }
-        }))
-      })
-      .catch((error) => {
-        logger.error('Error fetching reservations:', error);
-      });
-    } catch (error) {
-      logger.error('Error in getReservationsByCurrentViewMonth:', error);
-    }
-  }
+  const {
+    data: reservations = [],
+    isLoading,
+    isError,
+    setMonthYear
+  } = useReservationsByMonthRQ();
 
   const getViewDates = (args) => {
     const date = new Date(args.startStr);
-    getReservationsByCurrentViewMonth(date.getMonth(), date.getFullYear());
+    setMonthYear({
+      month: date.getMonth(),
+      year: date.getFullYear()
+    })
   };
 
   const isBusinessDay = (date) => {
@@ -66,7 +47,6 @@ const DashboardCalendar = () => {
       return ['unpaid', 'late'].includes(event.status)
     })
 
-
     if (dayEvents.length === 0 || !isBusinessDay(dayCellInfo.date)) {
       return (
         <div className="fc-daygrid-day-number">
@@ -75,6 +55,7 @@ const DashboardCalendar = () => {
         </div>
       );
     }
+
     return (
       <div className="fc-daygrid-day-number">
         {dayCellInfo.dayNumberText}
