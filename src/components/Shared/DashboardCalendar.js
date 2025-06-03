@@ -6,7 +6,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { useSelector } from 'react-redux';
 import ChipBadge from './ChipBadge';
 import { useAdminPanelContext } from '../Dashboard/AdminPanelContext';
-import { useReservationsByMonthRQ } from '../../Hooks/query-related/useReservationsByMonthRQ';
+import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
 
 const DashboardCalendar = () => {
   const { setSelectedDate } = useAdminPanelContext();
@@ -16,7 +16,7 @@ const DashboardCalendar = () => {
     isLoading,
     isError,
     setMonthYear
-  } = useReservationsByMonthRQ();
+  } = useReservationsByMonthDayRQ();
 
   const reservations = useMemo(() => rawReservations, [JSON.stringify(rawReservations)]);
 
@@ -89,7 +89,7 @@ const DashboardCalendar = () => {
 
   // Update daily view calendar when a date is clicked
   const handleDateClick = useCallback(info => {
-    setSelectedDate(info.dateStr);
+    setSelectedDate(info.date);
   }, [setSelectedDate]);
 
   const pluginsConfig = useMemo(() => [dayGridPlugin, timeGridPlugin, interactionPlugin], [])
