@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -7,17 +7,31 @@ import { useAuth } from '../AuthProvider';
 import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import { logger } from '../../Helpers/logger';
 import ReservationStatusDialog from '../Shared/ReservationStatusDialog';
+import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
+import { useAdminPanelContext } from './AdminPanelContext';
+import _ from 'lodash';
 
-const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
-  const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
+const ManageReservationsPage = () => {
   const { currentUser } = useAuth();
   const [currentUserData, setCurrentUserData] = useState({});
   const [dbService, setDbService] = useState(null);
-  const [currentDate, setCurrentDate] = useState(null);
   const [dialogOpenState, setDialogOpenState] = useState(false);
   const [dialogReservationContext, setDialogReservationContext] = useState(null);
   const [dialogValue, setDialogValue] = useState(null); // Only to track the status of the selected reservation
   const [refreshReservations, setRefreshReservations] = useState(false);
+  const { selectedDate, setSelectedDate } = useAdminPanelContext();
+  const calendarComponentRef = useRef(null);
+  const [eevents, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
+
+
+  const {
+    data: rawEvents = [],
+    isLoading,
+    isError,
+    error
+  } = useReservationsByMonthDayRQ();
+
+  const events = useMemo(() => rawEvents, [JSON.stringify(rawEvents)]);
 
   // get the dbService instance
   useEffect(() => {
@@ -30,27 +44,19 @@ const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
     dbService.fetchCurrentUser(currentUser.email).then((resp) => {
       setCurrentUserData(resp);
     });
-  }, [currentUser, dbService]);
+  }, [currentUser]);
 
-  // Fetch ALL reservations for the current day
-  // Save them in state under events
   useEffect(() => {
-    if (!dbService) return;
-    if (!currentDate) return;
+    if (!selectedDate || !calendarComponentRef.current) return;
+    // Use a timeout to ensure the calendar is fully rendered before navigating
+    const handle = setTimeout(() => {
+      const api = calendarComponentRef.current.getApi();
+      api.gotoDate(selectedDate);
+    }, 0);
 
-    dbService.fetchAllReservationsByMonthDay(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate()).then((resp) => {
-      let formattedEvents = [];
-      resp.forEach((event) => {
-        event.start = event.start.toDate().toISOString();
-        event.end = event.end.toDate().toISOString();
-        formattedEvents.push(event);
-      })
-      return formattedEvents;
-    }
-    ).then((resp) => {
-      setEvents(resp);
-    });
-  }, [currentUser, dbService, currentDate, refreshReservations]);
+    return () => clearTimeout(handle);
+  }, [selectedDate]);
+
 
   useEffect(() => {
     logger.info('Events:', events);
@@ -62,21 +68,14 @@ const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
     setDialogValue(dialogReservationContext.extendedProps.status);
   }, [dialogReservationContext]);
 
-  const businessHours = {
+  const businessHours = useMemo(() => ({
     daysOfWeek: [1, 2, 3, 4, 5], // Monday - Friday
     startTime: '07:00',
     endTime: '19:00',
     overlap: false
-  };
+  }), []);
 
-  const handleDatesSet = (dateInfo) => {
-    setCurrentDate(dateInfo.start);
-    if (contextDateSetter) {
-      contextDateSetter(dateInfo.start);
-    }
-  }
-
-  const handleEventResize = (resizeInfo) => {
+  const handleEventResize = useCallback((resizeInfo) => {
     const { event } = resizeInfo;
 
     // Calculate the new duration in hours
@@ -110,9 +109,9 @@ const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
     });
 
     setEvents(newEvents);
-  };
+  }, [events]);
 
-  const handleEventMove = (info) => {
+  const handleEventMove = useCallback((info) => {
     const { event } = info;
     const overlap = dbService.checkReservationAllowability(event, events);
 
@@ -143,23 +142,23 @@ const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
     if (allowSave) {
       setEvents(newEvents);
     }
-  };
+  }, [events]);
 
   // Enforce rules for where events can be dropped or resized
-  const eventAllow = (dropInfo) => {
+  const eventAllow = useCallback((dropInfo) => {
     if (!checkAgainstBusinessHours(dropInfo) || !checkFutureStartTime(dropInfo)) {
       return false;
     }
     // Additional validation conditions
     return true;
-  };
+  }, []);
 
-  const handleEventClick = ({ event }) => {
+  const handleEventClick = useCallback(({ event }) => {
     setDialogReservationContext(event);
     setDialogOpenState(true);
-  };
+  }, [setDialogReservationContext, setDialogOpenState]);
 
-  const handleDialogClose = async (newValue) => {
+  const handleDialogClose = useCallback(async (newValue) => {
     setDialogOpenState(false);
     if (newValue) {
       const newEvent = events.find((evt) => evt.id.toString() === dialogReservationContext.id.toString());
@@ -167,70 +166,79 @@ const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
       await handleScheduleSave([newEvent], currentUserData, dbService);
     }
     setRefreshReservations(!refreshReservations);
+  }, [dialogReservationContext, events, currentUserData, refreshReservations]);
+
+  const pluginsConfig = useMemo(() => [timeGridPlugin, interactionPlugin], []);
+  const viewsConfig = useMemo(() => ({ timeGridDay: { type: 'timeGrid', duration: { days: 1 } } }), []);
+  const headerToolbarConfig = useMemo(() => ({
+    left: 'prev,next today',
+    center: 'title',
+    right: 'backToAdminDashboard saveButton'
+  }), []);
+  const customButtonsConfig = useMemo(() => ({
+    saveButton: {
+      text: 'Save Schedule',
+      click: () =>
+        handleScheduleSave(events, currentUserData, dbService)
+    },
+    backToAdminDashboard: {
+      text: 'Cancel',
+      click: () => (window.location.href = '/admin')
+    }
+  }), [events]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  } else if (isError) {
+    console.error('Error loading reservations:', error);
+    return <div>Error loading reservations.</div>;
+  } else {
+    return (
+      <>
+        <FullCalendar
+          ref={calendarComponentRef}
+          plugins={pluginsConfig}
+          initialView="timeGridDay"
+          views={viewsConfig}
+          slotMinTime="05:00:00"
+          slotMaxTime="21:00:00"
+          headerToolbar={headerToolbarConfig}
+          customButtons={customButtonsConfig}
+          height="1100px"
+          expandRows={true}
+          handleWindowResize={true}
+
+          businessHours={businessHours}
+          showNonCurrentDates={false}
+          editable={true}
+          events={events}
+          eventAllow={eventAllow}
+          eventContent={renderEventContent}
+          eventClick={handleEventClick}
+          eventDrop={handleEventMove}
+          eventResize={handleEventResize}
+          nowIndicator={true}
+          allDaySlot={false}
+        />
+
+        <ReservationStatusDialog
+          keepMounted
+          open={dialogOpenState}
+          onClose={handleDialogClose}
+          value={dialogValue}
+          options={{
+            Confirm: 'confirmed',
+            Decline: 'declined',
+            Refund: 'refunded',
+            Complete: 'completed',
+          }}
+          title="Update Reservation Status"
+          reservationContext={dialogReservationContext}
+        />
+      </>
+    )
   }
-
-  return (
-    <>
-      <FullCalendar
-        key={initialDateValue}
-        plugins={[timeGridPlugin, interactionPlugin]}
-        initialView="timeGridDay"
-        views={{
-          timeGridDay: { type: 'timeGrid', duration: { days: 1 } }
-        }}
-        initialDate={initialDateValue || new Date()}
-        slotMinTime="05:00:00"
-        slotMaxTime="21:00:00"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'backToAdminDashboard saveButton'
-        }}
-        customButtons={{
-          saveButton: {
-            text: 'Save Schedule',
-            click: () =>
-              handleScheduleSave(events, currentUserData, dbService)
-          },
-          backToAdminDashboard: {
-            text: 'Cancel',
-            click: () => (window.location.href = '/admin')
-          }
-        }}
-        height="1100px"
-        expandRows={true}
-        handleWindowResize={true}
-
-        businessHours={businessHours}
-        showNonCurrentDates={false}
-        editable={true}
-        events={events}
-        eventAllow={eventAllow}
-        eventContent={renderEventContent}
-        eventClick={handleEventClick}
-        eventDrop={handleEventMove}
-        eventResize={handleEventResize}
-        nowIndicator={true}
-        allDaySlot={false}
-        datesSet={handleDatesSet}
-      />
-
-      <ReservationStatusDialog
-        keepMounted
-        open={dialogOpenState}
-        onClose={handleDialogClose}
-        value={dialogValue}
-        options={{
-          Confirm: 'confirmed',
-          Decline: 'declined',
-          Refund: 'refunded',
-          Complete: 'completed',
-        }}
-        title="Update Reservation Status"
-        reservationContext={dialogReservationContext}
-      />
-    </>
-  )
 };
+ManageReservationsPage.whyDidYouRender = true;
 
 export default ManageReservationsPage;
