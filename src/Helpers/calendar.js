@@ -33,10 +33,13 @@ export const renderEventContent = (eventInfo) => {
   let backgroundColor;
   switch (event.extendedProps.status) {
     case 'confirmed':
-      backgroundColor = 'green';
+      backgroundColor = 'mediumseagreen';
       break;
     case 'pending':
-      backgroundColor = 'orange';
+      backgroundColor = 'tomato';
+      break;
+    case 'unpaid':
+      backgroundColor = 'darkorange';
       break;
     default:
       backgroundColor = 'gray';

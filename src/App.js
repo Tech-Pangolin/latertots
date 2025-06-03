@@ -44,7 +44,6 @@ function App() {
           <Route path="/addContact" element={ <PrivateRoute element={ <ContactRegistration /> } />} />
           <Route path="/addChild/:childId?" element={ <PrivateRoute element={ <ChildRegistration /> } />} />
           <Route path="/admin" element={ <PrivateRoute element={ <AdminDashboard /> } />} />
-          <Route path="/admin/manageReservations" element={ <PrivateRoute element={ <ManageReservationsPage /> } />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>

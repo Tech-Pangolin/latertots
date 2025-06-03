@@ -7,13 +7,13 @@ import { useSelector } from 'react-redux';
 import { useAuth } from '../AuthProvider';
 import ChipBadge from './ChipBadge';
 import { logger } from '../../Helpers/logger';
-import { useNavigate } from 'react-router-dom';
+import { useAdminPanelContext } from '../Dashboard/AdminPanelContext';
 
 const DashboardCalendar = () => {
+  const { setSelectedDate } = useAdminPanelContext();
   const businessHours = useSelector(state => state.settings.businessHours);
   const [reservations, setReservations] = useState([]);
   const { currentUser, dbService } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     logger.info('reservations:', reservations);
@@ -38,7 +38,6 @@ const DashboardCalendar = () => {
     } catch (error) {
       logger.error('Error in getReservationsByCurrentViewMonth:', error);
     }
-    
   }
 
   const getViewDates = (args) => {
@@ -63,9 +62,10 @@ const DashboardCalendar = () => {
       return event.status === 'confirmed';
     });
 
-    const chipClickHandler = () => {
-      navigate('/admin/manageReservations', {state: {date: dayCellInfo.date} });
-    }
+    const unpaidEvents = dayEvents.filter((event) => {
+      return ['unpaid', 'late'].includes(event.status)
+    })
+
 
     if (dayEvents.length === 0 || !isBusinessDay(dayCellInfo.date)) {
       return (
@@ -83,14 +83,19 @@ const DashboardCalendar = () => {
             text={'Pending'} 
             color={'tomato'} 
             num={pendingEvents.length.toString()}
-            clickHandler={chipClickHandler} 
           />
           <ChipBadge 
             text={'Approved'} 
             color={'mediumseagreen'} 
             num={approvedEvents.length.toString()}
-            clickHandler={chipClickHandler} 
           />
+
+          <ChipBadge
+            text={'Unpaid'}
+            color={'darkorange'}
+            num={unpaidEvents.length.toString()}
+          />
+          
 
           {/* TODO: Display a percentage of capacity (which should be configurable in settings) */}
           {/* ie. If there are 12 hours and 12 child capacity, how many hours of 144 are filled? */}
@@ -99,16 +104,23 @@ const DashboardCalendar = () => {
     );
   }
 
+  // Update daily view calendar when a date is clicked
+  const handleDateClick = info => {
+    setSelectedDate(info.dateStr);
+  }
+
   return (
     <>
       <FullCalendar
         // TODO: Specify a timezone prop and tie into admin settings
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        height={'auto'}
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
           right: ''
         }}
+        dateClick={handleDateClick}
         businessHours={businessHours}
         showNonCurrentDates={false}
         datesSet={getViewDates}
