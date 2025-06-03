@@ -35,14 +35,13 @@ export default function DashHome() {
 
   return (
     <>
-      <h1 className="h2">Dashboard</h1>
+      <h1 className="h2">Owner's Dashboard</h1>
       <p>
-        This is the homepage of a simple admin interface which is part of a tutorial
-        written on Themesberg
+       See all current reservations, manage events, and view notifications.
       </p>
 
       {/* Top-row statistic cards */}
-      <div className="row my-4">
+      {/* <div className="row my-4">
         <div className="col-12 col-md-6 col-lg-3 mb-4 mb-lg-0">
           <div className="card">
             <h5 className="card-header">Customers</h5>
@@ -94,7 +93,7 @@ export default function DashHome() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* The notifications feed on the right has its height dynamically set to match the calendar on the left using the calCardRef */}
       <AdminPanelContextProvider>

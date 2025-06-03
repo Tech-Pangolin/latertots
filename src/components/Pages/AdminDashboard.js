@@ -31,7 +31,7 @@ const AdminDashboard = () => {
   return (
     <>
       <nav className="navbar navbar-light bg-light p-3">
-        <div className="d-flex col-12 col-md-3 col-lg-2 mb-2 mb-lg-0 flex-wrap flex-md-nowrap justify-content-between">
+        <div className="d-flex col-12 col-md-2 col-lg-2 mb-2 mb-lg-0 flex-wrap flex-md-nowrap justify-content-between">
           <a className="navbar-brand text-secondary" href="#" >
             Admin Dashboard
           </a>
@@ -46,7 +46,7 @@ const AdminDashboard = () => {
       <div className="container-fluid">
         <div className="row">
           <DashNav setCurrentView={setCurrentView} />
-          <main className="col-md-9 ml-sm-auto col-lg-10 px-md-4 py-4">
+          <main className="col-md-10 ml-sm-auto col-lg-10 px-md-4 py-4">
             {renderView()}
           </main>
         </div>

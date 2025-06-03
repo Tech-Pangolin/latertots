@@ -21,6 +21,7 @@ export default function InteractionColumnNavHeader({children}) {
             <button
               onClick={() => setMode('notifications')}
               disabled={interactionColumnMode === 'notifications'}
+              className='btn btn-primary'
             >
               Notifications
             </button>
@@ -29,6 +30,7 @@ export default function InteractionColumnNavHeader({children}) {
               onClick={() => setMode('daily')}
               disabled={interactionColumnMode === 'daily'}
               style={{ marginLeft: 8 }}
+              className='btn btn-secondary'
             >
               Daily View
             </button>
