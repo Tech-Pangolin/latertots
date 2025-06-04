@@ -484,6 +484,24 @@ export class FirebaseDbService {
   };
 
   /**
+   * Changes the status of a reservation document in the Reservations collection.
+   * 
+   * @param {string} reservationId - The ID of the reservation document to update.
+   * @param {string} newStatus - The new status to set for the reservation.
+   * @returns {Promise<void>} - A promise that resolves when the document is successfully updated.
+   * @throws {Error} - If there is an error updating the document.
+   * */
+  changeReservationStatus = async (reservationId, newStatus) => {
+    this.validateAuth('admin');
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      await updateDoc(reservationRef, { extendedProps: { status: newStatus } });
+    } catch (error) {
+      console.error(`Could not change reservation ${reservationId} status to ${newStatus}:`, error);
+    }
+  }
+
+  /**
    * Deletes a reservation document from the Reservations collection.
    * 
    * @param {string} reservationId - The ID of the reservation document to delete.

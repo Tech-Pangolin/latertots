@@ -52,11 +52,12 @@ export function useReservationsByMonthDayRQ() {
   }, [monthYear]);
 
   const transformReservationData = (res) => {
-    if (!res.extendedProps) {
+    if (!res.hasOwnProperty('extendedProps')) {
       // data already transformed
       return res;
     }
     return {
+      id: res.id,
       status: res.extendedProps.status,
       title: res.title || "",
       start: new Date(res.start.seconds * 1000),

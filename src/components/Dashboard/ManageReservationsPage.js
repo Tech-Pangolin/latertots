@@ -10,6 +10,7 @@ import ReservationStatusDialog from '../Shared/ReservationStatusDialog';
 import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
 import { useAdminPanelContext } from './AdminPanelContext';
 import _ from 'lodash';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const ManageReservationsPage = () => {
   const { currentUser } = useAuth();
@@ -18,10 +19,10 @@ const ManageReservationsPage = () => {
   const [dialogOpenState, setDialogOpenState] = useState(false);
   const [dialogReservationContext, setDialogReservationContext] = useState(null);
   const [dialogValue, setDialogValue] = useState(null); // Only to track the status of the selected reservation
-  const [refreshReservations, setRefreshReservations] = useState(false);
   const { selectedDate, setSelectedDate } = useAdminPanelContext();
   const calendarComponentRef = useRef(null);
   const [eevents, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
+  const queryClient = useQueryClient();
 
 
   const {
@@ -158,15 +159,28 @@ const ManageReservationsPage = () => {
     setDialogOpenState(true);
   }, [setDialogReservationContext, setDialogOpenState]);
 
+  const reservationStatusMutation = useMutation(
+    {
+      mutationFn: async ({ id, status }) => dbService.changeReservationStatus(id, status),
+      onSuccess: () => {
+        queryClient.invalidateQueries(
+          ['adminCalendarReservationsByMonth'],
+          selectedDate.getUTCMonth(),
+          selectedDate.getUTCFullYear()
+        );
+      },
+      onError: (error) => {
+        console.error('Error updating reservation status:', error);
+      }
+    }
+  )
+
   const handleDialogClose = useCallback(async (newValue) => {
     setDialogOpenState(false);
     if (newValue) {
-      const newEvent = events.find((evt) => evt.id.toString() === dialogReservationContext.id.toString());
-      newEvent.extendedProps.status = newValue;
-      await handleScheduleSave([newEvent], currentUserData, dbService);
+      reservationStatusMutation.mutate({ id: dialogReservationContext.id, status: newValue }); 
     }
-    setRefreshReservations(!refreshReservations);
-  }, [dialogReservationContext, events, currentUserData, refreshReservations]);
+  }, [dialogReservationContext, reservationStatusMutation]);
 
   const pluginsConfig = useMemo(() => [timeGridPlugin, interactionPlugin], []);
   const viewsConfig = useMemo(() => ({ timeGridDay: { type: 'timeGrid', duration: { days: 1 } } }), []);
