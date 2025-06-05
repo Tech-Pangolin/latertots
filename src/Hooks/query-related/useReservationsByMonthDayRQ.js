@@ -22,13 +22,13 @@ export function useReservationsByMonthDayRQ() {
   }, [monthYear]);
 
   const setMonthYear = useCallback((newMonthYear) => {
-    if (_.isEqual(monthYear, newMonthYear)) {
+    // Don't change state unless the new data is functionally different from the existing data
+    if (!_.isEqual(monthYear, newMonthYear)) {
       if (!newMonthYear.hasOwnProperty('day')) {
         newMonthYear.day = null;
       }
-      console.log("Setting monthYear:", newMonthYear);
-      setMonthYearRaw(newMonthYear);
-    }
+      setMonthYearRaw(newMonthYear)
+    } 
   }, [JSON.stringify(monthYear)]);
 
   const reservationQuery = useMemo(() => {
@@ -80,7 +80,6 @@ export function useReservationsByMonthDayRQ() {
     " status:", queryResult.status,
     " data:", queryResult.data
   );
-
 
   useEffect(() => {
     const unsubscribe = dbService.subscribeDocs(reservationQuery, fresh => {

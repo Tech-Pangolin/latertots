@@ -23,6 +23,7 @@ const ManageReservationsPage = () => {
 
   const {
     data: rawEvents = [],
+    setMonthYear,
     isLoading,
     isError,
     error
@@ -31,6 +32,11 @@ const ManageReservationsPage = () => {
   const events = useMemo(() => rawEvents, [JSON.stringify(rawEvents)]);
 
   useEffect(() => {
+    setMonthYear({
+      month: selectedDate.getUTCMonth(),
+      year: selectedDate.getUTCFullYear(),
+    });
+
     if (!selectedDate || !calendarComponentRef.current) return;
     // Use a timeout to ensure the calendar is fully rendered before navigating
     const handle = setTimeout(() => {
