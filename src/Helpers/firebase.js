@@ -385,7 +385,7 @@ export class FirebaseDbService {
    * @returns {string} [return.message] - An optional message if the reservation is not allowable.
    * @throws {Error} - If there is an error checking the reservation allowability.
    */
-  checkReservationAllowability(newReservation, unsavedEvents = []) {
+  checkReservationOverlapLimit(newReservation, unsavedEvents = []) {
     this.validateAuth();
     
     let eventsOverlappingNewReservation = unsavedEvents.filter(event => {
