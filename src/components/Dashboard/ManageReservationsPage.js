@@ -1,16 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { checkAgainstBusinessHours, checkFutureStartTime, renderEventContent } from '../../Helpers/calendar';
 import FullCalendar from '@fullcalendar/react';
-import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { FirebaseDbService } from '../../Helpers/firebase';
-import { useAuth } from '../AuthProvider';
-import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import { logger } from '../../Helpers/logger';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReservationStatusDialog from '../Shared/ReservationStatusDialog';
-import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
+import { useAuth } from '../AuthProvider';
 import { useAdminPanelContext } from './AdminPanelContext';
-import _ from 'lodash';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
+import _ from 'lodash';
 
 const ManageReservationsPage = () => {
   const { currentUser } = useAuth();
