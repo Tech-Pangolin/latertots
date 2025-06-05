@@ -12,17 +12,14 @@ import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReserv
 import _ from 'lodash';
 
 const ManageReservationsPage = () => {
-  const { currentUser } = useAuth();
-  const [currentUserData, setCurrentUserData] = useState({});
-  const [dbService, setDbService] = useState(null);
+  const { dbService } = useAuth();
+  const { selectedDate } = useAdminPanelContext();
+  const calendarComponentRef = useRef(null);
+  const queryClient = useQueryClient();
+  
   const [dialogOpenState, setDialogOpenState] = useState(false);
   const [dialogReservationContext, setDialogReservationContext] = useState(null);
   const [dialogValue, setDialogValue] = useState(null); // Only to track the status of the selected reservation
-  const { selectedDate, setSelectedDate } = useAdminPanelContext();
-  const calendarComponentRef = useRef(null);
-  const [eevents, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
-  const queryClient = useQueryClient();
-
 
   const {
     data: rawEvents = [],
@@ -32,19 +29,6 @@ const ManageReservationsPage = () => {
   } = useReservationsByMonthDayRQ();
 
   const events = useMemo(() => rawEvents, [JSON.stringify(rawEvents)]);
-
-  // get the dbService instance
-  useEffect(() => {
-    setDbService(new FirebaseDbService(currentUser));
-  }, [currentUser]);
-
-  // Fetch the current user's data
-  useEffect(() => {
-    if (!dbService) return;
-    dbService.fetchCurrentUser(currentUser.email).then((resp) => {
-      setCurrentUserData(resp);
-    });
-  }, [currentUser]);
 
   useEffect(() => {
     if (!selectedDate || !calendarComponentRef.current) return;
@@ -56,7 +40,6 @@ const ManageReservationsPage = () => {
 
     return () => clearTimeout(handle);
   }, [selectedDate]);
-
 
   useEffect(() => {
     logger.info('Events:', events);
@@ -75,42 +58,6 @@ const ManageReservationsPage = () => {
     overlap: false
   }), []);
 
-  const handleEventResize = useCallback((resizeInfo) => {
-    const { event } = resizeInfo;
-
-    // Calculate the new duration in hours
-    const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
-
-    const overlap = dbService.checkReservationAllowability(event, events);
-    console.log("overlap", overlap)
-
-    if (durationHours < 2) {
-      resizeInfo.revert();
-      alert('Reservations must be at least 2 hours long.');
-      return;
-    } else if (!overlap.allow) {
-      resizeInfo.revert();
-      alert(overlap.message);
-      return;
-    };
-
-    const newEvents = events.map((evt) => {
-      if (evt.id.toString() === event.id.toString()) {
-        return {
-          ...evt,
-          end: event.end.toISOString(),  // Use ISO string for FullCalendar compatibility
-          extendedProps: {
-            ...evt.extendedProps,
-            duration: `${durationHours.toFixed(2)}:00`  // Updated duration, formatted as a string
-          }
-        };
-      }
-      return evt;
-    });
-
-    setEvents(newEvents);
-  }, [events]);
-
   const reservationTimeChangeMutation = useMutation({
     mutationFn: async ({id, newStart, newEnd}) => dbService.changeReservationTime(id, newStart, newEnd),
     onSuccess: () => {
@@ -123,6 +70,29 @@ const ManageReservationsPage = () => {
     onError: (err) => console.error("Error changing reservation time: ", err)
   })
 
+  const handleEventResize = useCallback((resizeInfo) => {
+    const { event } = resizeInfo;
+
+    // Calculate the new duration in hours
+    const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
+    if (durationHours < 2) {
+      resizeInfo.revert();
+      alert('Reservations must be at least 2 hours long.');
+      return;
+    } 
+
+    // Check if event is during too many other reservations
+    const overlap = dbService.checkReservationOverlapLimit(event, events);
+    if (!overlap.allow) {
+      resizeInfo.revert();
+      alert(overlap.message);
+      return;
+    }
+
+    reservationTimeChangeMutation.mutate({id: event.id, newStart: event.start, newEnd: event.end});
+  }, [events, dbService, reservationTimeChangeMutation]);
+
+
   const handleEventMove = useCallback((info) => {
     const { event } = info;
 
@@ -131,7 +101,7 @@ const ManageReservationsPage = () => {
       return
     }
 
-    const overlap = dbService.checkReservationAllowability(event, events);
+    const overlap = dbService.checkReservationOverlapLimit(event, events);
     if (!overlap.allow) {
       info.revert();
       alert(overlap.message);
@@ -187,19 +157,8 @@ const ManageReservationsPage = () => {
   const headerToolbarConfig = useMemo(() => ({
     left: 'prev,next today',
     center: 'title',
-    right: 'backToAdminDashboard saveButton'
+    right: ''
   }), []);
-  const customButtonsConfig = useMemo(() => ({
-    saveButton: {
-      text: 'Save Schedule',
-      click: () =>
-        handleScheduleSave(events, currentUserData, dbService)
-    },
-    backToAdminDashboard: {
-      text: 'Cancel',
-      click: () => (window.location.href = '/admin')
-    }
-  }), [events]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -217,7 +176,6 @@ const ManageReservationsPage = () => {
           slotMinTime="05:00:00"
           slotMaxTime="21:00:00"
           headerToolbar={headerToolbarConfig}
-          customButtons={customButtonsConfig}
           height="1100px"
           expandRows={true}
           handleWindowResize={true}
