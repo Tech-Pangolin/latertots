@@ -112,38 +112,39 @@ const ManageReservationsPage = () => {
     setEvents(newEvents);
   }, [events]);
 
+  const reservationTimeChangeMutation = useMutation({
+    mutationFn: async ({id, newStart, newEnd}) => dbService.changeReservationTime(id, newStart, newEnd),
+    onSuccess: () => {
+      queryClient.invalidateQueries(
+        ['adminCalendarReservationsByMonth'],
+          selectedDate.getUTCMonth(),
+          selectedDate.getUTCFullYear()
+      )
+    },
+    onError: (err) => console.error("Error changing reservation time: ", err)
+  })
+
   const handleEventMove = useCallback((info) => {
     const { event } = info;
-    const overlap = dbService.checkReservationAllowability(event, events);
 
+    if (!checkAgainstBusinessHours(event) || !checkFutureStartTime(event)) {
+      info.revert();
+      return
+    }
+
+    const overlap = dbService.checkReservationAllowability(event, events);
     if (!overlap.allow) {
       info.revert();
       alert(overlap.message);
       return;
     }
 
-    const newEvents = events.map((evt) => {
-      if (evt.id.toString() === event.id.toString()) {
-        return {
-          ...evt,
-          start: event.start.toISOString(),
-          end: event.end.toISOString()
-        };
-      }
-      return evt;
-    });
-
-    // Validate the new event state
-    let allowSave = false;
-    if (checkAgainstBusinessHours(event) && checkFutureStartTime(event)) {
-      allowSave = dbService.checkReservationAllowability(event);
-    }
-
-    // Update the events state if the new event is valid
-    if (allowSave) {
-      setEvents(newEvents);
-    }
-  }, [events]);
+    reservationTimeChangeMutation.mutate({
+      id: event.id,
+      newStart: event.start,
+      newEnd: event.end
+    })
+  }, [events, dbService, reservationTimeChangeMutation]);
 
   // Enforce rules for where events can be dropped or resized
   const eventAllow = useCallback((dropInfo) => {

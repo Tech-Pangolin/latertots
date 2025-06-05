@@ -378,41 +378,39 @@ export class FirebaseDbService {
    * @param {Object} newReservation - The data for the new reservation.
    * @param {Date} newReservation.start - The start date of the new reservation.
    * @param {Date} newReservation.end - The end date of the new reservation.
-   * @param {Array<Object>} unsavedEvents - An array of unsaved events from the client-side.
-   * @returns {Promise<Object>} - A promise that resolves to an object containing the allowability status and additional information.
+   * @param {Array<Object>} [unsavedEvents=[]] - An optional array of unsaved events from the client-side.
+   * @returns {Object} - An object containing the allowability status and additional information.
+   * @returns {boolean} return.allow - Indicates if the reservation is allowable.
+   * @returns {number} return.size - The number of overlapping reservations.
+   * @returns {string} [return.message] - An optional message if the reservation is not allowable.
    * @throws {Error} - If there is an error checking the reservation allowability.
    */
   checkReservationAllowability(newReservation, unsavedEvents = []) {
     this.validateAuth();
-    let overlappingEvents = [];
-    unsavedEvents.forEach(event => {
-      if (newReservation.id && event.id === newReservation.id) {
-        return;
-      }
-
-      if (new Date(event.end) > new Date(newReservation.start) &&
-        new Date(event.start) < new Date(newReservation.end)) {
-        overlappingEvents.push(event);
-      }
+    
+    let eventsOverlappingNewReservation = unsavedEvents.filter(event => {
+      if (newReservation.id && event.id === newReservation.id) return false;
+      return (
+        new Date(event.end) > new Date(newReservation.start) &&
+        new Date(event.start) < new Date(newReservation.end)
+      ); 
+    });
+    
+    const overlapMarkers = [];
+    eventsOverlappingNewReservation.forEach(evt => {
+      overlapMarkers.push({ ts: new Date(evt.start), delta: +1 });
+      overlapMarkers.push({ ts: new Date(evt.end),   delta: -1 });
     });
 
-    let times = [];
-    overlappingEvents.forEach(event => {
-      times.push({ time: new Date(event.start), type: 'start' });
-      times.push({ time: new Date(event.end), type: 'end' });
-    });
-
-    times.sort((a, b) => a.time - b.time || (a.type === 'end' ? -1 : 1));
-
+    // compare timestamps first, but if those are equal,
+    // compare deltas to ensure -1 comes before +1
+    overlapMarkers.sort((a,b) => a.ts - b.ts || (a.delta - b.delta) );
+    
     let maxOverlap = 0;
     let currentOverlap = 0;
-    times.forEach(time => {
-      if (time.type === 'start') {
-        currentOverlap++;
-        maxOverlap = Math.max(maxOverlap, currentOverlap);
-      } else {
-        currentOverlap--;
-      }
+    overlapMarkers.forEach(marker => {
+      currentOverlap += marker.delta;
+      maxOverlap = Math.max(maxOverlap, currentOverlap);
     });
 
     if (maxOverlap < 5) {
@@ -498,6 +496,21 @@ export class FirebaseDbService {
       await updateDoc(reservationRef, { extendedProps: { status: newStatus } });
     } catch (error) {
       console.error(`Could not change reservation ${reservationId} status to ${newStatus}:`, error);
+      throw error;
+    }
+  }
+
+  changeReservationTime = async (reservationId, newStart, newEnd) => {
+    this.validateAuth('admin');
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      await updateDoc(reservationRef, {
+        start: Timestamp.fromDate(new Date(newStart)),
+        end: Timestamp.fromDate(new Date(newEnd))
+      });
+    } catch (error) {
+      console.error(`Could not change reservation ${reservationId} time:`, error);
+      throw error;
     }
   }
 
