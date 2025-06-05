@@ -125,7 +125,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
 
     if (allValid) {
       // Validate all reservations collectively
-      const allowSave = dbService.checkReservationAllowability(newEvents);
+      const allowSave = dbService.checkReservationOverlapLimit(newEvents);
 
       if (allowSave) {
         // Save all new events to the state
