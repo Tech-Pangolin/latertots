@@ -213,9 +213,12 @@ export class FirebaseDbService {
       if (userDoc) {
         const userRef = doc(collection(db, "Users"), userDoc.id);
         const userSnapshot = await getDoc(userRef);
-        const childrenRefs = userSnapshot.data().Children;
+        let childrenRefs = userSnapshot.data().Children;
         if (!childrenRefs) {
           return [];
+        } else if (!Array.isArray(childrenRefs)) {
+          // This happens when there's only one child and the data is not an array
+          childrenRefs = [childrenRefs]; 
         }
         const childrenPromises = childrenRefs.map(async (childRef) => {
           try {
