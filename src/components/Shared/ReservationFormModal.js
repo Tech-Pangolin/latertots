@@ -6,10 +6,12 @@ import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
 import { logger } from '../../Helpers/logger';
 import { debounce } from '../../Helpers/util';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 
 // Remember to create state for the open/closed state of the modal and the form data
-const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, children, setEvents, events, handleScheduleSave, currentUserData }) => {
+const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, children, scheduleChildSitterPage_queryKey }) => {
+  const queryClient = useQueryClient();
   const { currentUser } = useAuth();
   const [dbService, setDbService] = useState(null);
   const [errors, setErrors] = useState({
@@ -51,13 +53,13 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     validateTimesDebounced(updatedFormData, name);
   };
 
-  useEffect(() => {
-    const hasNewEvent = events.some(event => event.id.includes('-') && event.extendedProps.fromForm)
-
-    if (hasNewEvent) {
-      handleScheduleSave(events, currentUserData, dbService)
+  const saveNewEventMutation = useMutation({
+    mutationFn: async ({loggedInUserId, newEvent}) => await dbService.createReservationDocument(loggedInUserId, newEvent),
+    onSuccess: () => queryClient.invalidateQueries(scheduleChildSitterPage_queryKey),
+    onError: (error) => {
+      alert('Could not save event. Please try again later.');
     }
-  }, [events]);
+  });
 
   const validateTimesDebounced = debounce((updatedFormData, field) => {
     const now = new Date();
@@ -128,8 +130,9 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
       const allowSave = dbService.checkReservationOverlapLimit(newEvents);
 
       if (allowSave) {
-        // Save all new events to the state
-        setEvents((prevEvents) => [...prevEvents, ...newEvents]);
+        newEvents.forEach(event => {
+          saveNewEventMutation.mutate({loggedInUserId: currentUser.uid, newEvent: event})
+        })
         handleClose();
       } else {
         alert(
