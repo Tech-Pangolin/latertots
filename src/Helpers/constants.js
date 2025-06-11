@@ -6,3 +6,5 @@ export const COLLECTIONS = {
   RESERVATIONS: 'Reservations',
   ROLES: 'Roles',
 }
+
+export const MIN_RESERVATION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
