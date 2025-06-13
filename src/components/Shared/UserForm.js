@@ -24,11 +24,21 @@ const UserForm = () => {
   useEffect(() => {
     if (currentUser) {
       setMode('update');
-      reset(currentUser)
+      // Reset form with only applicable fields
+      reset({
+        Name: currentUser.Name || '',
+        Email: currentUser.Email || '',
+        CellNumber: currentUser.CellNumber || '',
+        StreetAddress: currentUser.StreetAddress || '',
+        City: currentUser.City || '',
+        State: currentUser.State || '',
+        Zip: currentUser.Zip || ''
+      })
     }
   }, [currentUser]);
 
   const createUserMutation = useMutation({
+    mutationKey: ['createUser'],
     mutationFn: async (userData) => {
       if (!dbService) throw new Error("Database service is not initialized");
       return await dbService.createUserAndAuthenticate(firebaseAuth, userData.email, userData.password);
@@ -61,6 +71,7 @@ const UserForm = () => {
   };
 
   const updateUserMutation = useMutation({
+    mutationKey: ['updateUser'],
     mutationFn: async (dataWithoutPassword, userImage) => {
       if (!dbService) throw new Error("Database service is not initialized");
       const userDocRef = doc(db, 'Users', currentUser.uid);
@@ -73,7 +84,6 @@ const UserForm = () => {
     },
     onSuccess: () => {
       logger.info('User updated successfully');
-      window.location.href = '/profile';
     },
     onError: (error) => {
       logger.error('Failed to update user:', error.message);
@@ -96,12 +106,10 @@ const UserForm = () => {
     const dataWithoutPassword = { ...data };
     delete dataWithoutPassword.Password;
 
-    logger.info('Submit Mode:', mode);
+    logger.info('Submit Mode:', mode); 
     try {
       logger.info('Form Data:', data);
-
       updateUserMutation.mutate(dataWithoutPassword, userImage);
-
     } catch (e) {
       logger.error('Error adding/updating document: ', e.message);
       logger.error('Stack Trace:', e.stack);
