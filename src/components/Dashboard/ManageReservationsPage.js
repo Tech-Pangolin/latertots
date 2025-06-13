@@ -10,6 +10,7 @@ import { useAdminPanelContext } from './AdminPanelContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
 import _ from 'lodash';
+import { MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
 
 const ManageReservationsPage = () => {
   const { dbService } = useAuth();
@@ -80,8 +81,8 @@ const ManageReservationsPage = () => {
     const { event } = resizeInfo;
 
     // Calculate the new duration in hours
-    const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
-    if (durationHours < 2) {
+    const durationHours = Math.abs(new Date(event.end) - new Date(event.start));
+    if (durationHours < MIN_RESERVATION_DURATION_MS) {
       resizeInfo.revert();
       alert('Reservations must be at least 2 hours long.');
       return;
@@ -217,6 +218,5 @@ const ManageReservationsPage = () => {
     )
   }
 };
-ManageReservationsPage.whyDidYouRender = true;
 
 export default ManageReservationsPage;
