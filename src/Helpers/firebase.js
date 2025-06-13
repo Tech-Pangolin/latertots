@@ -62,7 +62,7 @@ export class FirebaseDbService {
       throw new Error("Authentication required.");
     }
 
-    if (requiredRole && this.userContext.role !== requiredRole) {
+    if (requiredRole && this.userContext.Role !== requiredRole) {
       throw new Error("Unauthorized access.");
     }
   }

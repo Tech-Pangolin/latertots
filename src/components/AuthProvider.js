@@ -56,10 +56,12 @@ export const AuthProvider = ({ children }) => {
   
         // Try to fetch avatar
         const userPhoto = await tempDbService.fetchAvatarPhotoByUserId(user.uid);
+        
+        const userProfileData = await tempDbService.fetchCurrentUser(user.email);
   
         const loggedInUser = {
           ...user,
-          role: userRole,
+          ...userProfileData,
           photoURL: userPhoto
         };
   
