@@ -2,7 +2,7 @@ import { db } from "../../config/firestore";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { doc, updateDoc } from "firebase/firestore";
-import { useAuth } from "../AuthProvider";
+import { signInWithGoogle, useAuth } from "../AuthProvider";
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
 import ChangePasswordForm from "../ChangePasswordForm";
