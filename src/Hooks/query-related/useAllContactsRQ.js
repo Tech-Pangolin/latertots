@@ -12,7 +12,7 @@ export function useAllContactsRQ() {
 
   const allContacts = useMemo( () => query(
     collection(db, COLLECTIONS.CONTACTS),
-    where("archived", "==", "false"),     // TODO: Make sure dummy data has this field set correctly
+    where("archived", "==", false),     // TODO: Make sure dummy data has this field set correctly
   ), [])
 
   const queryResult = useQuery({
