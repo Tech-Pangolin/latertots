@@ -71,6 +71,14 @@ export class FirebaseDbService {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }
 
+  /**
+   * Fetches documents from a Firestore collection reference.
+   *  
+   * @param {import('firebase/firestore').CollectionReference} ref - The Firestore collection reference to fetch documents from.
+   * @param {boolean} [adminOnly=false] - If true, only allows access for admin users.
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of document data objects.
+   * @throws {Error} - If the user is not authenticated or does not have the required role.
+   */
   async fetchDocs(ref, adminOnly = false) {
     if (adminOnly) {
       this.validateAuth('admin');
@@ -81,6 +89,15 @@ export class FirebaseDbService {
     return data;
   }
 
+  /**
+   * Subscribes to real-time updates of documents in a Firestore collection reference.
+   * 
+   * @param {import('firebase/firestore').CollectionReference} ref - The Firestore collection reference to subscribe to.
+   * @param {function} callback - The callback function to execute when documents change.
+   * @param {boolean} [adminOnly=false] - If true, only allows access for admin users.
+   * @returns {function} - A function to unsubscribe from the real-time updates.
+   * @throws {Error} - If the user is not authenticated or does not have the required role.
+   */
   subscribeDocs(ref, callback, adminOnly = false) {
     if (adminOnly) {
       this.validateAuth('admin');
@@ -503,8 +520,9 @@ export class FirebaseDbService {
     }
   }
 
+  // TODO: Add validation to ensure that non-admin users can only change their own reservations
   changeReservationTime = async (reservationId, newStart, newEnd) => {
-    this.validateAuth('admin');
+    this.validateAuth();
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       await updateDoc(reservationRef, {

@@ -118,6 +118,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
         );
       }
     } else {
+      // TODO: Handle individual validation errors
       alert('One or more reservations did not pass validation.');
     }
   };
