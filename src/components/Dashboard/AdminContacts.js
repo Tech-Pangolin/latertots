@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../AuthProvider";
 import { logger } from "../../Helpers/logger";
-import { useAllContactsRQ } from "../../Hooks/query-related/useAllContactsRQ";
+import { useContactsRQ } from "../../Hooks/query-related/useContactsRQ";
 
 const AdminContacts = () => {
-  const { data: allContacts = [], isLoading, isError } = useAllContactsRQ();
+  const { data: allContacts = [], isLoading, isError } = useContactsRQ();
 
   const formatTableRow = (user) => {
     return (

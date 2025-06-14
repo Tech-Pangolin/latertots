@@ -1,8 +1,8 @@
 import React from "react";
-import { useAllChildrenRQ } from "../../Hooks/query-related/useAllChildrenRQ";
+import { useChildrenRQ } from "../../Hooks/query-related/useChildrenRQ";
 
 const AdminChildren = () => {
-  const { data: children = [], isLoading, isError } = useAllChildrenRQ();
+  const { data: children = [], isLoading, isError } = useChildrenRQ();
 
   const formatTableRow = (child) => {
     return (
