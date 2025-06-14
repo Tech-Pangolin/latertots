@@ -7,15 +7,17 @@ import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
 import ChangePasswordForm from "../ChangePasswordForm";
 import { useMutation } from "@tanstack/react-query";
+import { FirebaseDbService } from "../../Helpers/firebase";
 
 const UserForm = () => {
   const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
-  const { currentUser, dbService } = useAuth();
-  const [email, setEmail] = React.useState(currentUser.Email);
+  const { currentUser } = useAuth();
+  const [dbService, setDbService] = useState(null);
+  const [email, setEmail] = React.useState(currentUser ? currentUser.Email : '');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [passwordMismatch, setPasswordMismatch] = useState(false);
-  const [mode, setMode] = React.useState('create');
+  const [mode, setMode] = React.useState(currentUser ? 'update' : 'create');
   const [error, setError] = React.useState(null);
 
 
@@ -23,6 +25,7 @@ const UserForm = () => {
 
   useEffect(() => {
     if (currentUser) {
+      setDbService(new FirebaseDbService(currentUser));
       setMode('update');
       // Reset form with only applicable fields
       reset({
@@ -34,6 +37,9 @@ const UserForm = () => {
         State: currentUser.State || '',
         Zip: currentUser.Zip || ''
       })
+    } else {
+      setDbService(new FirebaseDbService({}));
+      setMode('create');
     }
   }, [currentUser]);
 
@@ -92,11 +98,6 @@ const UserForm = () => {
   })
 
   const onSubmit = async (data) => {
-    // Hardcode a user role for now
-    const userRoleRef = await doc(db, 'Roles', 'parent-user');
-    data.Role = userRoleRef;
-    data.archived = false;
-
     // Remove the image from the data object
     const userImage = data.Image[0];
     delete data.Image;
