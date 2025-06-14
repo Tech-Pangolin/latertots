@@ -1,0 +1,41 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../components/AuthProvider"
+import { collection, documentId, query, where } from "firebase/firestore";
+import { db } from "../../config/firestore";
+import { COLLECTIONS } from "../../Helpers/constants";
+import { useEffect, useMemo } from "react";
+
+export function useContactsRQ() {
+  const { dbService, currentUser } = useAuth();
+  const isAdmin = currentUser?.Role === 'admin';
+  const queryClient = useQueryClient();
+  const queryKey = isAdmin ? ['adminAllContacts'] : ['fetchContacts', currentUser.Email];
+
+  const allContacts = useMemo( () => query(
+    collection(db, COLLECTIONS.CONTACTS),
+    where("archived", "==", false),     // TODO: Make sure dummy data has this field set correctly
+  ), [])
+
+  const myContacts = useMemo(() => {
+    return query(
+          collection(db, COLLECTIONS.CONTACTS),
+          where(documentId(), "in", currentUser.Contacts),
+          where("archived", "==", false) 
+        )
+  }, [])
+
+  const queryResult = useQuery({
+    queryKey,
+    queryFn: () => dbService.fetchDocs(isAdmin ? allContacts : myContacts, isAdmin ? true : false),
+    onError: (error) => console.error("Error fetching /Contacts data:", error),
+  })
+
+  useEffect(() => {
+    const unsub = dbService.subscribeDocs(isAdmin ? allContacts : myContacts, fresh => {
+      queryClient.setQueryData(queryKey, fresh);
+    }, isAdmin ? true : false);
+    return () => unsub();
+  },[allContacts, dbService, queryKey, queryClient])
+
+  return queryResult;
+}

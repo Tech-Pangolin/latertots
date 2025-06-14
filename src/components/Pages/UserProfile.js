@@ -1,21 +1,19 @@
 import ContactsTable from '../Shared/ContactsTable';
-import React, { useState, useEffect } from 'react';
-import { FirebaseDbService } from '../../Helpers/firebase';
+import React, { useState } from 'react';
 import { useAuth } from '../AuthProvider';
 import ChildCard from '../Shared/ChildCard';
 import UserForm from '../Shared/UserForm';
-import { logger } from '../../Helpers/logger';
-import { db } from '../../config/firestore';
 import ChildRegistration from './ChildRegistration';
 import ContactRegistration from './ContactRegistration';
+import { useChildrenRQ } from '../../Hooks/query-related/useChildrenRQ';
+import { useContactsRQ } from '../../Hooks/query-related/useContactsRQ';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
-  const [children, setChildren] = useState([]);
-  const [contacts, setContacts] = useState([]);
-  const [reloadUserDataToggle, setReloadUserDataToggle] = useState(false);
-  const [dbService, setDbService] = useState(null);
+  const { data: children = [] } = useChildrenRQ();
+  const { data: contacts = [] } = useContactsRQ()
 
+  // TODO: Open a dialog to show/edit child details when clicking on a child's name
   // Dialog state
   const [selectedChild, setSelectedChild] = useState(null);
   const [open, setOpen] = useState(false);
@@ -24,23 +22,6 @@ const UserProfile = () => {
     setOpen(true);
   };
   const handleClose = () => setOpen(false);
-
-  useEffect(() => {
-    setDbService(new FirebaseDbService(currentUser));
-  }, [currentUser]);
-
-  useEffect(() => {
-    logger.info("currentUser: ", currentUser)
-
-    if (dbService) {
-      dbService.fetchAllCurrentUsersChildren().then((resp) => {
-        setChildren(resp);
-      }).catch((e) => logger.error(e));
-      dbService.fetchAllCurrentUsersContacts(currentUser.email).then((resp) => {
-        setContacts(resp);
-      }).catch((e) => logger.error(e));
-    }
-  }, [currentUser.email, reloadUserDataToggle, dbService]);
 
   return (
     <div className="container-fluid rounded bg-blue">
@@ -90,7 +71,8 @@ const UserProfile = () => {
           <div className="tab-content" id="myTabContent">
             <div className="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
               <div className='mt-5'>
-                <UserForm reloadUserData={[reloadUserDataToggle, setReloadUserDataToggle]} /></div>
+                <UserForm />
+              </div>
             </div>
             <div className="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
               <div className='px-5 py-5'>
@@ -99,7 +81,7 @@ const UserProfile = () => {
                   <div className="col-9">
                     {/* <a href="/addChild" className="border px-3 p-1 add-experience">Add Children&nbsp;<i className="bi bi-person-plus-fill"></i></a> */}
                     <button type="button" className="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                    Add Children&nbsp;<i className="bi bi-person-plus-fill"></i>
+                      Add Children&nbsp;<i className="bi bi-person-plus-fill"></i>
                     </button></div>
                 </div>
 
@@ -109,45 +91,47 @@ const UserProfile = () => {
                   <div className="modal-dialog">
                     <div className="modal-content">
                       <div className="modal-body">
-                       <div className="d-flex justify-content-end"> <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                       </div>
+                        <div className="d-flex justify-content-end"> <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
                         <ChildRegistration />
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="mt-3 d-flex justify-content-between-start align-items-center experience">
-                  {children.length > 0 && children.map((child) => (<ChildCard key={child.id} child={child} onNameClick={handleNameClick} />))}
+                  {children.length > 0 &&
+                    children.map((child) => (<ChildCard key={child.id} child={child} onNameClick={handleNameClick} />))
+                  }
                 </div>
               </div>
             </div>
             <div className="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
-            <div className='px-5 py-5'>
-              <div className=" row"  >
-                <div className="col-2"><h4 className="mt-2">Contacts</h4></div>
-                <div className="col-3"><button type="button" className="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#contactsModal">
+              <div className='px-5 py-5'>
+                <div className=" row"  >
+                  <div className="col-2"><h4 className="mt-2">Contacts</h4></div>
+                  <div className="col-3"><button type="button" className="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#contactsModal">
                     Add Contact&nbsp;<i className="bi bi-person-plus-fill"></i>
-                    </button>
-                </div> 
-              </div>
-              <ContactsTable contacts={contacts} />
+                  </button>
+                  </div>
+                </div>
+                <ContactsTable contacts={contacts} />
               </div>
             </div>
             <div className="modal fade" id="contactsModal" tabindex="-1" aria-labelledby="contactsModalLabel" aria-hidden="true">
-                  <div className="modal-dialog">
-                    <div className="modal-content">
-                      <div className="modal-body">
-                       <div className="d-flex justify-content-end"> <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                       </div>
-                        <ContactRegistration />
-                      </div>
+              <div className="modal-dialog">
+                <div className="modal-content">
+                  <div className="modal-body">
+                    <div className="d-flex justify-content-end"> <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
+                    <ContactRegistration />
                   </div>
                 </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-     
+
 
       {/* <div className="row">
         <div className="col-md-6 border-right">
