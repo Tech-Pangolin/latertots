@@ -50,11 +50,7 @@ const UserForm = () => {
       return await dbService.createUserAndAuthenticate(firebaseAuth, userData.email, userData.password);
     },
     onSuccess: (user) => {
-
-      // TODO: Create a google cloud function to create a /Users/{userId} document when a user is created
-      // and then update the user document with the user data
-
-      // This will currently fail, because there will be no document created in the Users collection on navigation
+      logger.info('User created successfully:', user);
       window.location.href = '/profile';
     },
     onError: (error) => {
