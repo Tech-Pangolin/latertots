@@ -1,27 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogTitle, DialogContent, MenuItem, Select, InputLabel, OutlinedInput, FormControl, Checkbox, FormControlLabel } from '@mui/material';
 import { checkAgainstBusinessHours, checkFutureStartTime, getCurrentDate, getCurrentTime } from '../../Helpers/calendar';
 import { v4 as uuidv4 } from 'uuid';
-import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
-import { logger } from '../../Helpers/logger';
-import { debounce } from '../../Helpers/util';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
+import useDebouncedValidateField from '../../Hooks/useDebouncedValidateField';
 
 
 // Remember to create state for the open/closed state of the modal and the form data
-const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, children, setEvents, events, handleScheduleSave, currentUserData }) => {
-  const { currentUser } = useAuth();
-  const [dbService, setDbService] = useState(null);
+const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, children, scheduleChildSitterPage_queryKey }) => {
+  const queryClient = useQueryClient();
+  const { currentUser, dbService } = useAuth();
   const [errors, setErrors] = useState({
     start: '',
     end: '',
     date: '',
     selectedChild: ''
   });
-
-  useEffect(() => {
-    setDbService(new FirebaseDbService(currentUser));
-  }, [currentUser]);
+  const childrenOptions = children.map(child => Object.fromEntries([["id", child.id], ["name", child.Name]]));
 
   const initialState = {
     selectedChild: [], // example {id: 'n7EBw3pLzUmsXtVHMqWf', name: 'Jimmm'}
@@ -37,10 +34,6 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     setModalOpenState(false);
   };
 
-  const childrenOptions = [
-    ...children.map(child => Object.fromEntries([["id", child.id], ["name", child.Name]]))
-  ];
-
   const handleChange = (e) => {
     const { name, type, checked, value } = e.target;
     const updatedFormData = {
@@ -48,57 +41,44 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
       [name]: type === "checkbox" ? checked : value, // Use checked to filter for checkboxes
     };
     setFormData(updatedFormData);
-    validateTimesDebounced(updatedFormData, name);
+    debouncedValidateFieldFxn(updatedFormData, name);
   };
 
-  useEffect(() => {
-    const hasNewEvent = events.some(event => event.id.includes('-') && event.extendedProps.fromForm)
-
-    if (hasNewEvent) {
-      handleScheduleSave(events, currentUserData, dbService)
+  const saveNewEventMutation = useMutation({
+    mutationFn: async ({ loggedInUserId, newEvent }) => await dbService.createReservationDocument(loggedInUserId, newEvent),
+    onSuccess: () => queryClient.invalidateQueries(scheduleChildSitterPage_queryKey),
+    onError: (error) => {
+      alert('Could not save event. Please try again later.');
     }
-  }, [events]);
+  });
 
-  const validateTimesDebounced = debounce((updatedFormData, field) => {
+  const debouncedValidateFieldFxn = useDebouncedValidateField((data, field) => {
+    const errors = {};
+    if (!data.selectedChild?.length) {
+      errors.selectedChild = 'At least one child must be selected.';
+    }
+    const start = new Date(`${data.date}T${data.start}`);
     const now = new Date();
-    const startTime = new Date(`${updatedFormData.date}T${updatedFormData.start}`);
-    const endTime = new Date(`${updatedFormData.date}T${updatedFormData.end}`);
-    const selectedDate = new Date(`${updatedFormData.date}T00:00:00`);
-    const today = new Date(now.toISOString().split('T')[0] + 'T00:00:00'); // Today's date at midnight
-
-    let updatedErrors = { ...errors };
-
-    if (!updatedFormData.selectedChild || updatedFormData.selectedChild.length === 0) {
-      updatedErrors.selectedChild = 'At least one child must be selected.';
+    if (field === 'start' && start <= now) {
+      errors.start = 'Dropoff time must be in the future.';
     }
-
-    if (field === 'start') {
-      if (startTime <= now) {
-        updatedErrors.start = 'Dropoff time must be in the future.';
-      } else {
-        updatedErrors.start = '';
-      }
-    }
-
     if (field === 'end') {
-      if (endTime - startTime < 2 * 60 * 60 * 1000) {
-        updatedErrors.end = 'Pickup time must be at least 2 hours after dropoff time.';
-      } else {
-        updatedErrors.end = '';
+      const end = new Date(`${data.date}T${data.end}`);
+      if (end - start < MIN_RESERVATION_DURATION_MS) {
+        errors.end = 'Pickup time must be at least 2 hours after dropoff time.';
       }
     }
-
     if (field === 'date') {
+      const selectedDate = new Date(`${data.date}T00:00:00`);
+      const today = new Date(new Date().toISOString().split('T')[0] + 'T00:00:00');
       if (selectedDate < today) {
-        updatedErrors.date = 'Date must be today or in the future.';
-      } else {
-        updatedErrors.date = '';
+        errors.date = 'Date must be today or in the future.';
       }
     }
+    return errors;
+  }, setErrors, 500);
 
-    setErrors(updatedErrors);
-  }, 500);
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newEvents = formData.selectedChild.map(child => {
@@ -125,11 +105,12 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
 
     if (allValid) {
       // Validate all reservations collectively
-      const allowSave = dbService.checkReservationAllowability(newEvents);
+      const allowSave = dbService.checkReservationOverlapLimit(newEvents);
 
       if (allowSave) {
-        // Save all new events to the state
-        setEvents((prevEvents) => [...prevEvents, ...newEvents]);
+        newEvents.forEach(event => {
+          saveNewEventMutation.mutate({ loggedInUserId: currentUser.uid, newEvent: event })
+        })
         handleClose();
       } else {
         alert(
@@ -137,6 +118,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
         );
       }
     } else {
+      // TODO: Handle individual validation errors
       alert('One or more reservations did not pass validation.');
     }
   };
@@ -147,7 +129,6 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
       <DialogContent>
         <form onSubmit={handleSubmit}>
 
-          {/* This is going to break the submit workflow, since it will create multiple reservations at once */}
           <FormControl fullWidth style={{ marginTop: '1rem' }}>
             <InputLabel id="multiselect-child-label">Name</InputLabel>
             <Select

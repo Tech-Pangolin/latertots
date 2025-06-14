@@ -48,26 +48,6 @@ export const renderEventContent = (eventInfo) => {
   return <StyledCalendarEvent event={event} backgroundColor={backgroundColor} />;
 }
 
-export const handleScheduleSave = async (events, currentUserData, dbService) => {
-  for (const event of events) {
-    // Check if reservation already exists
-    const reservationExists = await checkReservationExists(event);
-    if (reservationExists) {
-      // Update existing reservation
-      await dbService.updateReservationDocument(event);
-    } else {
-      // Create new reservation
-      await dbService.createReservationDocument(currentUserData.id, event);
-    }
-  }
-  
-  alert('Schedule saved successfully!');
-  if (currentUserData.Role === 'admin') {
-    return;
-  }
-  window.location.href = '/schedule';
-}
-
 async function checkReservationExists(event) {
   // New reservations are given a uuidv4 before being saved to the database, including "-" and lowercase letters
   // Firebase will automatically assign a unique ID when the document is created. It includes uppercase letters and no special characters
