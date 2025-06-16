@@ -20,7 +20,7 @@ export function useChildrenRQ() {
   const myChildren = useMemo(() => {
     return query(
       collection(db, COLLECTIONS.CHILDREN),
-      where(documentId(), "in", currentUser.Children), 
+      where(documentId(), "in", currentUser.Children), // This only allows up to 30 children before the "in" operator fails
       where("archived", "==", false) 
     )
   },[])

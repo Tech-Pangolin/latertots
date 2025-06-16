@@ -19,7 +19,7 @@ export function useContactsRQ() {
   const myContacts = useMemo(() => {
     return query(
           collection(db, COLLECTIONS.CONTACTS),
-          where(documentId(), "in", currentUser.Contacts),
+          where(documentId(), "in", currentUser.Contacts), // This only allows up to 30 contacts before the "in" operator fails
           where("archived", "==", false) 
         )
   }, [])
