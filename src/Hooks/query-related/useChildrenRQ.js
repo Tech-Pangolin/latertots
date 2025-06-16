@@ -23,12 +23,12 @@ export function useChildrenRQ() {
       where(documentId(), "in", currentUser.Children), // This only allows up to 30 children before the "in" operator fails
       where("archived", "==", false) 
     )
-  },[])
+  },[JSON.stringify(currentUser.Children)]);
 
   // Second, get the initial fetch of data
   const queryResult = useQuery({
     queryKey,
-    queryFn: () => dbService.fetchDocs(isAdmin? allChildren : myChildren, isAdmin ? true : false),
+    queryFn: () => dbService.fetchDocs(isAdmin? allChildren : myChildren, isAdmin),
     onError: (error) => {
       console.error("Error fetching /Children data:", error);
     },
@@ -38,7 +38,7 @@ export function useChildrenRQ() {
   useEffect(() => {
     const unsubscribe = dbService.subscribeDocs(isAdmin ? allChildren : myChildren, fresh => {
       queryClient.setQueryData(queryKey, fresh);
-    }, isAdmin ? true : false)
+    }, isAdmin)
     return () => unsubscribe();
   }, [dbService, queryClient, allChildren, myChildren, queryKey]);
 

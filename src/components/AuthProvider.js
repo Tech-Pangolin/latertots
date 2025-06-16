@@ -3,6 +3,8 @@ import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signI
 import { app } from '../config/firebase';
 import { logger } from '../Helpers/logger';
 import { FirebaseDbService } from '../Helpers/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../config/firestore';
 
 const auth = getAuth();
 
@@ -30,7 +32,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [dbService, setDbService] = useState(null);
   const auth = getAuth(app);
-  
+
   const logout = async () => {
     try {
       await auth.signOut();
@@ -41,38 +43,44 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubProfile = () => { }; // This will be used to unsubscribe from the profile listener
+    const unsubAuth = onAuthStateChanged(auth, async (user) => {
+
+      setLoading(true);
+      unsubProfile(); // Unsubscribe from any previous profile listener
+
       if (!user) {
         setCurrentUser(null);
         setLoading(false);
         return;
       }
-  
+
       try {
+        let loggedInUser = null;
         const tempDbService = new FirebaseDbService(user);
-  
-        // Try to fetch user role
-        const userRole = await tempDbService.fetchRoleByUserId(user.uid);
-  
-        // Try to fetch avatar
-        const userPhoto = await tempDbService.fetchAvatarPhotoByUserId(user.uid);
-        
-        const userProfileData = await tempDbService.fetchCurrentUser(user.email);
-        
-        // Make sure the Children array is always an array
-        if (!Array.isArray(userProfileData.Children)) {
-          userProfileData.Children = [userProfileData.Children];
-        }
-  
-        const loggedInUser = {
-          ...user,
-          ...userProfileData,
-          photoURL: userPhoto
-        };
-  
-        setDbService(new FirebaseDbService(loggedInUser));
-        setCurrentUser(loggedInUser);
-        setLoading(false);
+
+        const userProfileDocRef = doc(db, 'Users', user.uid);
+        unsubProfile = onSnapshot(userProfileDocRef, async (profileSnap) => {
+          if (profileSnap.exists()) {
+            const userProfileData = profileSnap.data();
+            // Make sure the Children array is always an array
+            if (!Array.isArray(userProfileData.Children)) {
+              userProfileData.Children = [userProfileData.Children];
+            }
+            // Try to fetch avatar
+            const userPhoto = await tempDbService.fetchAvatarPhotoByUserId(user.uid);
+            // Update the user object with profile data
+            loggedInUser = { ...user, ...userProfileData, photoURL: userPhoto };
+            // Update the AuthProvider state
+            setDbService(new FirebaseDbService(loggedInUser));
+            setCurrentUser(loggedInUser);
+            setLoading(false);
+            logger.info("User profile loaded successfully:", loggedInUser);
+          } else {
+            logger.warn("User profile does not exist in Firestore.");
+          }
+        });
+
       } catch (err) {
         logger.error("Error during post-auth user fetch:", err);
 
@@ -81,26 +89,36 @@ export const AuthProvider = ({ children }) => {
           err?.code === "permission-denied" ||
           err?.message?.includes("Missing or insufficient permissions") ||
           err?.message?.includes("PERMISSION_DENIED");
-      
+
         if (isPermissionError) {
           logger.warn("Permission denied while accessing user data. User will be signed out.");
         } else {
           logger.warn("Unexpected error during post-auth load. User will be signed out.");
         }
-      
+
         // Always sign the user out on error
         await logout()
         setCurrentUser(null);
         setLoading(false);
       }
     });
-  
-    return () => unsubscribe();
+
+    return () => {
+      unsubProfile();
+      unsubAuth();
+    }
   }, [auth]);
-  
+
 
   return (
     <AuthContext.Provider value={{ currentUser, logout, dbService }}>
+      {loading && (
+        <div className="d-flex justify-content-center align-items-center vh-100">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      )}
       {!loading && children}
     </AuthContext.Provider>
   );
@@ -113,4 +131,4 @@ export const AuthProvider = ({ children }) => {
  * @property {Object} currentUser - The current authenticated user.
  * @property {Function} logout - The function to log out the current user.
  */
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext)
