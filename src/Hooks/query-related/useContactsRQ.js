@@ -23,7 +23,7 @@ export function useContactsRQ() {
       where(documentId(), "in", currentUser.Contacts), // This only allows up to 30 contacts before the "in" operator fails
       where("archived", "==", false)
     )
-  }, [])
+  }, [JSON.stringify(currentUser.Contacts)]);
 
   const queryResult = useQuery({
     queryKey,
@@ -35,7 +35,7 @@ export function useContactsRQ() {
 
   useEffect(() => {
     if (!myContacts && !isAdmin) return; // If the user has no contacts and is not admin, do not set up a listener
-    
+
     const unsub = dbService.subscribeDocs(isAdmin ? allContacts : myContacts, fresh => {
       queryClient.setQueryData(queryKey, fresh);
     });
