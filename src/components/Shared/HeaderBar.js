@@ -12,15 +12,7 @@ const HeaderBar = () => {
   const [showTeamTots, setShowTeamTots] = useState(false);
   const [showBigTots, setShowBigTots] = useState(false);
   const [showDropIn, setShowDropIn] = useState(false);
-  const signOut = async () => {
-    const auth = getAuth();
-    try {
-      await auth.signOut(auth);
-      window.location.href = '/';
-    } catch (error) {
-      console.error("Error signing out: ", error);
-    }
-  }
+
   const handleMobileMenu = () => {
     setMobileMenu(!mobileMenu);
   }
@@ -138,7 +130,7 @@ const HeaderBar = () => {
               <li><a id="logout-link" className="nav-link scrollto logout-link" onClick={signOut}>Logout</a></li>
             )} */}
             {currentUser && (
-              <li><a id="logout-link" className="nav-link scrollto logout-link" style={{ cursor: 'pointer' }} onClick={signOut}>Logout</a></li>
+              <li><a id="logout-link" className="nav-link scrollto logout-link" style={{ cursor: 'pointer' }} onClick={logout}>Logout</a></li>
             )}
 
           </ul>

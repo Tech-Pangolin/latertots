@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await auth.signOut();
       setDbService(null);
+      window.location.href = '/';
     } catch (error) {
       logger.error("Error logging out: ", error);
     }
