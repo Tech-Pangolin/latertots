@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signI
 import { app } from '../config/firebase';
 import { logger } from '../Helpers/logger';
 import { FirebaseDbService } from '../Helpers/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, DocumentReference, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firestore';
 
 const auth = getAuth();
@@ -43,6 +43,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const cleanupReferencesArray = (children) => {
+    // Ensure children is always an array
+    if (!Array.isArray(children)) {
+      if (children === undefined || children === null) {
+        return [];
+      }
+      // If it's a single object, convert it to an array
+      return [children];
+    }
+    // If it's already an array, filter out any nonstring or nonDocumentRef items
+    return children.filter(child => typeof child === 'string' || child instanceof DocumentReference);
+  }
+
   useEffect(() => {
     let unsubProfile = () => { }; // This will be used to unsubscribe from the profile listener
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
@@ -61,21 +74,29 @@ export const AuthProvider = ({ children }) => {
         const tempDbService = new FirebaseDbService(user);
 
         const userProfileDocRef = doc(db, 'Users', user.uid);
+
+        // Subscribe to the user profile document
+        // This will update the user profile in real-time from the Firestore
         unsubProfile = onSnapshot(userProfileDocRef, async (profileSnap) => {
           if (profileSnap.exists()) {
             const userProfileData = profileSnap.data();
-            // Make sure the Children array is always an array
-            if (!Array.isArray(userProfileData.Children)) {
-              userProfileData.Children = [userProfileData.Children];
-            }
+
+            // Make sure every reference array is always an array
+            userProfileData.Children = cleanupReferencesArray(userProfileData.Children);
+            userProfileData.Contacts = cleanupReferencesArray(userProfileData.Contacts);
+            userProfileData.Role = userProfileData.Role.path.split('/').pop();
+
             // Try to fetch avatar
             const userPhoto = await tempDbService.fetchAvatarPhotoByUserId(user.uid);
+
             // Update the user object with profile data
             loggedInUser = { ...user, ...userProfileData, photoURL: userPhoto };
+
             // Update the AuthProvider state
             setDbService(new FirebaseDbService(loggedInUser));
             setCurrentUser(loggedInUser);
             setLoading(false);
+
             logger.info("User profile loaded successfully:", loggedInUser);
           } else {
             logger.warn("User profile does not exist in Firestore.");

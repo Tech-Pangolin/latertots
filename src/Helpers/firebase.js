@@ -11,37 +11,7 @@ export class FirebaseDbService {
     this.userContext = userContext;
   }
 
-  /**
-   * Fetches the role of a user based on the provided role reference.
-   * 
-   * @param {Object} roleRef - The reference to the user's role.
-   * @returns {Promise<string|null>} - A promise that resolves to the role ID if found, or null if not found.
-   */
-  async fetchUserRole(roleRef) {
-    const roleSnapshot = await getDoc(roleRef);
-    return roleSnapshot.exists() ? roleSnapshot.id : null;
-  }
-
-  /**
-   * Fetches the role of a user based on the provided user ID.
-   * 
-   * @param {string} userId - The ID of the user to fetch the role for.
-   * @returns {Promise<string|null>} - A promise that resolves to the role ID if found, or null if not found.
-   */
-  async fetchRoleByUserId(userId) {
-    const userDocRef = doc(db, 'Users', userId);
-    const userDoc = await getDoc(userDocRef);
-    if (userDoc.exists()) {
-      try {
-        const roleRef = userDoc.data().Role;
-        return await this.fetchUserRole(roleRef); 
-      } catch (error) {
-        throw new Error(`Failed to retrieve User's Role: ${error.message}`)
-      }
-    }
-    return null;
-  }
-
+  
   /**
    * Fetches the avatar photo URL of a user based on the provided user ID.
    * 
@@ -108,67 +78,6 @@ export class FirebaseDbService {
       callback(this.#mapSnapshotToData(snapshot));
     });
   }
-
-  /**
-   * Fetches the current user based on the provided email.
-   * 
-   * @param {string} email - The email of the user to fetch.
-   * @returns {Promise<Object|null>} - A promise that resolves to the user object if found, or null if not found.
-   * @throws {Error} - If there is an error fetching the current user.
-   */
-  fetchCurrentUser = async (identifier) => {
-    this.validateAuth();
-    const maxRetries = 10;
-    try {
-      let userDocRef;
-      let userDoc;
-
-      // Poll for the user document if the UID is provided
-      if (this.userContext.uid) {
-        logger.info(`${identifier} Polling for user document with UID:`, this.userContext.uid);
-        userDocRef = await this.pollForUserDocument(db, this.userContext.uid, maxRetries);
-        userDoc = await getDoc(userDocRef);
-      }
-
-      // Poll for user document by email if not found by UID
-      if (!userDoc || !userDoc.exists()) {
-        logger.info("Querying for user document with email:", this.userContext.email);
-        for (let i = 0; i < maxRetries; i++) {
-          logger.info("fetchCurrentUser: start query by email")
-          const q = query(collection(db, "Users"), where("Email", "==", this.userContext.email), where("archived", "==", false));
-          const querySnapshot = await getDocs(q);
-          const userDocSnapshot = querySnapshot.docs.find(doc => doc.data().Email === this.userContext.email);
-          logger.info("fetchCurrentUser: end query by email")
-
-          if (userDocSnapshot) {
-            userDocRef = userDocSnapshot.ref;
-            userDoc = userDocSnapshot;
-            break;
-          }
-
-          logger.info(`User document not found with email, retrying... (${i + 1}/${maxRetries})`);
-          await new Promise(r => setTimeout(r, 1000 * i));
-        }
-      }
-
-      if (userDoc && userDoc.exists()) {
-        logger.info("User document found:", userDoc.data());
-        const user = { id: userDoc.id, ...userDoc.data() };
-        const roleRef = user.Role;
-        if (roleRef) {
-          user.Role = await this.fetchUserRole(roleRef);
-        } else {
-          logger.warn(`${identifier || ''} Role reference not yet set.`)
-        }
-        return user;
-      } else {
-        throw new Error("No record found with email: " + this.userContext.email);
-      }
-    } catch (error) {
-      logger.error("Error fetching current user:", error);
-      return null;
-    }
-  };
 
   /**
    * Creates a document in the Children collection and associates it with the current user.
