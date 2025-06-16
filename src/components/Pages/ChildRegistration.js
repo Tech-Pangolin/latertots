@@ -1,19 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../AuthProvider';
-import { FirebaseDbService } from '../../Helpers/firebase';
 import { useLocation } from 'react-router-dom';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firestore';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { logger } from '../../Helpers/logger';
 
-const ChildRegistration = () => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
-  const { currentUser } = useAuth();
-  const [dbService, setDbService] = useState(null);
-
-  useEffect(() => {
-    setDbService(new FirebaseDbService(currentUser));
-  }, [currentUser]);
+const ChildRegistration = ({ setOpenState }) => {
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm();
+  const { currentUser, dbService } = useAuth();
+  const queryClient = useQueryClient();
 
   // Get the child from the location state
   // This is passed from the ChildCard component when editing
@@ -27,6 +24,19 @@ const ChildRegistration = () => {
     }
   }, [child, reset]);
 
+  const createChildMutation = useMutation({
+    mutationKey: ['createChild'],
+    mutationFn: async (data) => await dbService.createChildDocument(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
+      reset(); // Reset the form after successful submission
+      setOpenState(false); // Close the modal after submission
+    },
+    onError: (error) => {
+      logger.error('Error creating child document:', error);
+    }
+  })
+
   const onSubmit = async (data) => {
     try {
       if (child) {
@@ -35,13 +45,10 @@ const ChildRegistration = () => {
         await updateDoc(childRef, data);
       } else {
         // Create a new child document
-        await dbService.createChildDocument(data);
+        await createChildMutation.mutate(data);
       }
-
-      // Navigate back to the profile on success
-      window.location.href = '/profile';
     } catch (error) {
-      console.error('Error adding document: ', error);
+      logger.error('Error adding document: ', error);
     }
   };
 
@@ -82,6 +89,5 @@ const ChildRegistration = () => {
     </div>
   );
 };
-
 
 export default ChildRegistration;

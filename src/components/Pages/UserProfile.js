@@ -11,7 +11,9 @@ import { useContactsRQ } from '../../Hooks/query-related/useContactsRQ';
 const UserProfile = () => {
   const { currentUser } = useAuth();
   const { data: children = [] } = useChildrenRQ();
-  const { data: contacts = [] } = useContactsRQ()
+  const { data: contacts = [] } = useContactsRQ();
+
+  const [openChildModal, setOpenChildModal] = useState(false);
 
   // TODO: Open a dialog to show/edit child details when clicking on a child's name
   // Dialog state
@@ -37,22 +39,7 @@ const UserProfile = () => {
             <div className='col-12 d-flex justify-content-center mt-5'>
               <a href="/schedule" className="border px-5 py-3 p-1 pink-text blink-text">Book Now</a>
             </div>
-            <div className='col-12'>
 
-              {/* <div className="card mt-5" >
-                <ul className="list-group list-group-flush">
-                  <li className="list-group-item"><strong>User Information</strong>
-                  </li>
-                  <li className="list-group-item"><strong>Children</strong></li>
-                  <li className="list-group-item">A third item</li>
-                </ul>
-              </div> */}
-            </div>
-
-
-            <div className='col-12'>
-
-            </div>
           </div>
         </div>
         <div className='col-md-7 profile'>
@@ -79,25 +66,32 @@ const UserProfile = () => {
                 <div className='row'>
                   <div className="col-2"> <h3 className="mt-2">Children</h3></div>
                   <div className="col-9">
-                    {/* <a href="/addChild" className="border px-3 p-1 add-experience">Add Children&nbsp;<i className="bi bi-person-plus-fill"></i></a> */}
-                    <button type="button" className="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    <button type="button" className="btn btn-outline-primary btn-lg" onClick={() => setOpenChildModal(true)}>
                       Add Children&nbsp;<i className="bi bi-person-plus-fill"></i>
-                    </button></div>
+                    </button>
+                  </div>
                 </div>
 
-
-
-                <div className="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div
+                  className={`modal fade ${openChildModal ? 'show' : ''}`}
+                  style={{ display: openChildModal ? 'block' : 'none' }}
+                  tabindex="-1"
+                  aria-labelledby="newChildModalLabel"
+                  aria-hidden="true"
+                >
                   <div className="modal-dialog">
                     <div className="modal-content">
                       <div className="modal-body">
-                        <div className="d-flex justify-content-end"> <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <div className="d-flex justify-content-end">
+                          <button type="button" className="btn-close" onClick={() => setOpenChildModal(false)} aria-label="Close"></button>
                         </div>
-                        <ChildRegistration />
+                        <ChildRegistration setOpenState={setOpenChildModal}/>
                       </div>
                     </div>
                   </div>
                 </div>
+                {openChildModal && <div className="modal-backdrop fade show"></div>}
+
                 <div className="mt-3 d-flex justify-content-between-start align-items-center experience">
                   {children.length > 0 &&
                     children.map((child) => (<ChildCard key={child.id} child={child} onNameClick={handleNameClick} />))
