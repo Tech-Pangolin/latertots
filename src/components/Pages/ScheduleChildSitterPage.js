@@ -120,7 +120,7 @@ const ScheduleChildSitterPage = () => {
     // Only allow deletion of children reservations that belong to the current user
     const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
 
-    if (currentUser.Role == 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
+    if (currentUser.Role === 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
       reservationArchiveChangeMutation.mutate(event.id);
     }
   }, [children, currentUser, reservationArchiveChangeMutation]);

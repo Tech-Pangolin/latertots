@@ -17,7 +17,7 @@ const ManageReservationsPage = () => {
   const { selectedDate } = useAdminPanelContext();
   const calendarComponentRef = useRef(null);
   const queryClient = useQueryClient();
-  
+
   const [dialogOpenState, setDialogOpenState] = useState(false);
   const [dialogReservationContext, setDialogReservationContext] = useState(null);
   const [dialogValue, setDialogValue] = useState(null); // Only to track the status of the selected reservation
@@ -30,7 +30,13 @@ const ManageReservationsPage = () => {
     error
   } = useReservationsByMonthDayRQ();
 
-  const events = useMemo(() => rawEvents, [JSON.stringify(rawEvents)]);
+  const prevRawEventsRef = useRef([]);
+  const events = useMemo(() => {
+    if (!_.isEqual(prevRawEventsRef.current, rawEvents)) {
+      prevRawEventsRef.current = rawEvents;
+    }
+    return prevRawEventsRef.current;
+  }, [rawEvents]);
 
   useEffect(() => {
     setMonthYear({
@@ -66,12 +72,12 @@ const ManageReservationsPage = () => {
   }), []);
 
   const reservationTimeChangeMutation = useMutation({
-    mutationFn: async ({id, newStart, newEnd}) => dbService.changeReservationTime(id, newStart, newEnd),
+    mutationFn: async ({ id, newStart, newEnd }) => dbService.changeReservationTime(id, newStart, newEnd),
     onSuccess: () => {
       queryClient.invalidateQueries(
         ['adminCalendarReservationsByMonth'],
-          selectedDate.getUTCMonth(),
-          selectedDate.getUTCFullYear()
+        selectedDate.getUTCMonth(),
+        selectedDate.getUTCFullYear()
       )
     },
     onError: (err) => console.error("Error changing reservation time: ", err)
@@ -86,7 +92,7 @@ const ManageReservationsPage = () => {
       resizeInfo.revert();
       alert('Reservations must be at least 2 hours long.');
       return;
-    } 
+    }
 
     // Check if event is during too many other reservations
     const overlap = dbService.checkReservationOverlapLimit(event, events);
@@ -96,7 +102,7 @@ const ManageReservationsPage = () => {
       return;
     }
 
-    reservationTimeChangeMutation.mutate({id: event.id, newStart: event.start, newEnd: event.end});
+    reservationTimeChangeMutation.mutate({ id: event.id, newStart: event.start, newEnd: event.end });
   }, [events, dbService, reservationTimeChangeMutation]);
 
 
@@ -155,7 +161,7 @@ const ManageReservationsPage = () => {
   const handleDialogClose = useCallback(async (newValue) => {
     setDialogOpenState(false);
     if (newValue) {
-      reservationStatusMutation.mutate({ id: dialogReservationContext.id, status: newValue }); 
+      reservationStatusMutation.mutate({ id: dialogReservationContext.id, status: newValue });
     }
   }, [dialogReservationContext, reservationStatusMutation]);
 

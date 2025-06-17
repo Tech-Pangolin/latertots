@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../components/AuthProvider";
 import { useEffect, useMemo } from "react";
-import { and, collection, doc, or, query, where } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { db } from "../../config/firestore";
 import { COLLECTIONS } from "../../Helpers/constants";
 

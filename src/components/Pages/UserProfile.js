@@ -75,7 +75,7 @@ const UserProfile = () => {
                 <div
                   className={`modal fade ${openChildModal ? 'show' : ''}`}
                   style={{ display: openChildModal ? 'block' : 'none' }}
-                  tabindex="-1"
+                  tabIndex="-1"
                   aria-labelledby="newChildModalLabel"
                   aria-hidden="true"
                 >

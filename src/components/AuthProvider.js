@@ -53,7 +53,8 @@ export const AuthProvider = ({ children }) => {
       return [children];
     }
     // If it's already an array, filter out any nonstring or nonDocumentRef items
-    return children.filter(child => typeof child === 'string' || child instanceof DocumentReference);
+    // Since DocumentReference is a typescript type, I'm checking for path and id properties using js to avoid runtime js/ts errors
+    return children.filter(child => typeof child === 'string' || (child && typeof child === 'object' && 'path' in child && 'id' in child));
   }
 
   useEffect(() => {

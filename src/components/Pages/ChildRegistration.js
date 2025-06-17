@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logger } from '../../Helpers/logger';
 
 const ChildRegistration = ({ setOpenState }) => {
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const { currentUser, dbService } = useAuth();
   const queryClient = useQueryClient();
 
@@ -45,7 +45,7 @@ const ChildRegistration = ({ setOpenState }) => {
         await updateDoc(childRef, data);
       } else {
         // Create a new child document
-        await createChildMutation.mutate(data);
+        createChildMutation.mutate(data);
       }
     } catch (error) {
       logger.error('Error adding document: ', error);
