@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
-import { getAuth, signOut } from "firebase/auth";
-import { set } from 'react-hook-form';
 
 const HeaderBar = () => {
   const { currentUser, logout } = useAuth();
@@ -81,7 +79,7 @@ const HeaderBar = () => {
 
         <nav id="navbar" className={`navbar ${mobileMenu ? 'navbar-mobile' : ''}`}>
           <ul>
-            <li><a id="home-link" className={` nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href="/" >Home</a></li>
+            <li><a id="home-link" className={` nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href={currentUser ? "/profile" : "/"} >Home</a></li>
 
             {/* Show the marketing pages if the current user is not an admin */}
             {(!currentUser || currentUser.Role !== 'admin') && <>

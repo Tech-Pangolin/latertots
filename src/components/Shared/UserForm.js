@@ -10,7 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { FirebaseDbService } from "../../Helpers/firebase";
 
 const UserForm = () => {
-  const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const { currentUser } = useAuth();
   const [dbService, setDbService] = useState(null);
   const [email, setEmail] = React.useState(currentUser ? currentUser.Email : '');
