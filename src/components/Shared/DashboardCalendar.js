@@ -3,14 +3,13 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { useSelector } from 'react-redux';
 import ChipBadge from './ChipBadge';
 import { useAdminPanelContext } from '../Dashboard/AdminPanelContext';
 import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
+import { BUSINESS_HRS } from '../../Helpers/constants';
 
 const DashboardCalendar = () => {
   const { setSelectedDate } = useAdminPanelContext();
-  const businessHours = useSelector(state => state.settings.businessHours);
   const {
     data: rawReservations = [],
     isLoading,
@@ -29,8 +28,8 @@ const DashboardCalendar = () => {
   }, [setMonthYear]);
 
   const isBusinessDay = useCallback((date) => {
-    return businessHours.daysOfWeek.includes(date.getDay());
-  }, [businessHours]);
+    return BUSINESS_HRS.daysOfWeek.includes(date.getDay());
+  }, [BUSINESS_HRS]);
 
   const renderDayContent = useCallback((dayCellInfo) => {
     const dayEvents = reservations.filter((event) => {
@@ -85,7 +84,7 @@ const DashboardCalendar = () => {
         </div>
       </div>
     );
-  }, [reservations, businessHours]);
+  }, [reservations, BUSINESS_HRS]);
 
   // Update daily view calendar when a date is clicked
   const handleDateClick = useCallback(info => {
@@ -107,7 +106,7 @@ const DashboardCalendar = () => {
         height={'auto'}
         headerToolbar={headerToolbarConfig}
         dateClick={handleDateClick}
-        businessHours={businessHours}
+        businessHours={BUSINESS_HRS}
         showNonCurrentDates={false}
         datesSet={getViewDates}
         dayCellContent={renderDayContent}

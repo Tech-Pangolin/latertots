@@ -10,7 +10,7 @@ import { useAdminPanelContext } from './AdminPanelContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
 import _ from 'lodash';
-import { MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
+import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
 
 const ManageReservationsPage = () => {
   const { dbService } = useAuth();
@@ -63,13 +63,6 @@ const ManageReservationsPage = () => {
     if (!dialogReservationContext) return;
     setDialogValue(dialogReservationContext.extendedProps.status);
   }, [dialogReservationContext]);
-
-  const businessHours = useMemo(() => ({
-    daysOfWeek: [1, 2, 3, 4, 5], // Monday - Friday
-    startTime: '07:00',
-    endTime: '19:00',
-    overlap: false
-  }), []);
 
   const reservationTimeChangeMutation = useMutation({
     mutationFn: async ({ id, newStart, newEnd }) => dbService.changeReservationTime(id, newStart, newEnd),
@@ -193,7 +186,7 @@ const ManageReservationsPage = () => {
           expandRows={true}
           handleWindowResize={true}
 
-          businessHours={businessHours}
+          businessHours={BUSINESS_HRS}
           showNonCurrentDates={false}
           editable={true}
           events={events}
