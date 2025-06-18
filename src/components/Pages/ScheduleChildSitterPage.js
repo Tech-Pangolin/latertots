@@ -1,49 +1,25 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Grid } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { FirebaseDbService } from '../../Helpers/firebase';
 import { useAuth } from '../AuthProvider';
-import { v4 as uuidv4 } from 'uuid';
-import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
+import { checkAgainstBusinessHours, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import ReservationFormModal from '../Shared/ReservationFormModal';
+import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
+import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { logger } from '../../Helpers/logger';
 
 const ScheduleChildSitterPage = () => {
-  const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const queryClient = useQueryClient();
   const [children, setChildren] = useState([]);
-  const { currentUser } = useAuth();
-  const [currentUserData, setCurrentUserData] = useState({});
+  const { currentUser, dbService } = useAuth();
   const [modalOpenState, setModalOpenState] = useState(false);
-  const [dbService, setDbService] = useState(null);
 
-  useEffect(() => {
-    setDbService(new FirebaseDbService(currentUser));
-  }, [currentUser]);
-
-  useEffect(() => {
-    if (!dbService) return;
-    dbService.fetchCurrentUser(currentUser.email).then((resp) => {
-      setCurrentUserData(resp);
-    });
-  }, [currentUser, dbService]);
-
-  useEffect(() => {
-    if (!dbService) return;
-    dbService.fetchUserReservations(currentUser.uid).then((resp) => {
-      let formattedEvents = [];
-      resp.forEach((event) => {
-        event.start = event.start.toDate().toISOString();
-        event.end = event.end.toDate().toISOString();
-        formattedEvents.push(event);
-      })
-      return formattedEvents;
-    }
-    ).then((resp) => {
-      setEvents(resp);
-    });
-  }, [currentUser, dbService]);
+  const { data: events = [], setMonthYear } = useReservationsByMonthDayRQ()
 
   // Fetch children data
   useEffect(() => {
@@ -54,189 +30,142 @@ const ScheduleChildSitterPage = () => {
   }, [currentUser.email, dbService]);
 
   useEffect(() => {
-    console.log('Events:', events);
+    logger.info('Events:', events);
+    logger.info("children:", children);
   }, [events]);
 
-  const businessHours = {
-    daysOfWeek: [1, 2, 3, 4, 5], // Monday - Friday
-    startTime: '07:00', 
-    endTime: '19:00', 
-    overlap: false
-  };
+  const getViewDates = useCallback((args) => {
+    setSelectedDate(args.start);
+    setMonthYear({
+      day: args.start.getDate(),
+      week: args.view.type === 'timeGridWeek',
+      month: args.start.getMonth(),
+      year: args.start.getFullYear()
+    })
+  }, []);
 
-  const handleDrop = (info) => {
-    const droppedEventData = JSON.parse(info.draggedEl.dataset.event);
-    const newEvent = {
-      id: uuidv4(), 
-      title: droppedEventData.title,
-      start: info.date.toISOString(),
-      end:  new Date(new Date(info.date).getTime() + (2 * 60 * 60 * 1000 * parseInt(droppedEventData.duration.split(':')[0]))).toISOString(),
-      allDay: info.allDay,
-      extendedProps: {
-        duration: droppedEventData.duration,
-        status: 'pending',
-        childId: droppedEventData.extendedProps.childId,
-        fromForm: false
-      }
-    };
+  const reservationTimeChangeMutation = useMutation({
+    mutationFn: async ({ id, newStart, newEnd }) => dbService.changeReservationTime(id, newStart, newEnd),
+    onSuccess: () => {
+      queryClient.invalidateQueries(
+        ['adminCalendarReservationsByWeek'],
+        selectedDate.getUTCDate(),
+        selectedDate.getUTCMonth(),
+        selectedDate.getUTCFullYear()
+      )
+    },
+    onError: (err) => console.error("Error changing reservation time: ", err)
+  })
 
-    const isDuplicate = events.some(event =>
-      event.start === newEvent.start &&
-      event.title === newEvent.title &&
-      event.extendedProps.duration === newEvent.extendedProps.duration
-    );
-
-    if (!isDuplicate) {
-      setEvents(prevEvents => [...prevEvents, newEvent]);
-    } else {
-      console.warn('Event not added: Duplicate detected');
-    }
-  };
-
-  // The eventReceive callback is triggered when a new event is created in FullCalendar.
-  // Only now can we remove the event if it overlaps with too many existing reservations.
-  const handleEventReceive = async (info) => {
-    const overlap = await dbService.checkReservationAllowability(info.event, events);
-
-    if (!overlap.allow) {
-      // revert the event from FullCalendar
-      info.revert();
-      // remove from events state
-      setEvents((prevEvents) => prevEvents.filter(e =>{
-        return e.title !== info.event.title && e.start !== info.event.start && e.end !== info.event.end
-      }));
-      // alert the user
-      await alert("This reservation overlaps with too many existing reservations. Please choose another time.")
-    }
-  }
-
-  const handleEventResize = (resizeInfo) => {
+  const handleEventResize = useCallback((resizeInfo) => {
     const { event } = resizeInfo;
 
     // Calculate the new duration in hours
-    const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
-
-    const overlap = dbService.checkReservationAllowability(event, events);
-    console.log("overlap", overlap)
-
-    
-    if (durationHours < 2) {
+    const durationHours = Math.abs(new Date(event.end) - new Date(event.start));
+    if (durationHours < MIN_RESERVATION_DURATION_MS) {
       resizeInfo.revert();
       alert('Reservations must be at least 2 hours long.');
       return;
-    } else if (!overlap.allow) {
+    }
+
+    // Check if event is during too many other reservations
+    const overlap = dbService.checkReservationOverlapLimit(event, events);
+    if (!overlap.allow) {
       resizeInfo.revert();
       alert(overlap.message);
       return;
-    };
+    }
 
-    const newEvents = events.map((evt) => {
-      if (evt.id.toString() === event.id.toString()) {
-        return {
-          ...evt,
-          end: event.end.toISOString(),  // Use ISO string for FullCalendar compatibility
-          extendedProps: {
-            ...evt.extendedProps,
-            duration: `${durationHours.toFixed(2)}:00`  // Updated duration, formatted as a string
-          }
-        };
-      }
-      return evt;
-    });
+    reservationTimeChangeMutation.mutate({ id: event.id, newStart: event.start, newEnd: event.end });
+  }, [events, dbService, reservationTimeChangeMutation]);
 
-    setEvents(newEvents);
-  };
 
-  const handleEventMove = (info) => {
+  const handleEventMove = useCallback((info) => {
     const { event } = info;
-    const overlap = dbService.checkReservationAllowability(event, events);
 
+    if (!checkAgainstBusinessHours(event) || !checkFutureStartTime(event)) {
+      info.revert();
+      return
+    }
+
+    const overlap = dbService.checkReservationOverlapLimit(event, events);
     if (!overlap.allow) {
       info.revert();
       alert(overlap.message);
       return;
     }
 
-    const newEvents = events.map((evt) => {
-      if (evt.id.toString() === event.id.toString()) {
-        return {
-          ...evt,
-          start: event.start.toISOString(), 
-          end: event.end.toISOString()
-        };
-      }
-      return evt;
-    });
+    reservationTimeChangeMutation.mutate({
+      id: event.id,
+      newStart: event.start,
+      newEnd: event.end
+    })
+  }, [events, dbService, reservationTimeChangeMutation]);
 
-    // Validate the new event state
-    let allowSave = false;
-    if (checkAgainstBusinessHours(event) && checkFutureStartTime(event)) {
-      allowSave = dbService.checkReservationAllowability(event);
+
+  const reservationArchiveChangeMutation = useMutation({
+    mutationFn: async (eventId) => dbService.archiveReservationDocument(eventId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(
+        ['adminCalendarReservationsByWeek'],
+        selectedDate.getUTCDate(),
+        selectedDate.getUTCMonth(),
+        selectedDate.getUTCFullYear()
+      )
+    },
+    onError: (err) => console.error("Error archiving reservation: ", err)
+  })
+
+  const handleEventClick = useCallback(({ event }) => {
+    // Only allow deletion of children reservations that belong to the current user
+    const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
+
+    if (currentUser.Role === 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
+      reservationArchiveChangeMutation.mutate(event.id);
     }
+  }, [children, currentUser, reservationArchiveChangeMutation]);
 
-    // Update the events state if the new event is valid
-    if (allowSave) {
-      setEvents(newEvents);
-    } 
-};
-
-// Enforce rules for where events can be dropped or resized
-const eventAllow = (dropInfo) => {
-  if (!checkAgainstBusinessHours(dropInfo) || !checkFutureStartTime(dropInfo)) {
-    return false;
-  }
-  // Additional validation conditions
-  return true;
-};
-
-const handleEventClick = ({ event }) => {
-  // Only allow deletion of children reservations that belong to the current user
-  const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
-
-  if (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`)) {
-    if (currentUser.role !== 'admin') {
-      dbService.archiveReservationDocument(event.id);
-    } else {
-      // TODO: Implement a way for admins to choose whether to archive or delete reservations
-      dbService.deleteReservationDocument(event.id);
+  // Enforce rules for where events can be dropped or resized
+  const eventAllow = useCallback((dropInfo) => {
+    if (!checkAgainstBusinessHours(dropInfo) || !checkFutureStartTime(dropInfo)) {
+      return false;
     }
-    setEvents((prevEvents) => prevEvents.filter(e => e.id !== event.id));
-  }
-};
+    // Additional validation conditions
+    return true;
+  }, []);
+
+  const pluginsConfig = useMemo(() => [dayGridPlugin, timeGridPlugin, interactionPlugin], []);
+  const headerToolbarConfig = useMemo(() => ({
+    left: 'prev,next today',
+    center: 'title',
+    right: 'newReservationForm'
+  }), []);
+  const customButtonsConfig = useMemo(() => ({
+    newReservationForm: {
+      text: 'New Reservation',
+      click: () => setModalOpenState(true)
+    }
+  }), []);
 
   return (
     <Grid container className="schedule-child-sitter-page">
       <Grid item xs={1} />
-      <Grid item xs={10} className="main" style={{ marginTop: '15px'}}>
+      <Grid item xs={10} className="main" style={{ marginTop: '15px' }}>
         <FullCalendar
           // TODO: Specify a timezone prop and tie into admin settings
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          plugins={pluginsConfig}
           initialView="timeGridWeek"
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'newReservationForm saveButton'
-          }}
-          customButtons={{
-            saveButton: {
-              text: 'Save Schedule',
-              click: () => handleScheduleSave(events, currentUserData, dbService)
-            },
-            newReservationForm: {
-              text: 'New Reservation',
-              click: () => setModalOpenState(true)
-            }
-          }}
-          businessHours={businessHours}
+          headerToolbar={headerToolbarConfig}
+          customButtons={customButtonsConfig}
+          businessHours={BUSINESS_HRS}
           showNonCurrentDates={false}
           editable={true}
           droppable={true}
+          datesSet={getViewDates}
           events={events}
           eventAllow={eventAllow}
           eventContent={renderEventContent}
           eventClick={handleEventClick}
-          eventReceive={handleEventReceive}
-          drop={handleDrop}
           eventDrop={handleEventMove}
           eventResize={handleEventResize}
           nowIndicator={true}
@@ -244,14 +173,12 @@ const handleEventClick = ({ event }) => {
         />
       </Grid>
       <Grid item xs={1} />
-      <ReservationFormModal 
-        modalOpenState={modalOpenState} 
-        setModalOpenState={setModalOpenState} 
+      <ReservationFormModal
+        modalOpenState={modalOpenState}
+        setModalOpenState={setModalOpenState}
         children={children}
-        setEvents={setEvents}
         events={events}
-        handleScheduleSave={handleScheduleSave}
-        currentUserData={currentUserData}
+        currentUserData={currentUser}
       />
     </Grid>
   );

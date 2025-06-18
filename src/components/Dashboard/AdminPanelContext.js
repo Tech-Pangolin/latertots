@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const AdminPanelContext = createContext();
 
@@ -6,12 +6,12 @@ export function AdminPanelContextProvider({ children }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [interactionColumnMode, setMode] = useState('notifications'); // 'notifications' or 'daily' view for a selected date
 
-  const value = {
+  const value = useMemo(() => ({
     selectedDate,
     setSelectedDate,
     interactionColumnMode,
     setMode,
-  };
+  }), [selectedDate, interactionColumnMode, setSelectedDate, setMode]);
 
   useEffect(() => {
     if (selectedDate != null) {

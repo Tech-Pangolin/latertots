@@ -12,7 +12,7 @@ function LoginPage() {
 
   useEffect(() => {
     if (currentUser) {
-      if (currentUser.role === 'admin') {
+      if (currentUser.Role === 'admin') {
         navigate('/admin');
       }
       navigate('/profile');
@@ -52,7 +52,6 @@ function LoginPage() {
                 {errors.password && <span>Password is required</span>}
               </div>
 
-
               <div className="row">
                 <div className='col-12'> <button type="submit" className="login-btn w-100">Login</button></div>
                 {/* <div className='col-12 col-md-1 text-centerm d-flex justify-content-center align-items-center'>  <span className="mx-1"> or </span></div> */}
@@ -60,23 +59,16 @@ function LoginPage() {
               <div className='row'>
                 <div className='col-12'>
                   <a href="/register" className="register-btn w-100 mb-5 mt-3 text-center" type="button">
-                   Register
+                    Register
                   </a>
-                 
                 </div>
               </div>
-
-
-
-
             </form>
           </div>
           {/* <div className='col-2'>
             <img src="assets/img/shapes.png" className="page-img" />
           </div> */}
         </div>
-
-
       </div>
     </div>
   );

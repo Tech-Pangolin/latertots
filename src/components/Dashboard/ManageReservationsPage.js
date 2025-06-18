@@ -1,56 +1,58 @@
-import React, { useEffect, useState } from 'react';
+import { checkAgainstBusinessHours, checkFutureStartTime, renderEventContent } from '../../Helpers/calendar';
 import FullCalendar from '@fullcalendar/react';
-import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { FirebaseDbService } from '../../Helpers/firebase';
-import { useAuth } from '../AuthProvider';
-import { checkAgainstBusinessHours, handleScheduleSave, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import { logger } from '../../Helpers/logger';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReservationStatusDialog from '../Shared/ReservationStatusDialog';
+import { useAuth } from '../AuthProvider';
+import { useAdminPanelContext } from './AdminPanelContext';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
+import _ from 'lodash';
+import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
 
-const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
-  const [events, setEvents] = useState([]);  // Manage events in state rather than using FullCalendar's event source
-  const { currentUser } = useAuth();
-  const [currentUserData, setCurrentUserData] = useState({});
-  const [dbService, setDbService] = useState(null);
-  const [currentDate, setCurrentDate] = useState(null);
+const ManageReservationsPage = () => {
+  const { dbService } = useAuth();
+  const { selectedDate } = useAdminPanelContext();
+  const calendarComponentRef = useRef(null);
+  const queryClient = useQueryClient();
+
   const [dialogOpenState, setDialogOpenState] = useState(false);
   const [dialogReservationContext, setDialogReservationContext] = useState(null);
   const [dialogValue, setDialogValue] = useState(null); // Only to track the status of the selected reservation
-  const [refreshReservations, setRefreshReservations] = useState(false);
 
-  // get the dbService instance
-  useEffect(() => {
-    setDbService(new FirebaseDbService(currentUser));
-  }, [currentUser]);
+  const {
+    data: rawEvents = [],
+    setMonthYear,
+    isLoading,
+    isError,
+    error
+  } = useReservationsByMonthDayRQ();
 
-  // Fetch the current user's data
-  useEffect(() => {
-    if (!dbService) return;
-    dbService.fetchCurrentUser(currentUser.email).then((resp) => {
-      setCurrentUserData(resp);
-    });
-  }, [currentUser, dbService]);
-
-  // Fetch ALL reservations for the current day
-  // Save them in state under events
-  useEffect(() => {
-    if (!dbService) return;
-    if (!currentDate) return;
-
-    dbService.fetchAllReservationsByMonthDay(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate()).then((resp) => {
-      let formattedEvents = [];
-      resp.forEach((event) => {
-        event.start = event.start.toDate().toISOString();
-        event.end = event.end.toDate().toISOString();
-        formattedEvents.push(event);
-      })
-      return formattedEvents;
+  const prevRawEventsRef = useRef([]);
+  const events = useMemo(() => {
+    if (!_.isEqual(prevRawEventsRef.current, rawEvents)) {
+      prevRawEventsRef.current = rawEvents;
     }
-    ).then((resp) => {
-      setEvents(resp);
+    return prevRawEventsRef.current;
+  }, [rawEvents]);
+
+  useEffect(() => {
+    setMonthYear({
+      month: selectedDate.getUTCMonth(),
+      year: selectedDate.getUTCFullYear(),
     });
-  }, [currentUser, dbService, currentDate, refreshReservations]);
+
+    if (!selectedDate || !calendarComponentRef.current) return;
+    // Use a timeout to ensure the calendar is fully rendered before navigating
+    const handle = setTimeout(() => {
+      const api = calendarComponentRef.current.getApi();
+      api.gotoDate(selectedDate);
+    }, 0);
+
+    return () => clearTimeout(handle);
+  }, [selectedDate]);
 
   useEffect(() => {
     logger.info('Events:', events);
@@ -62,175 +64,158 @@ const ManageReservationsPage = ({ initialDateValue, contextDateSetter }) => {
     setDialogValue(dialogReservationContext.extendedProps.status);
   }, [dialogReservationContext]);
 
-  const businessHours = {
-    daysOfWeek: [1, 2, 3, 4, 5], // Monday - Friday
-    startTime: '07:00',
-    endTime: '19:00',
-    overlap: false
-  };
+  const reservationTimeChangeMutation = useMutation({
+    mutationFn: async ({ id, newStart, newEnd }) => dbService.changeReservationTime(id, newStart, newEnd),
+    onSuccess: () => {
+      queryClient.invalidateQueries(
+        ['adminCalendarReservationsByMonth'],
+        selectedDate.getUTCMonth(),
+        selectedDate.getUTCFullYear()
+      )
+    },
+    onError: (err) => console.error("Error changing reservation time: ", err)
+  })
 
-  const handleDatesSet = (dateInfo) => {
-    setCurrentDate(dateInfo.start);
-    if (contextDateSetter) {
-      contextDateSetter(dateInfo.start);
-    }
-  }
-
-  const handleEventResize = (resizeInfo) => {
+  const handleEventResize = useCallback((resizeInfo) => {
     const { event } = resizeInfo;
 
     // Calculate the new duration in hours
-    const durationHours = Math.abs(new Date(event.end) - new Date(event.start)) / (1000 * 60 * 60);
-
-    const overlap = dbService.checkReservationAllowability(event, events);
-    console.log("overlap", overlap)
-
-    if (durationHours < 2) {
+    const durationHours = Math.abs(new Date(event.end) - new Date(event.start));
+    if (durationHours < MIN_RESERVATION_DURATION_MS) {
       resizeInfo.revert();
       alert('Reservations must be at least 2 hours long.');
       return;
-    } else if (!overlap.allow) {
+    }
+
+    // Check if event is during too many other reservations
+    const overlap = dbService.checkReservationOverlapLimit(event, events);
+    if (!overlap.allow) {
       resizeInfo.revert();
       alert(overlap.message);
       return;
-    };
+    }
 
-    const newEvents = events.map((evt) => {
-      if (evt.id.toString() === event.id.toString()) {
-        return {
-          ...evt,
-          end: event.end.toISOString(),  // Use ISO string for FullCalendar compatibility
-          extendedProps: {
-            ...evt.extendedProps,
-            duration: `${durationHours.toFixed(2)}:00`  // Updated duration, formatted as a string
-          }
-        };
-      }
-      return evt;
-    });
+    reservationTimeChangeMutation.mutate({ id: event.id, newStart: event.start, newEnd: event.end });
+  }, [events, dbService, reservationTimeChangeMutation]);
 
-    setEvents(newEvents);
-  };
 
-  const handleEventMove = (info) => {
+  const handleEventMove = useCallback((info) => {
     const { event } = info;
-    const overlap = dbService.checkReservationAllowability(event, events);
 
+    if (!checkAgainstBusinessHours(event) || !checkFutureStartTime(event)) {
+      info.revert();
+      return
+    }
+
+    const overlap = dbService.checkReservationOverlapLimit(event, events);
     if (!overlap.allow) {
       info.revert();
       alert(overlap.message);
       return;
     }
 
-    const newEvents = events.map((evt) => {
-      if (evt.id.toString() === event.id.toString()) {
-        return {
-          ...evt,
-          start: event.start.toISOString(),
-          end: event.end.toISOString()
-        };
-      }
-      return evt;
-    });
-
-    // Validate the new event state
-    let allowSave = false;
-    if (checkAgainstBusinessHours(event) && checkFutureStartTime(event)) {
-      allowSave = dbService.checkReservationAllowability(event);
-    }
-
-    // Update the events state if the new event is valid
-    if (allowSave) {
-      setEvents(newEvents);
-    }
-  };
+    reservationTimeChangeMutation.mutate({
+      id: event.id,
+      newStart: event.start,
+      newEnd: event.end
+    })
+  }, [events, dbService, reservationTimeChangeMutation]);
 
   // Enforce rules for where events can be dropped or resized
-  const eventAllow = (dropInfo) => {
+  const eventAllow = useCallback((dropInfo) => {
     if (!checkAgainstBusinessHours(dropInfo) || !checkFutureStartTime(dropInfo)) {
       return false;
     }
     // Additional validation conditions
     return true;
-  };
+  }, []);
 
-  const handleEventClick = ({ event }) => {
+  const handleEventClick = useCallback(({ event }) => {
     setDialogReservationContext(event);
     setDialogOpenState(true);
-  };
+  }, [setDialogReservationContext, setDialogOpenState]);
 
-  const handleDialogClose = async (newValue) => {
+  const reservationStatusMutation = useMutation(
+    {
+      mutationFn: async ({ id, status }) => dbService.changeReservationStatus(id, status),
+      onSuccess: () => {
+        queryClient.invalidateQueries(
+          ['adminCalendarReservationsByMonth'],
+          selectedDate.getUTCMonth(),
+          selectedDate.getUTCFullYear()
+        );
+      },
+      onError: (error) => {
+        console.error('Error updating reservation status:', error);
+      }
+    }
+  )
+
+  const handleDialogClose = useCallback(async (newValue) => {
     setDialogOpenState(false);
     if (newValue) {
-      const newEvent = events.find((evt) => evt.id.toString() === dialogReservationContext.id.toString());
-      newEvent.extendedProps.status = newValue;
-      await handleScheduleSave([newEvent], currentUserData, dbService);
+      reservationStatusMutation.mutate({ id: dialogReservationContext.id, status: newValue });
     }
-    setRefreshReservations(!refreshReservations);
+  }, [dialogReservationContext, reservationStatusMutation]);
+
+  const pluginsConfig = useMemo(() => [timeGridPlugin, interactionPlugin], []);
+  const viewsConfig = useMemo(() => ({ timeGridDay: { type: 'timeGrid', duration: { days: 1 } } }), []);
+  const headerToolbarConfig = useMemo(() => ({
+    left: 'prev,next today',
+    center: 'title',
+    right: ''
+  }), []);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  } else if (isError) {
+    console.error('Error loading reservations:', error);
+    return <div>Error loading reservations.</div>;
+  } else {
+    return (
+      <>
+        <FullCalendar
+          ref={calendarComponentRef}
+          plugins={pluginsConfig}
+          initialView="timeGridDay"
+          views={viewsConfig}
+          slotMinTime="05:00:00"
+          slotMaxTime="21:00:00"
+          headerToolbar={headerToolbarConfig}
+          height="1100px"
+          expandRows={true}
+          handleWindowResize={true}
+
+          businessHours={BUSINESS_HRS}
+          showNonCurrentDates={false}
+          editable={true}
+          events={events}
+          eventAllow={eventAllow}
+          eventContent={renderEventContent}
+          eventClick={handleEventClick}
+          eventDrop={handleEventMove}
+          eventResize={handleEventResize}
+          nowIndicator={true}
+          allDaySlot={false}
+        />
+
+        <ReservationStatusDialog
+          keepMounted
+          open={dialogOpenState}
+          onClose={handleDialogClose}
+          value={dialogValue}
+          options={{
+            Confirm: 'confirmed',
+            Decline: 'declined',
+            Refund: 'refunded',
+            Complete: 'completed',
+          }}
+          title="Update Reservation Status"
+          reservationContext={dialogReservationContext}
+        />
+      </>
+    )
   }
-
-  return (
-    <>
-      <FullCalendar
-        key={initialDateValue}
-        plugins={[timeGridPlugin, interactionPlugin]}
-        initialView="timeGridDay"
-        views={{
-          timeGridDay: { type: 'timeGrid', duration: { days: 1 } }
-        }}
-        initialDate={initialDateValue || new Date()}
-        slotMinTime="05:00:00"
-        slotMaxTime="21:00:00"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'backToAdminDashboard saveButton'
-        }}
-        customButtons={{
-          saveButton: {
-            text: 'Save Schedule',
-            click: () =>
-              handleScheduleSave(events, currentUserData, dbService)
-          },
-          backToAdminDashboard: {
-            text: 'Cancel',
-            click: () => (window.location.href = '/admin')
-          }
-        }}
-        height="1100px"
-        expandRows={true}
-        handleWindowResize={true}
-
-        businessHours={businessHours}
-        showNonCurrentDates={false}
-        editable={true}
-        events={events}
-        eventAllow={eventAllow}
-        eventContent={renderEventContent}
-        eventClick={handleEventClick}
-        eventDrop={handleEventMove}
-        eventResize={handleEventResize}
-        nowIndicator={true}
-        allDaySlot={false}
-        datesSet={handleDatesSet}
-      />
-
-      <ReservationStatusDialog
-        keepMounted
-        open={dialogOpenState}
-        onClose={handleDialogClose}
-        value={dialogValue}
-        options={{
-          Confirm: 'confirmed',
-          Decline: 'declined',
-          Refund: 'refunded',
-          Complete: 'completed',
-        }}
-        title="Update Reservation Status"
-        reservationContext={dialogReservationContext}
-      />
-    </>
-  )
 };
 
 export default ManageReservationsPage;

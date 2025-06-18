@@ -14,7 +14,7 @@ function UserRegistrationPage() {
             <h1 className='text-center registration' >Ready to Play? Register Your Tot Today!</h1>
           </div>
           <div className="row">
-            <div className="col-12 col-md-6 register-text"> 
+            <div className="col-12 col-md-6 register-text">
               <p>Joining the Later Tots fun is as easy as drop, play, and stay!</p>
               <ul>
                 <li>Quick & Simple Online Registration – It only takes a few minutes!</li>
@@ -26,29 +26,21 @@ function UserRegistrationPage() {
                 <li>4-Hour Play Limit – To keep the fun fair for everyone, tots can enjoy up to 4 hours of play per day.</li>
               </ul>
               <p>Let’s get ready to giggle, explore, and create lasting memories! </p>
-              </div>
+            </div>
             <div className="col-12 col-md-6 ">
-              <h3 className='text-center' style={{color:'#e51377', fontSize:'40px'}}>Register</h3>
+              <h3 className='text-center' style={{ color: '#e51377', fontSize: '40px' }}>Register</h3>
               <UserForm />
             </div>
           </div>
-
-
-          {/*  */}
-
         </div>
-
       </div>
       <div className="row">
         <div className="col d-flex justify-content-center">
-
-        </div></div>
+        </div>
+      </div>
       <div className="row">
         <div className="col d-flex justify-content-center">
-
-
         </div>
-
       </div>
     </div>
 
