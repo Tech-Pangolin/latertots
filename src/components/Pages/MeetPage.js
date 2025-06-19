@@ -26,12 +26,7 @@ function AboutPage() {
                         </div>
                     </div>
                 </div>
-                <div className="row">
-                    <div className="col"><img src="assets/img/about/tottender.png" className='img-fluid' /></div>
-                    <div className="col"><img src="assets/img/about/totender1.jpg" className='img-fluid' /></div>
-                    <div className="col"><img src="assets/img/about/totender2.jpg" className='img-fluid' /></div>
-                    <div className="col"><img src="assets/img/about/totender3.jpg" className='img-fluid' /></div>
-                </div>
+              
                 <div className="row mt-5">
                     <div className="col-12">
                         <h3 className='text-center'>Amber Brown, Owner & Lead Tot-Tender</h3>
