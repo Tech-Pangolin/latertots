@@ -2391,3 +2391,24 @@ blockquote p {
   border-radius: 0 10px 10px 10px;
   box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.12);
 }
+
+/*  ADMIN DASHBOARD */
+.fc-backToAdminDashboard-button{
+  float:right;
+  margin-bottom: 10px !important;
+}
+
+.fc-saveButton-button{
+  float:right;
+}
+
+.fc .fc-button-group{
+  margin-bottom:10px!important;
+}
+.fc-today-button {
+  margin-bottom:10px!important;
+}
+
+.fc-toolbar-title{
+  width:170px;
+}

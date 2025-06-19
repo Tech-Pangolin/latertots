@@ -100,7 +100,7 @@ const HeaderBar = () => {
                 <ul className={`dropdown-menu ${showBigTots ? 'd-block' : ''}`}>
                   <li><a className={`nav-link scrollto ${location.pathname === '/totstidbits' ? 'active' : ''}`} href="/totstidbits">Tots & Tidbits</a></li>
                   {!currentUser ? <li><a id="" className={`nav-link become-link scrollto ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Become a Tot</a></li> : <li><a className="nav-link scrollto" href="/profile">Profile</a></li>}
-                  {!currentUser ?? <li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Play & Stay</a></li>}
+                  {<li><a className={`nav-link login-link scrollto ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Play & Stay</a></li>}
                 </ul>
               </li>
 

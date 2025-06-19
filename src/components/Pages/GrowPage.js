@@ -29,7 +29,7 @@ function CareersPage() {
 
                         <div className="col-xl-12 col-lg-12 icon-boxes d-flex flex-column align-items-stretch justify-content-center px-lg-5" dataAos="fade-left">
                             {/* <h3>Enim quis est voluptatibus aliquid consequatur fugiat</h3> */}
-                            <p className="text-center"><i class="bi bi-balloon-fill"></i> Join the Tot-tastic Fun! <i class="bi bi-balloon-fill"></i></p>
+                            <p className="text-center">Join the Tot-tastic Fun! </p>
                             <p>Do you have a knack for making little ones giggle, explore, and create? At Later Tots, we're all about play, imagination, and adventure—and we need fun-loving, energetic team members to bring the magic to life! Whether you're a pro at peekaboo or a master fort builder, there's a place for you on our Tot-tender team.
                                 Here, every day is a chance to spark joy, inspire creativity, and make a difference in the lives of tots and their families. If you love jumping into playful activities, crafting tot-approved fun, and being part of a supportive, exciting environment, we'd love to meet you!
                             </p>
