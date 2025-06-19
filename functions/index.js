@@ -12,6 +12,14 @@ const logger = require("firebase-functions/logger");
 const admin = require('firebase-admin');
 admin.initializeApp();
 
+exports.createUserProfile = functions.auth.user().onCreate(async (user) => {
+  return admin.firestore().collection('Users').doc(user.uid).set({
+    Email: user.email,
+    Role: admin.firestore().doc('Roles/parent-user'),
+    archived: false,
+  })
+});
+
 exports.updateAdminClaims = functions.firestore
   .document('Users/{userId}')
   .onUpdate(async (change, context) => {

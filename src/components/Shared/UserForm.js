@@ -1,78 +1,99 @@
 import { db } from "../../config/firestore";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { signInWithGoogle, useAuth } from "../AuthProvider";
-import { FirebaseDbService } from "../../Helpers/firebase";
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
 import ChangePasswordForm from "../ChangePasswordForm";
+import { useMutation } from "@tanstack/react-query";
+import { FirebaseDbService } from "../../Helpers/firebase";
 
-const UserForm = ({ reloadUserData }) => {
-  const { register, handleSubmit, formState: { errors }, watch, reset } = useForm();
+const UserForm = () => {
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const { currentUser } = useAuth();
-  const [email, setEmail] = React.useState(currentUser?.email ?? '');
+  const [dbService, setDbService] = useState(null);
+  const [email, setEmail] = React.useState(currentUser ? currentUser.Email : '');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [passwordMismatch, setPasswordMismatch] = useState(false);
-  const [authUserId, setAuthUserId] = React.useState(null);
-  const [mode, setMode] = React.useState('create');
-  const [hasAccount, setHasAccount] = React.useState(false);
-  const [userRef, setUserRef] = React.useState(null);
+  const [mode, setMode] = React.useState(currentUser ? 'update' : 'create');
   const [error, setError] = React.useState(null);
-  const [dbService, setDbService] = useState(null);
 
-  useEffect(() => {
-    setDbService(new FirebaseDbService(currentUser));
-  }, [currentUser]);
 
   setLogLevel(LOG_LEVELS.DEBUG);
 
   useEffect(() => {
     if (currentUser) {
-      const fetchData = async () => {
-        const userDocRef = doc(db, 'Users', currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          reset(userDoc.data());
-          setMode('update');
-          setHasAccount(true);
-          setAuthUserId(currentUser.uid);
-        } else {
-          logger.error("No such user found!");
-        }
-      };
-      fetchData();
+      setDbService(new FirebaseDbService(currentUser));
+      setMode('update');
+      // Reset form with only applicable fields
+      reset({
+        Name: currentUser.Name || '',
+        Email: currentUser.Email || '',
+        CellNumber: currentUser.CellNumber || '',
+        StreetAddress: currentUser.StreetAddress || '',
+        City: currentUser.City || '',
+        State: currentUser.State || '',
+        Zip: currentUser.Zip || ''
+      })
+    } else {
+      setDbService(new FirebaseDbService({}));
+      setMode('create');
     }
-  }, [reset, authUserId]);
+  }, [currentUser]);
+
+  const createUserMutation = useMutation({
+    mutationKey: ['createUser'],
+    mutationFn: async (userData) => {
+      if (!dbService) throw new Error("Database service is not initialized");
+      return await dbService.createUserAndAuthenticate(firebaseAuth, userData.email, userData.password);
+    },
+    onSuccess: (user) => {
+      logger.info('User created successfully:', user);
+      window.location.href = '/profile';
+    },
+    onError: (error) => {
+      logger.error('Failed to create user:', error.message);
+      setError(error.message);
+    }
+  })
 
   const createUser = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    try {
-      if (password === confirm) {
-        const user = await dbService.createUserAndAuthenticate(firebaseAuth, email, password);
-        setHasAccount(true);
-        setUserRef(user);
-
-        window.location.href = '/profile';
-      } else {
-        setPasswordMismatch(true);
-      }
-    } catch (e) {
-      logger.error('Failed to create user:', e.message)
-      setError(e.message)
+    if (password !== confirm) {
+      setPasswordMismatch(true);
+      return;
+    } else {
+      createUserMutation.mutate({ email, password });
+      // Clear error and password mismatch state if set
+      setPasswordMismatch(false);
+      setError(null);
     }
-
   };
 
+  const updateUserMutation = useMutation({
+    mutationKey: ['updateUser'],
+    mutationFn: async (dataWithoutPassword, userImage) => {
+      if (!dbService) throw new Error("Database service is not initialized");
+      const userDocRef = doc(db, 'Users', currentUser.uid);
+      if (userImage) {
+        let photoURL = await dbService.uploadProfilePhoto(currentUser.uid, userImage);
+        // Add the photoURL to the user document data
+        dataWithoutPassword.PhotoURL = photoURL;
+      }
+      await updateDoc(userDocRef, dataWithoutPassword);
+    },
+    onSuccess: () => {
+      logger.info('User updated successfully');
+    },
+    onError: (error) => {
+      logger.error('Failed to update user:', error.message);
+      setError(error.message);
+    }
+  })
 
   const onSubmit = async (data) => {
-    // Hardcode a user role for now
-    const userRoleRef = await doc(db, 'Roles', 'parent-user');
-    data.Role = userRoleRef;
-    data.archived = false;
-
     // Remove the image from the data object
     const userImage = data.Image[0];
     delete data.Image;
@@ -82,24 +103,10 @@ const UserForm = ({ reloadUserData }) => {
     const dataWithoutPassword = { ...data };
     delete dataWithoutPassword.Password;
 
-    logger.info('Submit Mode:', mode);
+    logger.info('Submit Mode:', mode); 
     try {
       logger.info('Form Data:', data);
-
-      // If user is already authenticated, get uid from auth token
-      const user = userRef || currentUser;
-
-      const userDocRef = doc(db, 'Users', user.uid);
-      if (userImage) {
-        let photoURL = await dbService.uploadProfilePhoto(user.uid, userImage);
-        // Add the photoURL to the user document data
-        dataWithoutPassword.PhotoURL = photoURL;
-      }
-      await updateDoc(userDocRef, dataWithoutPassword);
-
-      // Navigate on success
-      window.location.href = '/profile';
-
+      updateUserMutation.mutate(dataWithoutPassword, userImage);
     } catch (e) {
       logger.error('Error adding/updating document: ', e.message);
       logger.error('Stack Trace:', e.stack);
@@ -111,7 +118,7 @@ const UserForm = ({ reloadUserData }) => {
     <div className="container" style={{}}>
       <div className="row justify-content-center">
         <div className="col register-form">
-          {!hasAccount && <form onSubmit={createUser} className="row">
+          {(mode === "create") && <form onSubmit={createUser} className="row">
             <div className="mb-3 col-12 col-md-6">
               <label htmlFor="email" className="form-label">Email:</label>
               <input className="form-control"
@@ -158,23 +165,23 @@ const UserForm = ({ reloadUserData }) => {
               
             </div>
           </form>}
-          {hasAccount && (
+          {(mode === "update") && (
             <form onSubmit={handleSubmit(onSubmit)} className="row">
-              {/* <div className="mb-3">
-              <label htmlFor="Name" className="form-label">Name *</label>
-              <input type="text" className="form-control" {...register("Name", { required: "Name is required" })} />
-              {errors.Name && <div className="">{errors.Name.message}</div>}
-            </div>
-            <div className="mb-3">
-              <label htmlFor="Email" className="form-label">Email</label>
-              <input
-                className="form-control"
-                type="Email"
-                disabled={mode === 'update'}
-                {...register("Email")}
-              />
-              {errors.Email && <p>{errors.Email.message}</p>}
-            </div> */}
+              <div className="mb-3">
+                <label htmlFor="Name" className="form-label">Name *</label>
+                <input type="text" className="form-control" {...register("Name", { required: "Name is required" })} />
+                {errors.Name && <div className="">{errors.Name.message}</div>}
+              </div>
+              <div className="mb-3">
+                <label htmlFor="Email" className="form-label">Email</label>
+                <input
+                  className="form-control"
+                  type="Email"
+                  disabled={mode === 'update'}
+                  {...register("Email")}
+                />
+                {errors.Email && <p>{errors.Email.message}</p>}
+              </div>
 
               {/* {mode === 'create' && (
             <div className="mb-3">

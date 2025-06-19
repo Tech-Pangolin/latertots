@@ -1,4 +1,4 @@
-import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, setDoc, deleteDoc, Timestamp } from "@firebase/firestore";
+import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, setDoc, deleteDoc, Timestamp, onSnapshot } from "@firebase/firestore";
 import { db } from "../config/firestore";
 import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
@@ -11,37 +11,7 @@ export class FirebaseDbService {
     this.userContext = userContext;
   }
 
-  /**
-   * Fetches the role of a user based on the provided role reference.
-   * 
-   * @param {Object} roleRef - The reference to the user's role.
-   * @returns {Promise<string|null>} - A promise that resolves to the role ID if found, or null if not found.
-   */
-  async fetchUserRole(roleRef) {
-    const roleSnapshot = await getDoc(roleRef);
-    return roleSnapshot.exists() ? roleSnapshot.id : null;
-  }
-
-  /**
-   * Fetches the role of a user based on the provided user ID.
-   * 
-   * @param {string} userId - The ID of the user to fetch the role for.
-   * @returns {Promise<string|null>} - A promise that resolves to the role ID if found, or null if not found.
-   */
-  async fetchRoleByUserId(userId) {
-    const userDocRef = doc(db, 'Users', userId);
-    const userDoc = await getDoc(userDocRef);
-    if (userDoc.exists()) {
-      try {
-        const roleRef = userDoc.data().Role;
-        return await this.fetchUserRole(roleRef); 
-      } catch (error) {
-        throw new Error(`Failed to retrieve User's Role: ${error.message}`)
-      }
-    }
-    return null;
-  }
-
+  
   /**
    * Fetches the avatar photo URL of a user based on the provided user ID.
    * 
@@ -62,128 +32,52 @@ export class FirebaseDbService {
       throw new Error("Authentication required.");
     }
 
-    if (requiredRole && this.userContext.role !== requiredRole) {
+    if (requiredRole && this.userContext.Role !== requiredRole) {
       throw new Error("Unauthorized access.");
     }
   }
 
-  /**
-   * Fetches all users from the "Users" collection.
-   * 
-   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects.
-   */
-  fetchAllUsers = async (includeArchived = false) => {
-    this.validateAuth('admin');
-    try {
-      const snapshot = await getDocs(collection(db, "Users"));
-      const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      for (const user of users) {
-        const roleRef = user.Role;
-        user.Role = await this.fetchUserRole(roleRef);
-      }
-      return includeArchived ? users : users.filter(user => !user.archived);
-    } catch (error) {
-      logger.error("Error fetching users:", error);
-      return [];
-    }
-  };
-
-  /**
-   * Fetches all contacts from the "Contacts" collection.
-   * 
-   * @param {boolean} [includeArchived=false] - Whether to include archived contacts in the results.
-   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of contact objects.
-   */ 
-  fetchAllContacts = async (includeArchived = false) => {
-    this.validateAuth('admin');
-    try {
-      const snapshot = await getDocs(collection(db, "Contacts"));
-      const contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return includeArchived ? contacts : contacts.filter(contact => !contact.archived);
-    } catch (error) {
-      logger.error("Error fetching contacts:", error);
-      return [];
-    }
+  #mapSnapshotToData(snapshot) {
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }
 
   /**
-   * Fetches all children from the "Children" collection.
-   * 
-   * @param {boolean} [includeArchived=false] - Whether to include archived children in the results.
-   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of child objects.
+   * Fetches documents from a Firestore collection reference.
+   *  
+   * @param {import('firebase/firestore').CollectionReference} ref - The Firestore collection reference to fetch documents from.
+   * @param {boolean} [adminOnly=false] - If true, only allows access for admin users.
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of document data objects.
+   * @throws {Error} - If the user is not authenticated or does not have the required role.
    */
-  fetchAllChildren = async (includeArchived = false) => {
-    this.validateAuth('admin');
-    try {
-      const snapshot = await getDocs(collection(db, "Children"));
-      const children = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return includeArchived ? children : children.filter(child => !child.archived);
-    } catch (error) {
-      logger.error("Error fetching children:", error);
-      return [];
+  async fetchDocs(ref, adminOnly = false) {
+    if (adminOnly) {
+      this.validateAuth('admin');
+    } else {
+      this.validateAuth();
     }
+    const data = await getDocs(ref).then(snapshot => this.#mapSnapshotToData(snapshot))
+    return data;
   }
 
   /**
-   * Fetches the current user based on the provided email.
+   * Subscribes to real-time updates of documents in a Firestore collection reference.
    * 
-   * @param {string} email - The email of the user to fetch.
-   * @returns {Promise<Object|null>} - A promise that resolves to the user object if found, or null if not found.
-   * @throws {Error} - If there is an error fetching the current user.
+   * @param {import('firebase/firestore').CollectionReference} ref - The Firestore collection reference to subscribe to.
+   * @param {function} callback - The callback function to execute when documents change.
+   * @param {boolean} [adminOnly=false] - If true, only allows access for admin users.
+   * @returns {function} - A function to unsubscribe from the real-time updates.
+   * @throws {Error} - If the user is not authenticated or does not have the required role.
    */
-  fetchCurrentUser = async (identifier) => {
-    this.validateAuth();
-    const maxRetries = 10;
-    try {
-      let userDocRef;
-      let userDoc;
-
-      // Poll for the user document if the UID is provided
-      if (this.userContext.uid) {
-        logger.info(`${identifier} Polling for user document with UID:`, this.userContext.uid);
-        userDocRef = await this.pollForUserDocument(db, this.userContext.uid, maxRetries);
-        userDoc = await getDoc(userDocRef);
-      }
-
-      // Poll for user document by email if not found by UID
-      if (!userDoc || !userDoc.exists()) {
-        logger.info("Querying for user document with email:", this.userContext.email);
-        for (let i = 0; i < maxRetries; i++) {
-          logger.info("fetchCurrentUser: start query by email")
-          const q = query(collection(db, "Users"), where("Email", "==", this.userContext.email), where("archived", "==", false));
-          const querySnapshot = await getDocs(q);
-          const userDocSnapshot = querySnapshot.docs.find(doc => doc.data().Email === this.userContext.email);
-          logger.info("fetchCurrentUser: end query by email")
-
-          if (userDocSnapshot) {
-            userDocRef = userDocSnapshot.ref;
-            userDoc = userDocSnapshot;
-            break;
-          }
-
-          logger.info(`User document not found with email, retrying... (${i + 1}/${maxRetries})`);
-          await new Promise(r => setTimeout(r, 1000 * i));
-        }
-      }
-
-      if (userDoc && userDoc.exists()) {
-        logger.info("User document found:", userDoc.data());
-        const user = { id: userDoc.id, ...userDoc.data() };
-        const roleRef = user.Role;
-        if (roleRef) {
-          user.Role = await this.fetchUserRole(roleRef);
-        } else {
-          logger.warn(`${identifier || ''} Role reference not yet set.`)
-        }
-        return user;
-      } else {
-        throw new Error("No record found with email: " + this.userContext.email);
-      }
-    } catch (error) {
-      logger.error("Error fetching current user:", error);
-      return null;
+  subscribeDocs(ref, callback, adminOnly = false) {
+    if (adminOnly) {
+      this.validateAuth('admin');
+    } else {
+      this.validateAuth();
     }
-  };
+    return onSnapshot(ref, (snapshot) => {
+      callback(this.#mapSnapshotToData(snapshot));
+    });
+  }
 
   /**
    * Creates a document in the Children collection and associates it with the current user.
@@ -245,9 +139,12 @@ export class FirebaseDbService {
       if (userDoc) {
         const userRef = doc(collection(db, "Users"), userDoc.id);
         const userSnapshot = await getDoc(userRef);
-        const childrenRefs = userSnapshot.data().Children;
+        let childrenRefs = userSnapshot.data().Children;
         if (!childrenRefs) {
           return [];
+        } else if (!Array.isArray(childrenRefs)) {
+          // This happens when there's only one child and the data is not an array
+          childrenRefs = [childrenRefs]; 
         }
         const childrenPromises = childrenRefs.map(async (childRef) => {
           try {
@@ -410,41 +307,39 @@ export class FirebaseDbService {
    * @param {Object} newReservation - The data for the new reservation.
    * @param {Date} newReservation.start - The start date of the new reservation.
    * @param {Date} newReservation.end - The end date of the new reservation.
-   * @param {Array<Object>} unsavedEvents - An array of unsaved events from the client-side.
-   * @returns {Promise<Object>} - A promise that resolves to an object containing the allowability status and additional information.
+   * @param {Array<Object>} [unsavedEvents=[]] - An optional array of unsaved events from the client-side.
+   * @returns {Object} - An object containing the allowability status and additional information.
+   * @returns {boolean} return.allow - Indicates if the reservation is allowable.
+   * @returns {number} return.size - The number of overlapping reservations.
+   * @returns {string} [return.message] - An optional message if the reservation is not allowable.
    * @throws {Error} - If there is an error checking the reservation allowability.
    */
-  checkReservationAllowability(newReservation, unsavedEvents = []) {
+  checkReservationOverlapLimit(newReservation, unsavedEvents = []) {
     this.validateAuth();
-    let overlappingEvents = [];
-    unsavedEvents.forEach(event => {
-      if (newReservation.id && event.id === newReservation.id) {
-        return;
-      }
-
-      if (new Date(event.end) > new Date(newReservation.start) &&
-        new Date(event.start) < new Date(newReservation.end)) {
-        overlappingEvents.push(event);
-      }
+    
+    let eventsOverlappingNewReservation = unsavedEvents.filter(event => {
+      if (newReservation.id && event.id === newReservation.id) return false;
+      return (
+        new Date(event.end) > new Date(newReservation.start) &&
+        new Date(event.start) < new Date(newReservation.end)
+      ); 
+    });
+    
+    const overlapMarkers = [];
+    eventsOverlappingNewReservation.forEach(evt => {
+      overlapMarkers.push({ ts: new Date(evt.start), delta: +1 });
+      overlapMarkers.push({ ts: new Date(evt.end),   delta: -1 });
     });
 
-    let times = [];
-    overlappingEvents.forEach(event => {
-      times.push({ time: new Date(event.start), type: 'start' });
-      times.push({ time: new Date(event.end), type: 'end' });
-    });
-
-    times.sort((a, b) => a.time - b.time || (a.type === 'end' ? -1 : 1));
-
+    // compare timestamps first, but if those are equal,
+    // compare deltas to ensure -1 comes before +1
+    overlapMarkers.sort((a,b) => a.ts - b.ts || (a.delta - b.delta) );
+    
     let maxOverlap = 0;
     let currentOverlap = 0;
-    times.forEach(time => {
-      if (time.type === 'start') {
-        currentOverlap++;
-        maxOverlap = Math.max(maxOverlap, currentOverlap);
-      } else {
-        currentOverlap--;
-      }
+    overlapMarkers.forEach(marker => {
+      currentOverlap += marker.delta;
+      maxOverlap = Math.max(maxOverlap, currentOverlap);
     });
 
     if (maxOverlap < 5) {
@@ -514,6 +409,40 @@ export class FirebaseDbService {
       throw error;
     }
   };
+
+  /**
+   * Changes the status of a reservation document in the Reservations collection.
+   * 
+   * @param {string} reservationId - The ID of the reservation document to update.
+   * @param {string} newStatus - The new status to set for the reservation.
+   * @returns {Promise<void>} - A promise that resolves when the document is successfully updated.
+   * @throws {Error} - If there is an error updating the document.
+   * */
+  changeReservationStatus = async (reservationId, newStatus) => {
+    this.validateAuth('admin');
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      await updateDoc(reservationRef, { extendedProps: { status: newStatus } });
+    } catch (error) {
+      console.error(`Could not change reservation ${reservationId} status to ${newStatus}:`, error);
+      throw error;
+    }
+  }
+
+  // TODO: Add validation to ensure that non-admin users can only change their own reservations
+  changeReservationTime = async (reservationId, newStart, newEnd) => {
+    this.validateAuth();
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      await updateDoc(reservationRef, {
+        start: Timestamp.fromDate(new Date(newStart)),
+        end: Timestamp.fromDate(new Date(newEnd))
+      });
+    } catch (error) {
+      console.error(`Could not change reservation ${reservationId} time:`, error);
+      throw error;
+    }
+  }
 
   /**
    * Deletes a reservation document from the Reservations collection.

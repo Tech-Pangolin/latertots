@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
-import { getAuth, signOut } from "firebase/auth";
-import { set } from 'react-hook-form';
 
 const HeaderBar = () => {
   const { currentUser, logout } = useAuth();
@@ -12,15 +10,7 @@ const HeaderBar = () => {
   const [showTeamTots, setShowTeamTots] = useState(false);
   const [showBigTots, setShowBigTots] = useState(false);
   const [showDropIn, setShowDropIn] = useState(false);
-  const signOut = async () => {
-    const auth = getAuth();
-    try {
-      await auth.signOut(auth);
-      window.location.href = '/';
-    } catch (error) {
-      console.error("Error signing out: ", error);
-    }
-  }
+
   const handleMobileMenu = () => {
     setMobileMenu(!mobileMenu);
   }
@@ -89,10 +79,10 @@ const HeaderBar = () => {
 
         <nav id="navbar" className={`navbar ${mobileMenu ? 'navbar-mobile' : ''}`}>
           <ul>
-            <li><a id="home-link" className={` nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href="/" >Home</a></li>
+            <li><a id="home-link" className={` nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href={currentUser ? "/profile" : "/"} >Home</a></li>
 
             {/* Show the marketing pages if the current user is not an admin */}
-            {(!currentUser || currentUser.role !== 'admin') && <>
+            {(!currentUser || currentUser.Role !== 'admin') && <>
               <li className="nav-item dropdown">
                 <a id="team-link" className={`nav-link team-link dropdown-toggle scrollto ${dropdownActiveTeam()}`} onClick={() => expandChildren('teamtots')} href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   Team Tots
@@ -127,7 +117,7 @@ const HeaderBar = () => {
             </>}
 
             {/* Hide the marketing pages if the current user is an admin */}
-            {(currentUser && currentUser.role === 'admin') && <>
+            {(currentUser && currentUser.Role === 'admin') && <>
               <li><a id="team-link" className={`nav-link dropin-link scrollto ${location.pathname === '/admin' ? 'active' : ''}`} href="/admin">Admin Dashboard</a></li>
             </>}
 
@@ -138,7 +128,7 @@ const HeaderBar = () => {
               <li><a id="logout-link" className="nav-link scrollto logout-link" onClick={signOut}>Logout</a></li>
             )} */}
             {currentUser && (
-              <li><a id="logout-link" className="nav-link scrollto logout-link" style={{ cursor: 'pointer' }} onClick={signOut}>Logout</a></li>
+              <li><a id="logout-link" className="nav-link scrollto logout-link" style={{ cursor: 'pointer' }} onClick={logout}>Logout</a></li>
             )}
 
           </ul>
