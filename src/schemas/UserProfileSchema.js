@@ -4,7 +4,7 @@ import { DocumentReference } from 'firebase/firestore';
 
 const UserProfileSchema = Joi.object({
   // Administrative fields
-  archived: Joi.boolean().required(),
+  archived: Joi.boolean().default(false).required(),
   paymentHold: Joi.boolean().required(),
 
   // User profile fields

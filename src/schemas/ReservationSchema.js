@@ -4,7 +4,7 @@ import { DocumentReference } from 'firebase/firestore';
 
 const ReservationSchema = Joi.object({
   // Administrative fields
-  archived: Joi.boolean().required(),
+  archived: Joi.boolean().default(false).required(),
   billingLocked: Joi.boolean().required(),
   allDay: Joi.boolean().required(),
   overrideTotalCents: Joi.number().integer().min(0).optional(),       // Optional field for overriding total billing amount
