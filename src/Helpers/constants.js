@@ -43,3 +43,5 @@ export const GENDERS = Object.freeze({
   OTHER: "Other",
   UNSPECIFIED: "Unspecified",
 })
+
+export const MIN_AGE_FOR_CHILD_YEARS = 2; 

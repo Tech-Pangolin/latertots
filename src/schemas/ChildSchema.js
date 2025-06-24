@@ -1,9 +1,9 @@
 import Joi from 'joi';
-import { GENDERS } from '../Helpers/constants';
+import { GENDERS, MIN_AGE_FOR_CHILD_YEARS } from '../Helpers/constants';
 
 function twoYearsAgo() {
   const date = new Date();
-  date.setFullYear(date.getFullYear() - 2);
+  date.setFullYear(date.getFullYear() - MIN_AGE_FOR_CHILD_YEARS);
   return date;
 }
 
