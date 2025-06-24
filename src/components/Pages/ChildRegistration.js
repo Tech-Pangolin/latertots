@@ -79,16 +79,16 @@ const ChildRegistration = ({ setOpenState }) => {
           {errors.Name?.message && <p>{errors.Name.message}</p>}
 
           <label htmlFor="DOB" className="form-label">DOB:</label>
-          <input type="date" id="DOB" {...register('DOB', { required: true })} className="form-control" />
+          <input type="date" id="DOB" {...register('DOB')} className="form-control" />
           {errors.DOB?.message && <p>{errors.DOB.message}</p>}
 
           <label htmlFor="Gender" className="form-label">Gender:</label>
-          <select id="Gender" {...register('Gender', { required: true })} className="form-control">
+          <select id="Gender" {...register('Gender')} className="form-control">
             {Object.values(GENDERS).map(option => {
               return <option key={option} value={option}>{option}</option>;
             })}
           </select>
-          {errors.Gender && <p>Gender is required</p>}
+          {errors.Gender?.message && <p>{errors.Gender.message}</p>}
 
           <label htmlFor="Allergies" className="form-label">Allergies:</label>
           <input type="text" id="Allergies" {...register('Allergies')} className="form-control" />
