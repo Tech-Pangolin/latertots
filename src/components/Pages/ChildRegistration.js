@@ -43,16 +43,27 @@ const ChildRegistration = ({ setOpenState }) => {
   })
 
   const onSubmit = async (data) => {
+    const payload = {
+      ...data,
+      archived: true,
+    }
+
     try {
+      const validatedPayload = await generateChildSchema().validateAsync(payload);
+
       if (child) {
         // Update the existing child document
         const childRef = doc(db, 'Children', child.id);
-        await updateDoc(childRef, data);
+        await updateDoc(childRef, validatedPayload);
       } else {
         // Create a new child document
-        createChildMutation.mutate(data);
+        createChildMutation.mutate(validatedPayload);
       }
     } catch (error) {
+      if (error.isJoi) {
+        logger.error('Child registration failed validation:', error.details);
+        logger.error('Child registration error details:', error.details);
+      }
       logger.error('Error adding document: ', error);
     }
   };
@@ -64,8 +75,8 @@ const ChildRegistration = ({ setOpenState }) => {
       <div className="row d-flex justify-content-center">
         <form onSubmit={handleSubmit(onSubmit)} className='col-md-12'>
           <label htmlFor="Name" className="form-label">Name:</label>
-          <input type="text" disabled={child?.Name} id="Name" {...register('Name', { required: true })} className="form-control" />
-          {errors.Name && <p>Name is required</p>}
+          <input type="text" disabled={child?.Name} id="Name" {...register('Name')} className="form-control" />
+          {errors.Name?.message && <p>{errors.Name.message}</p>}
 
           <label htmlFor="DOB" className="form-label">DOB:</label>
           <input type="date" id="DOB" {...register('DOB', { required: true })} className="form-control" />
@@ -94,7 +105,5 @@ const ChildRegistration = ({ setOpenState }) => {
     </div>
   );
 };
-
-ChildRegistration.whyDidYouRender = true; // Enable React's why-did-you-render for this component
 
 export default ChildRegistration;

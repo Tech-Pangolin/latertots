@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
+import { generateChildSchema } from "../schemas/ChildSchema";
 
 
 export class FirebaseDbService {
@@ -38,7 +39,11 @@ export class FirebaseDbService {
   }
 
   #mapSnapshotToData(snapshot) {
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    try {
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error("Error mapping snapshot to data:", error);
+    }
   }
 
   /**
@@ -75,7 +80,11 @@ export class FirebaseDbService {
       this.validateAuth();
     }
     return onSnapshot(ref, (snapshot) => {
-      callback(this.#mapSnapshotToData(snapshot));
+      try {
+        callback(this.#mapSnapshotToData(snapshot));
+      } catch (error) {
+        console.error("Error subscribing to documents:", error);
+      }
     });
   }
 
@@ -89,7 +98,6 @@ export class FirebaseDbService {
    */
   createChildDocument = async (childData) => {
     this.validateAuth();
-    childData.archived = false;
     try {
       const docRef = await addDoc(collection(db, "Children"), childData);
       const userRef = doc(collection(db, "Users"), this.userContext.uid);

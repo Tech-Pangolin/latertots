@@ -18,7 +18,8 @@ export const generateChildSchema = (forFormValidation = false) => {
                 .max(twoYearsAgo())
                 .required()
                 .messages({
-                  'date.max': 'Child must be at least 2 years old.'
+                  'date.max': `Child must be at least ${MIN_AGE_FOR_CHILD_YEARS} years old.`,
+                  'date.base': 'Invalid date format. Please use YYYY/MM/DD.'
                 }),
     Gender: Joi.string()
                 .valid(...Object.values(GENDERS))
@@ -26,7 +27,12 @@ export const generateChildSchema = (forFormValidation = false) => {
     Medications: Joi.string().allow('').optional(),
     Allergies: Joi.string().allow('').optional(),
     Notes: Joi.string().allow('').optional(),
-  }).prefs({ abortEarly: false })
+  })
+    .prefs({ abortEarly: false })
+    .messages({
+      'any.required': 'This field is required.',
+      'string.empty': 'This field is required.',
+    })
 
   if (forFormValidation) {
     schema = schema.fork(['archived'], (field) => field.forbidden());
