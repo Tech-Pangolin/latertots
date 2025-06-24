@@ -45,7 +45,7 @@ const ChildRegistration = ({ setOpenState }) => {
   const onSubmit = async (data) => {
     const payload = {
       ...data,
-      archived: true,
+      archived: false,
     }
 
     try {

@@ -10,9 +10,9 @@ function ChildCard({ child, onNameClick }) {
 
   const getAvatarImgName = () => {
     switch (child.Gender) {
-      case 'male':
+      case 'Male':
         return 'boy_avatar.png';
-      case 'female':
+      case 'Female':
         return 'girl_avatar.png';
       default:
         return 'green_avatar.png';
