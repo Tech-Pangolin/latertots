@@ -6,9 +6,14 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firestore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logger } from '../../Helpers/logger';
+import { joiResolver } from '@hookform/resolvers/joi';
+import { generateChildSchema } from '../../schemas/ChildSchema';
+import { GENDERS } from '../../Helpers/constants';
 
 const ChildRegistration = ({ setOpenState }) => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    resolver: joiResolver(generateChildSchema(true))
+  });
   const { currentUser, dbService } = useAuth();
   const queryClient = useQueryClient();
 
@@ -64,13 +69,13 @@ const ChildRegistration = ({ setOpenState }) => {
 
           <label htmlFor="DOB" className="form-label">DOB:</label>
           <input type="date" id="DOB" {...register('DOB', { required: true })} className="form-control" />
-          {errors.DOB && <p>DOB is required</p>}
+          {errors.DOB?.message && <p>{errors.DOB.message}</p>}
 
           <label htmlFor="Gender" className="form-label">Gender:</label>
           <select id="Gender" {...register('Gender', { required: true })} className="form-control">
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Unspecified</option>
+            {Object.values(GENDERS).map(option => {
+              return <option key={option} value={option}>{option}</option>;
+            })}
           </select>
           {errors.Gender && <p>Gender is required</p>}
 
@@ -89,5 +94,7 @@ const ChildRegistration = ({ setOpenState }) => {
     </div>
   );
 };
+
+ChildRegistration.whyDidYouRender = true; // Enable React's why-did-you-render for this component
 
 export default ChildRegistration;

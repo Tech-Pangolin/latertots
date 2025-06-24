@@ -36,3 +36,10 @@ export const RESERVATION_STATUS = Object.freeze({
   REFUNDED: 'refunded',       // Payment was received but later refunded
   COMPED: 'comped',           // Payment was waived, no fees apply
 })
+
+export const GENDERS = Object.freeze({
+  MALE: "Male",
+  FEMALE: "Female",
+  OTHER: "Other",
+  UNSPECIFIED: "Unspecified",
+})
