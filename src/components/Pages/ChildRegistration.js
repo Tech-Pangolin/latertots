@@ -62,7 +62,6 @@ const ChildRegistration = ({ setOpenState }) => {
     } catch (error) {
       if (error.isJoi) {
         logger.error('Child registration failed validation:', error.details);
-        logger.error('Child registration error details:', error.details);
       }
       logger.error('Error adding document: ', error);
     }

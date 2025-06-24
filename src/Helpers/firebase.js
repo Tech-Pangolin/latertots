@@ -4,7 +4,6 @@ import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
-import { generateChildSchema } from "../schemas/ChildSchema";
 
 
 export class FirebaseDbService {
