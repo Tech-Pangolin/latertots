@@ -9,8 +9,9 @@ export function useChildrenRQ() {
   const { dbService, currentUser } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = currentUser?.Role === 'admin';
-  const queryKey = isAdmin ? ['adminAllChildren'] : ['fetchChildren', currentUser.Email];
-
+  const queryKey = useMemo(() => {
+    return isAdmin ? ['adminAllChildren'] : ['fetchChildren', currentUser.Email];
+  }, [currentUser?.Email, isAdmin]);
 
   // First, build the query
   const allChildrenQuery = useMemo(() => query(
