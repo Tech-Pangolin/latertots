@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
+import ReservationSchema from "../schemas/ReservationSchema";
 
 
 export class FirebaseDbService {
@@ -375,16 +376,22 @@ export class FirebaseDbService {
       dataWithoutId.start = Timestamp.fromDate(new Date(dataWithoutId.start));
       dataWithoutId.end = Timestamp.fromDate(new Date(dataWithoutId.end));
 
-      const docRef = await addDoc(collection(db, "Reservations"), dataWithoutId);
       const userRef = doc(collection(db, "Users"), userId);
-
-      // Add a reference to the user document and quick reference to the userId
-      await updateDoc(docRef, { User: userRef, userId: userId });
-
-      // Add a reference to the child document
       const childRef = doc(collection(db, "Children"), reservationData.extendedProps.childId);
-      await updateDoc(docRef, { Child: childRef });
 
+      const dataWithExtraRefs = {
+        ...dataWithoutId,
+        User: userRef,
+        userId: userId,
+        Child: childRef,
+      }
+
+      const validatedData = await ReservationSchema.validateAsync(dataWithExtraRefs, { abortEarly: false });
+      if (validatedData.error) {
+        throw new Error(`Validation error: ${validatedData.error.message}`);
+      }
+
+      const docRef = await addDoc(collection(db, "Reservations"), validatedData);
       return docRef.id;
     } catch (error) {
       console.error("Error creating reservation document:", error);

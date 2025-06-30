@@ -103,7 +103,7 @@ const ScheduleChildSitterPage = () => {
   }, [events, dbService, reservationTimeChangeMutation]);
 
 
-  const reservationArchiveChangeMutation = useMutation({
+  const archiveReservationMutation = useMutation({
     mutationFn: async (eventId) => dbService.archiveReservationDocument(eventId),
     onSuccess: () => {
       queryClient.invalidateQueries(
@@ -121,9 +121,9 @@ const ScheduleChildSitterPage = () => {
     const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
 
     if (currentUser.Role === 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
-      reservationArchiveChangeMutation.mutate(event.id);
+      archiveReservationMutation.mutate(event.id);
     }
-  }, [children, currentUser, reservationArchiveChangeMutation]);
+  }, [children, currentUser, archiveReservationMutation]);
 
   // Enforce rules for where events can be dropped or resized
   const eventAllow = useCallback((dropInfo) => {
