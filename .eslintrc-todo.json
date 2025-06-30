@@ -1,0 +1,22 @@
+{
+  "root": true,
+  "parserOptions": {
+    "ecmaVersion": 2023,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "rules": {
+    "no-warning-comments": [ 1,
+      {
+        "terms": ["todo"],
+        "location": "start"
+      }
+    ]
+  }
+}

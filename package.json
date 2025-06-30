@@ -39,7 +39,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "todo-check": "eslint --no-eslintrc -c .eslintrc-todo.json \"src/**/*.{js,jsx}\""
   },
   "eslintConfig": {
     "extends": [
