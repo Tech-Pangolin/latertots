@@ -44,4 +44,14 @@ export const GENDERS = Object.freeze({
   UNSPECIFIED: "Unspecified",
 })
 
+export const CONTACT_RELATIONS = Object.freeze({
+  PARENT: 'Parent',
+  FAMILY: 'Family',
+  LEGAL_GUARDIAN: 'Legal Guardian',
+  FAMILY_FRIEND: 'Family Friend',
+  DOCTOR: 'Doctor',
+  PROFESSIONAL_CAREGIVER: 'Professional Caregiver',
+  OTHER: 'Other',
+})
+
 export const MIN_AGE_FOR_CHILD_YEARS = 2; 
