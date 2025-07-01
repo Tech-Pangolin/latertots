@@ -78,7 +78,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     return errors;
   }, setErrors, 500);
 
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newEvents = formData.selectedChild.map(child => {
@@ -88,39 +88,34 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
         start: new Date(formData.date + 'T' + formData.start).toISOString(),
         end: new Date(formData.date + 'T' + formData.end).toISOString(),
         allDay: false,
-        locked: false,
+        billingLocked: false,
+        groupActivity: formData.groupActivity,
         extendedProps: {
-          duration: (new Date(formData.date + 'T' + formData.end).toISOString() - new Date(formData.date + 'T' + formData.start).toISOString()) / 3600_000,
           status: 'pending',
-          childId: child.id,
-          fromForm: true
+          childId: child.id
         }
       }
     });
 
-    // Check if all events are valid
-    const allValid = newEvents.every((event) => {
+    const validHours = newEvents.every((event) => {
       return checkAgainstBusinessHours(event) && checkFutureStartTime(event);
     });
-
-    if (allValid) {
-      // Validate all reservations collectively
-      const allowSave = dbService.checkReservationOverlapLimit(newEvents);
-
-      if (allowSave) {
-        newEvents.forEach(event => {
-          saveNewEventMutation.mutate({ loggedInUserId: currentUser.uid, newEvent: event })
-        })
-        handleClose();
-      } else {
-        alert(
-          'Could not save event(s). Please check the time and try again. Note that only 5 reservations can exist at once.'
-        );
-      }
-    } else {
+    if (!validHours) {
       // TODO: Handle individual validation errors
-      alert('One or more reservations did not pass validation.');
+      alert('One or more reservations falls outside of valid business hours. Please check the date/time and try again.');
+      return;
     }
+
+    const validOverlap = dbService.checkReservationOverlapLimit(newEvents);
+    if (!validOverlap) {
+      alert('No more than 5 reservations can take place simultaneously. Please check available time slots and try again.');
+      return;
+    }
+
+    newEvents.forEach((validatedEvent) => {
+      saveNewEventMutation.mutate({ loggedInUserId: currentUser.uid, newEvent: validatedEvent });
+    });
+    handleClose();
   };
 
   return (

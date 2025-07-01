@@ -5,9 +5,15 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logger } from '../../Helpers/logger';
 import { db } from '../../config/firestore';
 import { doc, updateDoc } from 'firebase/firestore';
+import { joiResolver } from '@hookform/resolvers/joi';
+import { generateContactSchema } from '../../schemas/ContactSchema';
+import { CONTACT_RELATIONS } from '../../Helpers/constants';
+
 
 function ContactRegistration({ setOpenState }) {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, formState: {errors}, reset } = useForm({
+    resolver: joiResolver(generateContactSchema(true))
+  });
   const { currentUser, dbService } = useAuth();
   const queryClient = useQueryClient();
   const [contact, setContact] = useState(null); // State to hold the contact when editing an existing one
@@ -43,12 +49,29 @@ function ContactRegistration({ setOpenState }) {
   })
 
   const onSubmit = async (data) => {
-    if (contact) {
-      updateContactMutation.mutate(data);
-    } else {
-      createContactMutation.mutate(data);
+    const payload = {
+      ...data,
+      archived: false,
+    }
+
+    try {
+      const validatedPayload = await generateContactSchema().validateAsync(payload);
+
+      if (contact) {
+        updateContactMutation.mutate(validatedPayload);
+      } else {
+        createContactMutation.mutate(validatedPayload);
+      }
+    } catch (error) {
+      if (error.isJoi) {
+        logger.error('Contact validation error:', error.details);
+        return;
+      }
+      logger.error('Error creating new contact:', error);
     }
   };
+
+  const schemaErrors = errors[""];
 
   return (
     <div className="container">
@@ -56,24 +79,30 @@ function ContactRegistration({ setOpenState }) {
       <div className="row">
         <form onSubmit={handleSubmit(onSubmit)} className='col-12'>
           <label htmlFor="Name" className="form-label">Name:</label>
-          <input type="text" id="Name" {...register('Name', { required: true })} className="form-control" />
+          <input type="text" id="Name" {...register('Name')} className="form-control mb-4" />
+          {errors.Name?.message && <p className='text-danger'>{errors.Name.message}</p>}
 
           <label htmlFor="Phone" className="form-label">Phone:</label>
-          <input type="tel" id="Phone" {...register('Phone')} className="form-control" />
+          <input type="tel" id="Phone" {...register('Phone')} className="form-control mb-4" />
+          {errors.Phone?.message && <p className='text-danger'>{errors.Phone.message}</p>}
 
           <label htmlFor="Email" className="form-label">Email:</label>
-          <input type="Email" id="Email" {...register('Email')} className="form-control" />
+          <input type="email" id="Email" {...register('Email')} className="form-control mb-4" />
+          {errors.Email?.message && <p className='text-danger'>{errors.Email.message}</p>}
 
           <label htmlFor="Relation" className="form-label">Relation:</label>
-          <select id="Relation" {...register('Relation', { required: true })} className="form-control">
-            <option value="Parent">Parent</option>
-            <option value="Family">Family</option>
-            <option value="Guardian">Legal Guardian</option>
-            <option value="Friend">Family Friend</option>
-            <option value="Doctor">Doctor</option>
-            <option value="Professional Caregiver">Professional Caregiver</option>
-            <option value="Other">Other</option>
+          <select id="Relation" {...register('Relation')} className="form-control">
+            <option value={CONTACT_RELATIONS.PARENT}>                   Parent</option>
+            <option value={CONTACT_RELATIONS.FAMILY}>                   Family</option>
+            <option value={CONTACT_RELATIONS.LEGAL_GUARDIAN}>           Legal Guardian</option>
+            <option value={CONTACT_RELATIONS.FAMILY_FRIEND}>            Family Friend</option>
+            <option value={CONTACT_RELATIONS.DOCTOR}>                   Doctor</option>
+            <option value={CONTACT_RELATIONS.PROFESSIONAL_CAREGIVER}>   Professional Caregiver</option>
+            <option value={CONTACT_RELATIONS.O}>                        Other</option>
           </select>
+          {errors.Relation?.message && <p className='text-danger'>{errors.Relation.message}</p>}
+          <br/>
+          {schemaErrors?.message && <p className="text-danger">{schemaErrors.message}</p>}
 
           <button type="submit" className="btn btn-primary mt-5">Submit</button>
         </form>
