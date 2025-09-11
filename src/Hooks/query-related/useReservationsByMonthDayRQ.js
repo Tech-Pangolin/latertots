@@ -6,6 +6,7 @@ import { COLLECTIONS } from "../../Helpers/constants";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { logger } from "../../Helpers/logger";
 import _ from "lodash";
+import { luxonDateTimeFromFirebaseTimestamp } from "../../Helpers/datetime";
 
 export function useReservationsByMonthDayRQ() {
   const { dbService, currentUser } = useAuth();
@@ -16,13 +17,13 @@ export function useReservationsByMonthDayRQ() {
   const queryKey = useMemo(() => {
     if (monthYear.day != null && !monthYear.week) {
       // Fetch reservations for a specific day
-      return ['adminCalendarReservationsByDay', monthYear.day, monthYear.month, monthYear.year];
+      return ['calendarReservationsByDay', monthYear.day, monthYear.month, monthYear.year];
     } else if (monthYear.day != null && monthYear.week) {
       // Fetch reservations for a specific week
-      return ['adminCalendarReservationsByWeek', monthYear.day, monthYear.month, monthYear.year];
+      return ['calendarReservationsByWeek', monthYear.day, monthYear.month, monthYear.year];
     } else {
       // Fetch reservations for the entire month
-      return ['adminCalendarReservationsByMonth', monthYear.month, monthYear.year];
+      return ['calendarReservationsByMonth', monthYear.month, monthYear.year];
     }
   }, [monthYear]);
 
@@ -85,8 +86,10 @@ export function useReservationsByMonthDayRQ() {
       status: res.extendedProps.status,
       childId: res.extendedProps.childId,
       title: res.title || "",
-      start: new Date(res.start.seconds * 1000),
-      end: new Date(res.end.seconds * 1000),
+      start: luxonDateTimeFromFirebaseTimestamp(res.start).toISO(),
+      end: luxonDateTimeFromFirebaseTimestamp(res.end).toISO(),
+      startDT: luxonDateTimeFromFirebaseTimestamp(res.start),
+      endDT: luxonDateTimeFromFirebaseTimestamp(res.end),
     };
 
   };
