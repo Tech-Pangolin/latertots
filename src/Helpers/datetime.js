@@ -40,3 +40,20 @@ export const luxonDateTimeFromISOString = (() => {
 })();
 
 export const firebaseTimestampFromLuxonDateTime = (dt) => Timestamp.fromMillis(dt.toMillis());
+
+/**
+ * Checks if an event date falls within a specific calendar day
+ * @param {string|Date} eventDate - The event date (ISO string or Date object)
+ * @param {Date} calendarDay - The calendar day to check against
+ * @returns {boolean} - True if the event falls on the calendar day
+ */
+export const isEventOnCalendarDay = (eventDate, calendarDay) => {
+  const event = new Date(eventDate);
+  const day = new Date(calendarDay);
+  
+  // Set both dates to start of day for comparison
+  const eventStartOfDay = new Date(event.getFullYear(), event.getMonth(), event.getDate());
+  const calendarStartOfDay = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+  
+  return eventStartOfDay.getTime() === calendarStartOfDay.getTime();
+};

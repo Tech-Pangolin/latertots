@@ -7,6 +7,7 @@ import ChipBadge from './ChipBadge';
 import { useAdminPanelContext } from '../Dashboard/AdminPanelContext';
 import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
 import { BUSINESS_HRS } from '../../Helpers/constants';
+import { isEventOnCalendarDay } from '../../Helpers/datetime';
 
 const DashboardCalendar = () => {
   const { setSelectedDate } = useAdminPanelContext();
@@ -33,7 +34,7 @@ const DashboardCalendar = () => {
 
   const renderDayContent = useCallback((dayCellInfo) => {
     const dayEvents = reservations.filter((event) => {
-      return event.start.getDate() === dayCellInfo.date.getDate();
+      return isEventOnCalendarDay(event.start, dayCellInfo.date);
     })
 
     const pendingEvents = dayEvents.filter((event) => {
