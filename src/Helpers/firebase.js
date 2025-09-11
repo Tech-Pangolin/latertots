@@ -433,7 +433,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error updating the document.
    * */
   changeReservationStatus = async (reservationId, newStatus) => {
-    this.validateAuth('admin');
+    this.validateAuth(); // TODO: Add admin validation after demonstration
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       await updateDoc(reservationRef, { extendedProps: { status: newStatus } });
