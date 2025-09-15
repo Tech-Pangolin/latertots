@@ -10,6 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { FirebaseDbService } from "../../Helpers/firebase";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { generateUserProfileSchema } from "../../schemas/UserProfileSchema";
+import { useNavigate } from "react-router-dom";
 
 const UserForm = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
@@ -23,6 +24,7 @@ const UserForm = () => {
   const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [mode, setMode] = React.useState(currentUser ? 'update' : 'create');
   const [error, setError] = React.useState(null);
+  const navigate = useNavigate();
 
 
   setLogLevel(LOG_LEVELS.DEBUG);
@@ -40,12 +42,16 @@ const UserForm = () => {
         City: currentUser.City || '',
         State: currentUser.State || '',
         Zip: currentUser.Zip || ''
-      })
+      });
+      
+      // Redirect authenticated users from registration page to profile page
+      logger.info("User is authenticated, redirecting to profile page");
+      navigate('/profile');
     } else {
       setDbService(new FirebaseDbService({}));
       setMode('create');
     }
-  }, [currentUser]);
+  }, [currentUser, navigate, reset]);
 
   const createUserMutation = useMutation({
     mutationKey: ['createUser'],

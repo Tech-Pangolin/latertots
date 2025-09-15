@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 import { app } from '../config/firebase';
 import { logger } from '../Helpers/logger';
 import { FirebaseDbService } from '../Helpers/firebase';
-import { doc, DocumentReference, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firestore';
 
 const auth = getAuth();
@@ -31,17 +31,19 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dbService, setDbService] = useState(null);
+  const [profileJustCreated, setProfileJustCreated] = useState(false);
   const auth = getAuth(app);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await auth.signOut();
       setDbService(null);
+      setProfileJustCreated(false);
       window.location.href = '/';
     } catch (error) {
       logger.error("Error logging out: ", error);
     }
-  };
+  }, [auth]);
 
   const cleanupReferencesArray = (children) => {
     // Ensure children is always an array
@@ -99,8 +101,29 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
 
             logger.info("User profile loaded successfully:", loggedInUser);
+            
+            // Redirect to profile page if this is a newly created profile
+            if (profileJustCreated) {
+              logger.info("Redirecting new user to profile page");
+              window.location.href = '/profile';
+              setProfileJustCreated(false); // Reset the flag
+            }
           } else {
-            logger.warn("User profile does not exist in Firestore.");
+            logger.warn("User.uid: ", user.uid, " profile does not exist in Firestore. Creating profile...");
+            
+            // Create user profile for new users (Google or email/password)
+            try {
+              await tempDbService.createUserProfileFromGoogleAuth(user);
+              logger.info("User profile created successfully for:", user.uid);
+              setProfileJustCreated(true);
+              // The onSnapshot listener will pick up the newly created profile
+            } catch (error) {
+              logger.error("Failed to create user profile:", error);
+              // Sign out user if profile creation fails
+              await logout();
+              setCurrentUser(null);
+              setLoading(false);
+            }
           }
         });
 
@@ -130,7 +153,7 @@ export const AuthProvider = ({ children }) => {
       unsubProfile();
       unsubAuth();
     }
-  }, [auth]);
+  }, [auth, logout]);
 
 
   return (
