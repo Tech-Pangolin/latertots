@@ -65,6 +65,7 @@ const ManageReservationsPage = () => {
   }, [dialogReservationContext]);
 
   const reservationTimeChangeMutation = useMutation({
+    mutationKey: ['changeReservationTime'],
     mutationFn: async ({ id, newStart, newEnd }) => dbService.changeReservationTime(id, newStart, newEnd),
     onSuccess: () => {
       queryClient.invalidateQueries(
@@ -137,6 +138,7 @@ const ManageReservationsPage = () => {
 
   const reservationStatusMutation = useMutation(
     {
+      mutationKey: ['changeReservationStatus'],
       mutationFn: async ({ id, status }) => dbService.changeReservationStatus(id, status),
       onSuccess: () => {
         queryClient.invalidateQueries(

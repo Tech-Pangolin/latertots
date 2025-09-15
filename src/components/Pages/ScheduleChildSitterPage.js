@@ -10,10 +10,14 @@ import ReservationFormModal from '../Shared/ReservationFormModal';
 import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
 import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { logger } from '../../Helpers/logger';
+import { LOG_LEVELS, logger, setLogLevel } from '../../Helpers/logger';
+import { luxonDateTimeFromISOString, luxonDateTimeFromJSDate } from '../../Helpers/datetime';
+import { DateTime } from 'luxon';
+
+setLogLevel(LOG_LEVELS.DEBUG); // Set log level to 'info' for debugging
 
 const ScheduleChildSitterPage = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(DateTime.now());
   const queryClient = useQueryClient();
   const [children, setChildren] = useState([]);
   const { currentUser, dbService } = useAuth();
@@ -35,12 +39,12 @@ const ScheduleChildSitterPage = () => {
   }, [events]);
 
   const getViewDates = useCallback((args) => {
-    setSelectedDate(args.start);
+    setSelectedDate(luxonDateTimeFromISOString(args.startStr));
     setMonthYear({
-      day: args.start.getDate(),
+      day: luxonDateTimeFromISOString(args.startStr).day,
       week: args.view.type === 'timeGridWeek',
-      month: args.start.getMonth(),
-      year: args.start.getFullYear()
+      month: luxonDateTimeFromISOString(args.startStr).month - 1, // FullCalendar months are 0-indexed
+      year: luxonDateTimeFromISOString(args.startStr).year
     })
   }, []);
 
@@ -48,10 +52,10 @@ const ScheduleChildSitterPage = () => {
     mutationFn: async ({ id, newStart, newEnd }) => dbService.changeReservationTime(id, newStart, newEnd),
     onSuccess: () => {
       queryClient.invalidateQueries(
-        ['adminCalendarReservationsByWeek'],
-        selectedDate.getUTCDate(),
-        selectedDate.getUTCMonth(),
-        selectedDate.getUTCFullYear()
+        ['calendarReservationsByWeek'],
+        selectedDate.toUTC().day,
+        selectedDate.toUTC().month - 1,
+        selectedDate.toUTC().year
       )
     },
     onError: (err) => console.error("Error changing reservation time: ", err)
@@ -103,11 +107,11 @@ const ScheduleChildSitterPage = () => {
   }, [events, dbService, reservationTimeChangeMutation]);
 
 
-  const reservationArchiveChangeMutation = useMutation({
+  const archiveReservationMutation = useMutation({
     mutationFn: async (eventId) => dbService.archiveReservationDocument(eventId),
     onSuccess: () => {
       queryClient.invalidateQueries(
-        ['adminCalendarReservationsByWeek'],
+        ['calendarReservationsByWeek'],
         selectedDate.getUTCDate(),
         selectedDate.getUTCMonth(),
         selectedDate.getUTCFullYear()
@@ -121,9 +125,9 @@ const ScheduleChildSitterPage = () => {
     const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
 
     if (currentUser.Role === 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
-      reservationArchiveChangeMutation.mutate(event.id);
+      archiveReservationMutation.mutate(event.id);
     }
-  }, [children, currentUser, reservationArchiveChangeMutation]);
+  }, [children, currentUser, archiveReservationMutation]);
 
   // Enforce rules for where events can be dropped or resized
   const eventAllow = useCallback((dropInfo) => {
@@ -183,5 +187,5 @@ const ScheduleChildSitterPage = () => {
     </Grid>
   );
 };
-
+// ScheduleChildSitterPage.whyDidYouRender = true; // Enable for debugging purposes
 export default ScheduleChildSitterPage;

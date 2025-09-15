@@ -6,9 +6,14 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firestore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logger } from '../../Helpers/logger';
+import { joiResolver } from '@hookform/resolvers/joi';
+import { generateChildSchema } from '../../schemas/ChildSchema';
+import { GENDERS } from '../../Helpers/constants';
 
 const ChildRegistration = ({ setOpenState }) => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    resolver: joiResolver(generateChildSchema(true))
+  });
   const { currentUser, dbService } = useAuth();
   const queryClient = useQueryClient();
 
@@ -38,16 +43,26 @@ const ChildRegistration = ({ setOpenState }) => {
   })
 
   const onSubmit = async (data) => {
+    const payload = {
+      ...data,
+      archived: false,
+    }
+
     try {
+      const validatedPayload = await generateChildSchema().validateAsync(payload);
+
       if (child) {
         // Update the existing child document
         const childRef = doc(db, 'Children', child.id);
-        await updateDoc(childRef, data);
+        await updateDoc(childRef, validatedPayload);
       } else {
         // Create a new child document
-        createChildMutation.mutate(data);
+        createChildMutation.mutate(validatedPayload);
       }
     } catch (error) {
+      if (error.isJoi) {
+        logger.error('Child registration failed validation:', error.details);
+      }
       logger.error('Error adding document: ', error);
     }
   };
@@ -59,20 +74,20 @@ const ChildRegistration = ({ setOpenState }) => {
       <div className="row d-flex justify-content-center">
         <form onSubmit={handleSubmit(onSubmit)} className='col-md-12'>
           <label htmlFor="Name" className="form-label">Name:</label>
-          <input type="text" disabled={child?.Name} id="Name" {...register('Name', { required: true })} className="form-control" />
-          {errors.Name && <p>Name is required</p>}
+          <input type="text" disabled={child?.Name} id="Name" {...register('Name')} className="form-control" />
+          {errors.Name?.message && <p>{errors.Name.message}</p>}
 
           <label htmlFor="DOB" className="form-label">DOB:</label>
-          <input type="date" id="DOB" {...register('DOB', { required: true })} className="form-control" />
-          {errors.DOB && <p>DOB is required</p>}
+          <input type="date" id="DOB" {...register('DOB')} className="form-control" />
+          {errors.DOB?.message && <p>{errors.DOB.message}</p>}
 
           <label htmlFor="Gender" className="form-label">Gender:</label>
-          <select id="Gender" {...register('Gender', { required: true })} className="form-control">
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Unspecified</option>
+          <select id="Gender" {...register('Gender')} className="form-control">
+            {Object.values(GENDERS).map(option => {
+              return <option key={option} value={option}>{option}</option>;
+            })}
           </select>
-          {errors.Gender && <p>Gender is required</p>}
+          {errors.Gender?.message && <p>{errors.Gender.message}</p>}
 
           <label htmlFor="Allergies" className="form-label">Allergies:</label>
           <input type="text" id="Allergies" {...register('Allergies')} className="form-control" />
