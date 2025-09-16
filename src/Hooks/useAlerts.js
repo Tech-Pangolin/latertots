@@ -1,15 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
-/**
- * Custom hook for managing alerts across pages
- * 
- * Features:
- * - Handles alerts from navigation state
- * - Provides methods to add/remove alerts
- * - Automatically clears navigation state after processing
- * - Supports multiple alerts with unique IDs
- */
 
 const createAlert = (type, message, autoDismissDelayMillis = null) => ({
   id: Date.now().toString() + Math.random().toString(36).substr(2, 9),

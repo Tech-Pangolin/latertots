@@ -2,11 +2,6 @@ import React from 'react';
 import Alert from './Alert';
 import { useAlerts } from '../../Hooks/useAlerts';
 
-/**
- * AlertContainer Component
- * 
- * Renders all active alerts using the useAlerts hook
- */
 
 const AlertContainer = () => {
   const { alerts, removeAlert } = useAlerts();

@@ -1,18 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
-/**
- * Reusable Alert Component
- * 
- * Props:
- * - type: Alert type - accepts 'info', 'warning', 'success', or 'danger' (default: 'info')
- * - message: Alert message text to display
- * - autoDismissDelayMillis: Auto-dismiss delay in milliseconds (optional - if not provided, alert only dismisses manually)
- * - onDismiss: Callback function called when alert is dismissed (optional)
- * - className: Additional CSS classes (optional)
- */
-
 const Alert = ({ 
-  type = 'info', 
+  type = 'info', // info, warning, success, danger
   message, 
   autoDismissDelayMillis,
   onDismiss,
