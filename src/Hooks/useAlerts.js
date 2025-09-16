@@ -9,19 +9,6 @@ import { useLocation } from 'react-router-dom';
  * - Provides methods to add/remove alerts
  * - Automatically clears navigation state after processing
  * - Supports multiple alerts with unique IDs
- * 
- * PLANNED TESTS:
- * 1. Navigation State Handling:
- *    - Processes alerts from location.state.alerts array
- *    - Clears navigation state after processing to prevent re-triggering
- *    - Does not process alerts when location.state.alerts is undefined/null/empty
- * 
- * 2. Alert Management:
- *    - addAlert creates alert with unique ID and adds to state
- *    - removeAlert removes specific alert by ID
- *    - clearAllAlerts removes all alerts from state
- *    - Alert IDs are unique (timestamp + random string)
- * 
  */
 
 const createAlert = (type, message, autoDismissDelayMillis = null) => ({

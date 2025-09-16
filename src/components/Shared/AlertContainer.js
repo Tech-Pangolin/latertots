@@ -6,18 +6,6 @@ import { useAlerts } from '../../Hooks/useAlerts';
  * AlertContainer Component
  * 
  * Renders all active alerts using the useAlerts hook
- * 
- * PLANNED TESTS:
- * 1. Unit Tests:
- *    - Renders multiple alerts when they exist
- *    - Renders no alerts when alerts array is empty
- *    - Each alert has unique key prop
- *    - Alert removal works correctly
- * 
- * 2. Integration Tests:
- *    - Works correctly with useAlerts hook
- *    - Alerts from navigation state are displayed
- *    - Multiple alerts can be displayed simultaneously
  */
 
 const AlertContainer = () => {
