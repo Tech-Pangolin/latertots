@@ -541,7 +541,10 @@ export class FirebaseDbService {
           State: "",
           StreetAddress: "",
           Zip: "",
-          archived: false
+          archived: false,
+          paymentHold: false,
+          Children: [],
+          Contacts: []
       });
         logger.info("User document initialized with template data.");
       } catch (error) {
@@ -556,6 +559,40 @@ export class FirebaseDbService {
         await deleteUser(userCredential.user);
       }
       logger.error("createUserAndAuthenticate: Could not create new FirebaseAuth account: ", error);
+      throw error;
+    }
+  };
+
+  /**
+   * Creates a user profile document from Google authentication data.
+   * 
+   * @param {Object} authUser - The Firebase Auth user object from Google sign-in.
+   * @returns {Promise<void>} A promise that resolves when the user profile is created.
+   */
+  createUserProfileFromGoogleAuth = async (authUser) => {
+    try {
+      await setDoc(doc(db, 'Users', authUser.uid), {
+        // Map available Google data
+        Email: authUser.email,
+        Name: authUser.displayName || "",
+        photoURL: authUser.photoURL || undefined,
+        
+        // Hard-coded defaults (same as email/password flow)
+        CellNumber: "",
+        City: "",
+        Role: doc(db, 'Roles', 'parent-user'),
+        State: "",
+        StreetAddress: "",
+        Zip: "",
+        archived: false,
+        paymentHold: false,
+        Children: [],
+        Contacts: []
+      });
+      
+      logger.info("Google user profile created successfully:", authUser.uid);
+    } catch (error) {
+      logger.error("Error creating Google user profile:", error);
       throw error;
     }
   };

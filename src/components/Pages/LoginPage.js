@@ -3,6 +3,7 @@ import 'firebaseui/dist/firebaseui.css';
 import { signInWithGoogle, signInWithEmail, useAuth } from '../AuthProvider';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import GoogleIcon from '../Shared/GoogleIcon';
 
 
 function LoginPage() {
@@ -54,7 +55,14 @@ function LoginPage() {
 
               <div className="row">
                 <div className='col-12'> <button type="submit" className="login-btn w-100">Login</button></div>
-                {/* <div className='col-12 col-md-1 text-centerm d-flex justify-content-center align-items-center'>  <span className="mx-1"> or </span></div> */}
+              </div>
+              <div className='row'>
+                <div className='col-12'>
+                  <button onClick={signInWithGoogle} className="google-btn w-100 mt-3" type="button">
+                    <GoogleIcon size={16} />
+                    <span className="ms-2">Sign in with Google</span>
+                  </button>
+                </div>
               </div>
               <div className='row'>
                 <div className='col-12'>
