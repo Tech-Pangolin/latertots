@@ -7,7 +7,6 @@ import UserForm from '../Shared/UserForm';
 import ChildRegistration from './ChildRegistration';
 import ContactRegistration from './ContactRegistration';
 import AlertContainer from '../Shared/AlertContainer';
-import { useAlerts } from '../../Hooks/useAlerts';
 import { useChildrenRQ } from '../../Hooks/query-related/useChildrenRQ';
 import { useContactsRQ } from '../../Hooks/query-related/useContactsRQ';
 
@@ -17,7 +16,6 @@ const UserProfile = () => {
   const { data: children = [] } = useChildrenRQ();
   const { data: contacts = [] } = useContactsRQ();
   const location = useLocation();
-  const { alerts } = useAlerts();
 
   const [openChildModal, setOpenChildModal] = useState(false);
   const [openContactsModal, setOpenContactsModal] = useState(false);
