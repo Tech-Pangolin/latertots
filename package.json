@@ -40,6 +40,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:auth": "react-scripts test --testPathPattern=auth",
+    "test:coverage": "react-scripts test --coverage",
+    "test:watch": "react-scripts test --watchAll",
     "eject": "react-scripts eject",
     "todo-check": "eslint --no-eslintrc -c .eslintrc-todo.json \"src/**/*.{js,jsx}\""
   },
