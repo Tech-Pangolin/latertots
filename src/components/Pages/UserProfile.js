@@ -1,20 +1,34 @@
 import ContactsTable from '../Shared/ContactsTable';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthProvider';
+import { useLocation } from 'react-router-dom';
 import ChildCard from '../Shared/ChildCard';
 import UserForm from '../Shared/UserForm';
 import ChildRegistration from './ChildRegistration';
 import ContactRegistration from './ContactRegistration';
+import AlertContainer from '../Shared/AlertContainer';
+import { useAlerts } from '../../Hooks/useAlerts';
 import { useChildrenRQ } from '../../Hooks/query-related/useChildrenRQ';
 import { useContactsRQ } from '../../Hooks/query-related/useContactsRQ';
+
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
   const { data: children = [] } = useChildrenRQ();
   const { data: contacts = [] } = useContactsRQ();
+  const location = useLocation();
+  const { alerts } = useAlerts();
 
   const [openChildModal, setOpenChildModal] = useState(false);
   const [openContactsModal, setOpenContactsModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('home');
+
+  // Handle tab switching from navigation state
+  useEffect(() => {
+    if (location.state?.switchToTab) {
+      setActiveTab(location.state.switchToTab);
+    }
+  }, [location.state]);
 
   // TODO: Open a dialog to show/edit child details when clicking on a child's name
   // Dialog state
@@ -26,8 +40,15 @@ const UserProfile = () => {
   };
   const handleClose = () => setOpen(false);
 
+
   return (
     <div className="container-fluid rounded bg-blue">
+      {/* Alert Container */}
+      <div className="row">
+        <div className="col-12 p-3">
+          <AlertContainer />
+        </div>
+      </div>
 
       <div className="row">
 
@@ -52,13 +73,49 @@ const UserProfile = () => {
           {/* Tab Navigation Header */}
           <ul className="nav nav-tabs mt-5" id="myTab" role="tablist">
             <li className="nav-item" role="presentation">
-              <button className="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">User Info</button>
+              <button 
+                className={`nav-link ${activeTab === 'home' ? 'active' : ''}`} 
+                id="home-tab" 
+                data-bs-toggle="tab" 
+                data-bs-target="#home-tab-pane" 
+                type="button" 
+                role="tab" 
+                aria-controls="home-tab-pane" 
+                aria-selected={activeTab === 'home'}
+                onClick={() => setActiveTab('home')}
+              >
+                User Info
+              </button>
             </li>
             <li className="nav-item" role="presentation">
-              <button className="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Children</button>
+              <button 
+                className={`nav-link ${activeTab === 'children' ? 'active' : ''}`} 
+                id="profile-tab" 
+                data-bs-toggle="tab" 
+                data-bs-target="#profile-tab-pane" 
+                type="button" 
+                role="tab" 
+                aria-controls="profile-tab-pane" 
+                aria-selected={activeTab === 'children'}
+                onClick={() => setActiveTab('children')}
+              >
+                Children
+              </button>
             </li>
             <li className="nav-item" role="presentation">
-              <button className="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-tab-pane" type="button" role="tab" aria-controls="contact-tab-pane" aria-selected="false">Contacts</button>
+              <button 
+                className={`nav-link ${activeTab === 'contacts' ? 'active' : ''}`} 
+                id="contact-tab" 
+                data-bs-toggle="tab" 
+                data-bs-target="#contact-tab-pane" 
+                type="button" 
+                role="tab" 
+                aria-controls="contact-tab-pane" 
+                aria-selected={activeTab === 'contacts'}
+                onClick={() => setActiveTab('contacts')}
+              >
+                Contacts
+              </button>
             </li>
           </ul>
 
@@ -66,14 +123,14 @@ const UserProfile = () => {
           <div className="tab-content" id="myTabContent">
 
             {/* currentUser's Profile Tab Content */}
-            <div className="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabIndex="0">
+            <div className={`tab-pane fade ${activeTab === 'home' ? 'show active' : ''}`} id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabIndex="0">
               <div className='mt-5'>
                 <UserForm />
               </div>
             </div>
 
             {/* currentUser's Children Tab Content */}
-            <div className="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabIndex="0">
+            <div className={`tab-pane fade ${activeTab === 'children' ? 'show active' : ''}`} id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabIndex="0">
               <div className='px-5 py-5'>
                 <div className='row'>
                   <div className="col-2"> <h3 className="mt-2">Children</h3></div>
@@ -113,7 +170,7 @@ const UserProfile = () => {
             </div>
 
             {/* currentUser's Contacts Tab Content */}
-            <div className="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabIndex="0">
+            <div className={`tab-pane fade ${activeTab === 'contacts' ? 'show active' : ''}`} id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabIndex="0">
               <div className='px-5 py-5'>
                 <div className=" row"  >
                   <div className="col-2"><h4 className="mt-2">Contacts</h4></div>
