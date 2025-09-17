@@ -71,7 +71,7 @@ export function useAllReservationsRQ({
       return pageDocs;
     },
     enabled,
-    staleTime: 0, // Always consider data stale to force refetch
+    staleTime: 15000, // 15 seconds between refetches
     onError: (error) => {
       console.error("Error fetching /Reservations data:", error);
     },

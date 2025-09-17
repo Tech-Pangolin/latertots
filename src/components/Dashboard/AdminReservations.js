@@ -36,20 +36,6 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
     }
   };
 
-  // Calculate the range of items being displayed
-  const getItemRange = () => {
-    if (isDayView) {
-      return { start: 1, end: filteredReservations.length, total: filteredReservations.length };
-    }
-    
-    if (paginationInfo) {
-      const start = (paginationInfo.currentPage - 1) * pageSize + 1;
-      const end = Math.min(paginationInfo.currentPage * pageSize, paginationInfo.totalCount);
-      return { start, end, total: paginationInfo.totalCount };
-    }
-    
-    return { start: 1, end: displayReservations.length, total: displayReservations.length };
-  };
   
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("start");
@@ -112,8 +98,24 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
     return filtered;
   }, [reservations, selectedDate, searchTerm, sortField, sortDirection]);
 
+
   // For now, use filteredReservations directly (pagination will be handled by the hook)
   const displayReservations = filteredReservations;
+
+  // Calculate the range of items being displayed
+  const getItemRange = () => {
+    if (isDayView) {
+      return { start: 1, end: filteredReservations.length, total: filteredReservations.length };
+    }
+    
+    if (paginationInfo) {
+      const start = (paginationInfo.currentPage - 1) * pageSize + 1;
+      const end = Math.min(paginationInfo.currentPage * pageSize, paginationInfo.totalCount);
+      return { start, end, total: paginationInfo.totalCount };
+    }
+    
+    return { start: 1, end: displayReservations.length, total: displayReservations.length };
+  };
 
   const handleSort = (field) => {
     if (sortField === field) {
