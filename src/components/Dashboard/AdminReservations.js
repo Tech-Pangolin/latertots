@@ -176,9 +176,9 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
                 </button>
               )}
             </div>
-            <div className="card-body">
+            <div className="card-body d-flex flex-column">
               {/* Search and Sort Controls */}
-              <div className="row mb-3">
+              <div className="row mb-3 flex-shrink-0">
                 <div className="col-md-6">
                   <input
                     type="text"
@@ -204,7 +204,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
                 </div>
               </div>
 
-              <div className="table-responsive">
+              <div className="table-responsive flex-fill overflow-auto">
                 {isLoading && <p>Loading...</p>}
                 {!isLoading && !isError && (
                   <table className="table">
@@ -251,7 +251,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
               
               {/* Pagination controls (only for full admin view) */}
               {!isDayView && paginationInfo && paginationInfo.totalPages > 1 && (
-                <nav aria-label="Appointments pagination" className="mt-3">
+                <nav aria-label="Appointments pagination" className="mt-3 flex-shrink-0">
                   <ul className="pagination justify-content-center">
                     <li className={`page-item ${!paginationInfo.hasPreviousPage ? 'disabled' : ''}`}>
                       <button 

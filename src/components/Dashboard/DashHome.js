@@ -19,6 +19,7 @@ function DashHomeContent({ calCardRef, calHeight }) {
           ref={calCardRef}
           id="calendar-card"
           className="card flex-fill d-flex flex-column"
+          style={calHeight > 0 ? { height: calHeight } : {}}
         >
           {selectedDate ? (
             <AdminReservations 
@@ -29,7 +30,7 @@ function DashHomeContent({ calCardRef, calHeight }) {
           ) : (
             <>
               <h5 className="card-header">Monthly Overview</h5>
-              <div className="card-body flex-fill">
+              <div className="card-body flex-fill overflow-auto">
                 <DashboardCalendar />
               </div>
             </>
