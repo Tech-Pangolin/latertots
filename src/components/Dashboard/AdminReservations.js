@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAllReservationsRQ } from "../../Hooks/query-related/useAllReservationsRQ";
 import { useReservationsByMonthDayRQ } from "../../Hooks/query-related/useReservationsByMonthDayRQ";
 import { useAdminPanelContext } from "./AdminPanelContext";
@@ -15,6 +15,17 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
     pageSize 
   });
   const monthReservationsQuery = useReservationsByMonthDayRQ({ enabled: isDayView });
+  
+  // Update the hook's monthYear state when selectedDate changes
+  useEffect(() => {
+    if (selectedDate && monthReservationsQuery.setMonthYear) {
+      monthReservationsQuery.setMonthYear({
+        day: selectedDate.getUTCDate(),
+        month: selectedDate.getUTCMonth(),
+        year: selectedDate.getUTCFullYear(),
+      });
+    }
+  }, [selectedDate, monthReservationsQuery.setMonthYear]);
   
   // Use the appropriate query result
   const queryResult = isDayView ? monthReservationsQuery : allReservationsQuery;
@@ -41,6 +52,12 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
   const [sortField, setSortField] = useState("start");
   const [sortDirection, setSortDirection] = useState("desc");
 
+  // Helper function to get status from either data format
+  const getReservationStatus = (reservation) => {
+    // Handle both raw data (extendedProps.status) and transformed data (status)
+    return reservation.status || reservation.extendedProps?.status || '--';
+  };
+
   // Filter reservations by selected date if provided
   const filteredReservations = useMemo(() => {
     let filtered = reservations;
@@ -54,7 +71,8 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
       
       filtered = filtered.filter(reservation => {
         const reservationDate = new Date(reservation.start?.seconds ? reservation.start.toDate() : reservation.start);
-        return reservationDate >= startOfDay && reservationDate <= endOfDay;
+        const isInRange = reservationDate >= startOfDay && reservationDate <= endOfDay;
+        return isInRange;
       });
     }
     
@@ -62,7 +80,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
     if (searchTerm) {
       filtered = filtered.filter(reservation => 
         reservation.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reservation.extendedProps?.status?.toLowerCase().includes(searchTerm.toLowerCase())
+        getReservationStatus(reservation).toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -80,8 +98,8 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
           bValue = b.title || "";
           break;
         case "status":
-          aValue = a.extendedProps?.status || "";
-          bValue = b.extendedProps?.status || "";
+          aValue = getReservationStatus(a);
+          bValue = getReservationStatus(b);
           break;
         default:
           aValue = a[sortField] || "";
@@ -142,10 +160,11 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
     return (
       <tr key={reservation.id}>
         <th scope="row">{reservation.title || '--'}</th>
-        <td>{formatDate(reservation.start)}</td>
+        {!selectedDate && (
+          <td>{formatDate(reservation.start)}</td>
+        )}
         <td>{formatTime(reservation.start)} - {formatTime(reservation.end)}</td>
-        <td>{reservation.extendedProps?.status || '--'}</td>
-        <td>{reservation.extendedProps?.childId || '--'}</td>
+        <td>{getReservationStatus(reservation)}</td>
         <td>{reservation.userId || '--'}</td>
       </tr>
     )
@@ -234,7 +253,6 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
                         >
                           Status {getSortIcon('status')}
                         </th>
-                        <th scope="col">Child ID</th>
                         <th scope="col">User ID</th>
                       </tr>
                     </thead>
