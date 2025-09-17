@@ -39,12 +39,14 @@ const ManageReservationsPage = () => {
   }, [rawEvents]);
 
   useEffect(() => {
+    if (!selectedDate) return;
+    
     setMonthYear({
       month: selectedDate.getUTCMonth(),
       year: selectedDate.getUTCFullYear(),
     });
 
-    if (!selectedDate || !calendarComponentRef.current) return;
+    if (!calendarComponentRef.current) return;
     // Use a timeout to ensure the calendar is fully rendered before navigating
     const handle = setTimeout(() => {
       const api = calendarComponentRef.current.getApi();
