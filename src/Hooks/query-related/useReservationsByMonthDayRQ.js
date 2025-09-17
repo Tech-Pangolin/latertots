@@ -8,7 +8,7 @@ import { logger } from "../../Helpers/logger";
 import _ from "lodash";
 import { luxonDateTimeFromFirebaseTimestamp } from "../../Helpers/datetime";
 
-export function useReservationsByMonthDayRQ() {
+export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
   const { dbService, currentUser } = useAuth();
   const [monthYear, setMonthYearRaw] = useState({ day: null, week: false, month: new Date().getMonth(), year: new Date().getFullYear() });
   const queryClient = useQueryClient();
@@ -98,6 +98,7 @@ export function useReservationsByMonthDayRQ() {
     queryKey,
     queryFn: () => dbService.fetchDocs(reservationQuery, false),
     select: (data) => data.map(transformReservationData).filter(Boolean),
+    enabled,
     onError: (error) => {
       console.error("Error fetching monthly reservations:", error);
     },
@@ -110,11 +111,13 @@ export function useReservationsByMonthDayRQ() {
   );
 
   useEffect(() => {
+    if (!enabled) return;
+    
     const unsubscribe = dbService.subscribeDocs(reservationQuery, fresh => {
       queryClient.setQueryData(queryKey, fresh.map(transformReservationData).filter(Boolean)); 
     }, false);
     return () => unsubscribe();
-  }, [queryKey, reservationQuery, queryClient]);
+  }, [queryKey, reservationQuery, queryClient, enabled]);
 
   return {
     ...queryResult,
