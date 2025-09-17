@@ -27,6 +27,11 @@ const DashNav = ({ setCurrentView }) => {
                 <span className="ml-2">View Contacts</span>
               </a>
             </li>
+            <li className="nav-item">
+              <a className="nav-link" href="#" onClick={() => setCurrentView('reservations')} >
+                <span className="ml-2">View Reservations</span>
+              </a>
+            </li>
 
           </ul>
         </div>
