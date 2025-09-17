@@ -86,6 +86,7 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
       status: res.extendedProps.status,
       childId: res.extendedProps.childId,
       title: res.title || "",
+      userId: res.userId, // Include userId field
       start: luxonDateTimeFromFirebaseTimestamp(res.start).toISO(),
       end: luxonDateTimeFromFirebaseTimestamp(res.end).toISO(),
       startDT: luxonDateTimeFromFirebaseTimestamp(res.start),
