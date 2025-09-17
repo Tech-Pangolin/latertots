@@ -94,11 +94,19 @@ const ManageReservationsPage = ({ enableAggregates = false }) => {
     mutationKey: ['changeReservationTime'],
     mutationFn: async ({ id, newStart, newEnd }) => dbService.changeReservationTime(id, newStart, newEnd),
     onSuccess: () => {
-      queryClient.invalidateQueries(
-        ['adminCalendarReservationsByMonth'],
-        selectedDate.getUTCMonth(),
-        selectedDate.getUTCFullYear()
-      )
+      // Invalidate all relevant query keys based on the current view
+      const month = selectedDate.getUTCMonth();
+      const year = selectedDate.getUTCFullYear();
+      const day = selectedDate.getUTCDate();
+      
+      // Invalidate day view query
+      queryClient.invalidateQueries(['calendarReservationsByDay', day, month, year]);
+      
+      // Invalidate month view query  
+      queryClient.invalidateQueries(['calendarReservationsByMonth', month, year]);
+      
+      // Invalidate week view query (in case user switches to week view)
+      queryClient.invalidateQueries(['calendarReservationsByWeek', day, month, year]);
     },
     onError: (err) => console.error("Error changing reservation time: ", err)
   })
@@ -167,11 +175,19 @@ const ManageReservationsPage = ({ enableAggregates = false }) => {
       mutationKey: ['changeReservationStatus'],
       mutationFn: async ({ id, status }) => dbService.changeReservationStatus(id, status),
       onSuccess: () => {
-        queryClient.invalidateQueries(
-          ['adminCalendarReservationsByMonth'],
-          selectedDate.getUTCMonth(),
-          selectedDate.getUTCFullYear()
-        );
+        // Invalidate all relevant query keys based on the current view
+        const month = selectedDate.getUTCMonth();
+        const year = selectedDate.getUTCFullYear();
+        const day = selectedDate.getUTCDate();
+        
+        // Invalidate day view query
+        queryClient.invalidateQueries(['calendarReservationsByDay', day, month, year]);
+        
+        // Invalidate month view query  
+        queryClient.invalidateQueries(['calendarReservationsByMonth', month, year]);
+        
+        // Invalidate week view query (in case user switches to week view)
+        queryClient.invalidateQueries(['calendarReservationsByWeek', day, month, year]);
       },
       onError: (error) => {
         console.error('Error updating reservation status:', error);
