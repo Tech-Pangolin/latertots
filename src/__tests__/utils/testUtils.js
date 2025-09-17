@@ -1,22 +1,34 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 
 // Custom render function that includes providers
 export const renderWithProviders = (ui, options = {}) => {
   const {
     route = '/',
+    locationState = null,
     ...renderOptions
   } = options;
 
-  // Set up router
-  window.history.pushState({}, 'Test page', route);
-
-  const Wrapper = ({ children }) => (
-    <BrowserRouter>
-      {children}
-    </BrowserRouter>
-  );
+  const Wrapper = ({ children }) => {
+    // Use MemoryRouter for tests with location state to ensure proper state handling
+    if (locationState) {
+      return (
+        <MemoryRouter 
+          initialEntries={[{ pathname: route, state: locationState }]}
+        >
+          {children}
+        </MemoryRouter>
+      );
+    }
+    
+    // Use BrowserRouter for tests without location state
+    return (
+      <BrowserRouter>
+        {children}
+      </BrowserRouter>
+    );
+  };
 
   return render(ui, { wrapper: Wrapper, ...renderOptions });
 };

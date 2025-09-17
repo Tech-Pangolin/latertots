@@ -4,6 +4,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
 import { checkAgainstBusinessHours, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import ReservationFormModal from '../Shared/ReservationFormModal';
@@ -22,6 +23,7 @@ const ScheduleChildSitterPage = () => {
   const [children, setChildren] = useState([]);
   const { currentUser, dbService } = useAuth();
   const [modalOpenState, setModalOpenState] = useState(false);
+  const navigate = useNavigate();
 
   const { data: events = [], setMonthYear } = useReservationsByMonthDayRQ()
 
@@ -32,6 +34,23 @@ const ScheduleChildSitterPage = () => {
       setChildren(resp);
     });
   }, [currentUser.email, dbService]);
+
+  // Redirect to profile if no children are registered (except for admin users)
+  useEffect(() => {
+    if (children.length === 0 && currentUser.Role !== 'admin' && dbService) {
+      navigate('/profile', { 
+        state: { 
+          alerts: [{
+            id: Date.now().toString(),
+            type: 'warning',
+            message: 'Please register at least one child before scheduling appointments.',
+            autoDismissDelayMillis: null
+          }],
+          switchToTab: 'children'
+        } 
+      });
+    }
+  }, [children, currentUser.Role, navigate, dbService]);
 
   useEffect(() => {
     logger.info('Events:', events);
