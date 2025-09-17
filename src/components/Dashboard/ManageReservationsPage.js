@@ -1,4 +1,5 @@
 import { checkAgainstBusinessHours, checkFutureStartTime, renderEventContent } from '../../Helpers/calendar';
+import { generateTimeSlotAggregates } from '../../Helpers/timeSlotAggregates';
 import FullCalendar from '@fullcalendar/react';
 import interactionPlugin from '@fullcalendar/interaction';
 import { logger } from '../../Helpers/logger';
@@ -12,7 +13,7 @@ import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReserv
 import _ from 'lodash';
 import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
 
-const ManageReservationsPage = () => {
+const ManageReservationsPage = ({ enableAggregates = false }) => {
   const { dbService } = useAuth();
   const { selectedDate } = useAdminPanelContext();
   const calendarComponentRef = useRef(null);
@@ -31,12 +32,35 @@ const ManageReservationsPage = () => {
   } = useReservationsByMonthDayRQ();
 
   const prevRawEventsRef = useRef([]);
-  const events = useMemo(() => {
+  const processedRawEvents = useMemo(() => {
     if (!_.isEqual(prevRawEventsRef.current, rawEvents)) {
       prevRawEventsRef.current = rawEvents;
     }
     return prevRawEventsRef.current;
   }, [rawEvents]);
+
+  // Process events with optional aggregation
+  // Recalculates ALL aggregates when ANY event changes
+  // TODO: Consider Level 2 optimization (granular recalculation) if performance 
+  // becomes an issue with company growth (1000+ appointments per day)
+  const events = useMemo(() => {
+    if (!enableAggregates || !processedRawEvents.length) {
+      return processedRawEvents;
+    }
+
+    // Separate confirmed and pending appointments
+    const confirmed = processedRawEvents.filter(event => event.status === 'confirmed');
+    const pending = processedRawEvents.filter(event => event.status === 'pending');
+    const other = processedRawEvents.filter(event => 
+      !['confirmed', 'pending'].includes(event.status)
+    );
+
+    // Generate aggregates for confirmed appointments
+    const aggregates = generateTimeSlotAggregates(confirmed);
+    
+    // Return combined events: aggregates + pending + other statuses
+    return [...aggregates, ...pending, ...other];
+  }, [processedRawEvents, enableAggregates]);
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -185,8 +209,10 @@ const ManageReservationsPage = () => {
           views={viewsConfig}
           slotMinTime="05:00:00"
           slotMaxTime="21:00:00"
+          slotDuration="00:15:00"
+          slotLabelInterval="01:00:00"
           headerToolbar={headerToolbarConfig}
-          height="1100px"
+          height="1800px"
           expandRows={true}
           handleWindowResize={true}
 

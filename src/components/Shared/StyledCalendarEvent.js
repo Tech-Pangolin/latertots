@@ -15,13 +15,13 @@ const StyledCalendarEvent = ({event, backgroundColor}) => {
   return (
     <div className='fc-event-main' data-event-id={event.id} style={{ backgroundColor, padding: '5px', borderRadius: '5px', color: 'white' }}>
         <b>{event.title}</b>
-        {event.extendedProps.status === 'pending' && (
+        {event.status === 'pending' && (
             <i style={{ marginLeft: '5px' }}>Pending</i>
         )}
-        {event.extendedProps.status === 'confirmed' && (
+        {event.status === 'confirmed' && (
             <i style={{ marginLeft: '5px' }}>Approved</i>
         )}
-        {event.extendedProps.status === 'unpaid' && (
+        {event.status === 'unpaid' && (
             <i style={{ marginLeft: '5px' }}>Unpaid</i>
         )}
     </div>
