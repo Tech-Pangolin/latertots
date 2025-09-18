@@ -3,6 +3,28 @@ import { useAllReservationsRQ } from "../../Hooks/query-related/useAllReservatio
 import { useReservationsByMonthDayRQ } from "../../Hooks/query-related/useReservationsByMonthDayRQ";
 import { useAdminPanelContext } from "./AdminPanelContext";
 
+// Helper function to generate visible page numbers for pagination
+const generateVisiblePageNumbers = (currentPage, totalPages, maxVisiblePages = 5) => {
+  // If we have fewer pages than the maximum visible, show all pages
+  if (totalPages <= maxVisiblePages) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  
+  // Calculate the range of pages to show, centered around current page
+  const halfVisible = Math.floor(maxVisiblePages / 2);
+  let startPage = Math.max(1, currentPage - halfVisible);
+  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+  
+  // Adjust start page if we're near the end
+  if (endPage - startPage < maxVisiblePages - 1) {
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+  }
+  
+  return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+};
+
+
+
 const AdminReservations = ({ selectedDate = null, showReturnButton = false, onReturnToMonth = null }) => {
   // Use conditional hook calls based on context
   const isDayView = selectedDate !== null;
@@ -281,22 +303,17 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
                       </button>
                     </li>
                     
-                    {/* Show page numbers */}
-                    {Array.from({ length: Math.min(5, paginationInfo.totalPages) }, (_, i) => {
-                      const pageNum = Math.max(1, Math.min(paginationInfo.totalPages - 4, paginationInfo.currentPage - 2)) + i;
-                      if (pageNum > paginationInfo.totalPages) return null;
-                      
-                      return (
-                        <li key={pageNum} className={`page-item ${paginationInfo.currentPage === pageNum ? 'active' : ''}`}>
-                          <button 
-                            className="page-link" 
-                            onClick={() => setCurrentPage(pageNum)}
-                          >
-                            {pageNum}
-                          </button>
-                        </li>
-                      );
-                    })}
+                    {/* Show page numbers - display up to 5 pages centered around current page */}
+                    {generateVisiblePageNumbers(paginationInfo.currentPage, paginationInfo.totalPages).map(pageNum => (
+                      <li key={pageNum} className={`page-item ${paginationInfo.currentPage === pageNum ? 'active' : ''}`}>
+                        <button 
+                          className="page-link" 
+                          onClick={() => setCurrentPage(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      </li>
+                    ))}
                     
                     <li className={`page-item ${!paginationInfo.hasNextPage ? 'disabled' : ''}`}>
                       <button 
