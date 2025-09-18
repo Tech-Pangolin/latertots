@@ -1,5 +1,6 @@
 import React from 'react';
 import  StyledCalendarEvent from '../components/Shared/StyledCalendarEvent';
+import AggregateTimeSlot from '../components/Shared/AggregateTimeSlot';
 import { BUSINESS_HRS } from './constants';
 
 
@@ -23,8 +24,17 @@ export function checkFutureStartTime(event) {
 
 export const renderEventContent = (eventInfo) => {
   const { event } = eventInfo;
+  
+  // Handle aggregate events (confirmed appointments grouped into 15-minute slots)
+  if (event.extendedProps?.isAggregate) {
+    // Muted neon purple color for aggregate events
+    const backgroundColor = '#8A2BE2'; // BlueViolet - muted neon purple
+    return <AggregateTimeSlot event={event} backgroundColor={backgroundColor} />;
+  }
+  
+  // Handle individual events (pending appointments and other statuses)
   let backgroundColor;
-  switch (event.extendedProps.status) {
+  switch (event.status) {
     case 'confirmed':
       backgroundColor = 'mediumseagreen';
       break;

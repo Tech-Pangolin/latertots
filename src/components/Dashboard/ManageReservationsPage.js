@@ -1,4 +1,5 @@
 import { checkAgainstBusinessHours, checkFutureStartTime, renderEventContent } from '../../Helpers/calendar';
+import { generateTimeSlotAggregates } from '../../Helpers/timeSlotAggregates';
 import FullCalendar from '@fullcalendar/react';
 import interactionPlugin from '@fullcalendar/interaction';
 import { logger } from '../../Helpers/logger';
@@ -12,7 +13,7 @@ import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReserv
 import _ from 'lodash';
 import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
 
-const ManageReservationsPage = () => {
+const ManageReservationsPage = ({ enableAggregates = false }) => {
   const { dbService } = useAuth();
   const { selectedDate } = useAdminPanelContext();
   const calendarComponentRef = useRef(null);
@@ -31,20 +32,45 @@ const ManageReservationsPage = () => {
   } = useReservationsByMonthDayRQ();
 
   const prevRawEventsRef = useRef([]);
-  const events = useMemo(() => {
+  const processedRawEvents = useMemo(() => {
     if (!_.isEqual(prevRawEventsRef.current, rawEvents)) {
       prevRawEventsRef.current = rawEvents;
     }
     return prevRawEventsRef.current;
   }, [rawEvents]);
 
+  // Process events with optional aggregation
+  // Recalculates ALL aggregates when ANY event changes
+  // TODO: Consider Level 2 optimization (granular recalculation) if performance 
+  // becomes an issue with company growth (1000+ appointments per day)
+  const events = useMemo(() => {
+    if (!enableAggregates || !processedRawEvents.length) {
+      return processedRawEvents;
+    }
+
+    // Separate confirmed and pending appointments
+    const confirmed = processedRawEvents.filter(event => event.status === 'confirmed');
+    const pending = processedRawEvents.filter(event => event.status === 'pending');
+    const other = processedRawEvents.filter(event => 
+      !['confirmed', 'pending'].includes(event.status)
+    );
+
+    // Generate aggregates for confirmed appointments
+    const aggregates = generateTimeSlotAggregates(confirmed);
+    
+    // Return combined events: aggregates + pending + other statuses
+    return [...aggregates, ...pending, ...other];
+  }, [processedRawEvents, enableAggregates]);
+
   useEffect(() => {
+    if (!selectedDate) return;
+    
     setMonthYear({
       month: selectedDate.getUTCMonth(),
       year: selectedDate.getUTCFullYear(),
     });
 
-    if (!selectedDate || !calendarComponentRef.current) return;
+    if (!calendarComponentRef.current) return;
     // Use a timeout to ensure the calendar is fully rendered before navigating
     const handle = setTimeout(() => {
       const api = calendarComponentRef.current.getApi();
@@ -68,11 +94,19 @@ const ManageReservationsPage = () => {
     mutationKey: ['changeReservationTime'],
     mutationFn: async ({ id, newStart, newEnd }) => dbService.changeReservationTime(id, newStart, newEnd),
     onSuccess: () => {
-      queryClient.invalidateQueries(
-        ['adminCalendarReservationsByMonth'],
-        selectedDate.getUTCMonth(),
-        selectedDate.getUTCFullYear()
-      )
+      // Invalidate all relevant query keys based on the current view
+      const month = selectedDate.getUTCMonth();
+      const year = selectedDate.getUTCFullYear();
+      const day = selectedDate.getUTCDate();
+      
+      // Invalidate day view query
+      queryClient.invalidateQueries(['calendarReservationsByDay', day, month, year]);
+      
+      // Invalidate month view query  
+      queryClient.invalidateQueries(['calendarReservationsByMonth', month, year]);
+      
+      // Invalidate week view query (in case user switches to week view)
+      queryClient.invalidateQueries(['calendarReservationsByWeek', day, month, year]);
     },
     onError: (err) => console.error("Error changing reservation time: ", err)
   })
@@ -141,11 +175,19 @@ const ManageReservationsPage = () => {
       mutationKey: ['changeReservationStatus'],
       mutationFn: async ({ id, status }) => dbService.changeReservationStatus(id, status),
       onSuccess: () => {
-        queryClient.invalidateQueries(
-          ['adminCalendarReservationsByMonth'],
-          selectedDate.getUTCMonth(),
-          selectedDate.getUTCFullYear()
-        );
+        // Invalidate all relevant query keys based on the current view
+        const month = selectedDate.getUTCMonth();
+        const year = selectedDate.getUTCFullYear();
+        const day = selectedDate.getUTCDate();
+        
+        // Invalidate day view query
+        queryClient.invalidateQueries(['calendarReservationsByDay', day, month, year]);
+        
+        // Invalidate month view query  
+        queryClient.invalidateQueries(['calendarReservationsByMonth', month, year]);
+        
+        // Invalidate week view query (in case user switches to week view)
+        queryClient.invalidateQueries(['calendarReservationsByWeek', day, month, year]);
       },
       onError: (error) => {
         console.error('Error updating reservation status:', error);
@@ -183,8 +225,10 @@ const ManageReservationsPage = () => {
           views={viewsConfig}
           slotMinTime="05:00:00"
           slotMaxTime="21:00:00"
+          slotDuration="00:15:00"
+          slotLabelInterval="01:00:00"
           headerToolbar={headerToolbarConfig}
-          height="1100px"
+          height="1800px"
           expandRows={true}
           handleWindowResize={true}
 

@@ -14,7 +14,7 @@ export default function AdminCalendarInteractionColumn({ calHeight }) {
         style={{ maxHeight: calHeight, minHeight: calHeight }}
       >
         <InteractionColumnNavHeader>
-          {interactionColumnMode === 'notifications' ? <AdminDashNotificationsFeed /> : <ManageReservationsPage initialDateValue={selectedDate} contextDateSetter={setSelectedDate} />}
+          {interactionColumnMode === 'notifications' ? <AdminDashNotificationsFeed /> : <ManageReservationsPage initialDateValue={selectedDate} contextDateSetter={setSelectedDate} enableAggregates={true} />}
           
         </InteractionColumnNavHeader>
       </div>
