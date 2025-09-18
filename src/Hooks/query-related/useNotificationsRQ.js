@@ -55,6 +55,7 @@ export function useNotificationsRQ() {
   
   // Dismiss notification mutation
   const dismissNotificationMutation = useMutation({
+    mutationKey: ['dismissNotification'],
     mutationFn: async (notificationId) => {
       const notificationRef = doc(db, COLLECTIONS.NOTIFICATIONS, notificationId);
       await deleteDoc(notificationRef);
