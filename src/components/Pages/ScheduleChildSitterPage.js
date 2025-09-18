@@ -21,6 +21,7 @@ const ScheduleChildSitterPage = () => {
   const [selectedDate, setSelectedDate] = useState(DateTime.now());
   const queryClient = useQueryClient();
   const [children, setChildren] = useState([]);
+  const [isLoadingChildren, setIsLoadingChildren] = useState(true);
   const { currentUser, dbService } = useAuth();
   const [modalOpenState, setModalOpenState] = useState(false);
   const navigate = useNavigate();
@@ -30,14 +31,19 @@ const ScheduleChildSitterPage = () => {
   // Fetch children data
   useEffect(() => {
     if (!dbService) return;
+    setIsLoadingChildren(true);
     dbService.fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
       setChildren(resp);
+      setIsLoadingChildren(false);
+    }).catch((error) => {
+      console.error('Error fetching children:', error);
+      setIsLoadingChildren(false);
     });
   }, [currentUser.email, dbService]);
 
   // Redirect to profile if no children are registered (except for admin users)
   useEffect(() => {
-    if (children.length === 0 && currentUser.Role !== 'admin' && dbService) {
+    if (!isLoadingChildren && children.length === 0 && currentUser.Role !== 'admin' && dbService) {
       navigate('/profile', { 
         state: { 
           alerts: [{
@@ -50,7 +56,7 @@ const ScheduleChildSitterPage = () => {
         } 
       });
     }
-  }, [children, currentUser.Role, navigate, dbService]);
+  }, [isLoadingChildren, children, currentUser.Role, navigate, dbService]);
 
   useEffect(() => {
     logger.info('Events:', events);
