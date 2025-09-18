@@ -5,6 +5,7 @@ export const COLLECTIONS = Object.freeze({
   PERMISSIONS: 'Parent_Authorized_Permissions',
   RESERVATIONS: 'Reservations',
   ROLES: 'Roles',
+  NOTIFICATIONS: 'Notifications',
 })
 
 export const MIN_RESERVATION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
@@ -54,4 +55,9 @@ export const CONTACT_RELATIONS = Object.freeze({
   OTHER: 'Other',
 })
 
-export const MIN_AGE_FOR_CHILD_YEARS = 2; 
+export const MIN_AGE_FOR_CHILD_YEARS = 2;
+
+export const NOTIFICATION_TYPES = Object.freeze({
+  SYSTEM: 'system',
+  ADMIN: 'admin',
+}) 
