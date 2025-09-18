@@ -46,8 +46,6 @@ export function useAllReservationsRQ({
   const dataQueryResult = useQuery({
     queryKey,
     queryFn: async () => {
-      console.log('Fetching page', page, 'with pageSize', pageSize);
-      
       // First, get all document IDs (lightweight)
       const allDocsSnapshot = await getDocs(baseQuery);
       const allDocIds = allDocsSnapshot.docs.map(doc => doc.id);
@@ -56,8 +54,6 @@ export function useAllReservationsRQ({
       const startIndex = (page - 1) * pageSize;
       const endIndex = startIndex + pageSize;
       const pageDocIds = allDocIds.slice(startIndex, endIndex);
-      
-      console.log(`Page ${page} of ${Math.ceil(allDocIds.length / pageSize)}: showing docs ${startIndex + 1}-${Math.min(endIndex, allDocIds.length)} of ${allDocIds.length} (${pageDocIds.length} docs on this page)`);
       
       // Fetch full documents for this page
       const pageDocs = [];
