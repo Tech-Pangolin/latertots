@@ -10,18 +10,18 @@ const FooterBar = () => {
 
                         <div className="col-lg-4 col-md-6">
                             <div className="footer-info">
-                                <img src="./assets/img/footer/footer.png" className='img-fluid' />
+                                <img src="/assets/img/footer/footer.png" className='img-fluid' />
 
 
                             </div>
                         </div>
                         <div className="col-lg-4 col-md-6 footer-links">
                             <div className="social-links mt-3 text-center">
-                                <a href="https://x.com/l8tertots/" className="twitter"><img src="./assets/img/footer/twitter.png" className='img-fluid' /></a>
+                                <a href="https://x.com/l8tertots/" className="twitter"><img src="/assets/img/footer/twitter.png" className='img-fluid' /></a>
 
-                                <a href="https://www.instagram.com/l8tertots/" className="instagram"><img src="./assets/img/footer/ig.png" className='img-fluid' /></a>
-                                <a href="#" className="facebook"><img src="./assets/img/footer/fb.png" className='img-fluid' /></a>
-                                <a href="#" className="linkedin"><img src="./assets/img/footer/linkedin.png" className='img-fluid' /></a>
+                                <a href="https://www.instagram.com/l8tertots/" className="instagram"><img src="/assets/img/footer/ig.png" className='img-fluid' /></a>
+                                <a href="#" className="facebook"><img src="/assets/img/footer/fb.png" className='img-fluid' /></a>
+                                <a href="#" className="linkedin"><img src="/assets/img/footer/linkedin.png" className='img-fluid' /></a>
                             </div>
                         </div>
 

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
+import { logger } from '../../Helpers/logger';
 
 const HeaderBar = () => {
   const { currentUser, logout } = useAuth();
   const location = useLocation();
+
 
   const [mobileMenu, setMobileMenu] = useState(false);
   const [showTeamTots, setShowTeamTots] = useState(false);
@@ -37,7 +39,6 @@ const HeaderBar = () => {
 
   const dropdownActiveTeam = () => {
     const path = location.pathname;
-    console.log(path)
     switch (path) {
       case '/teamtots':
         return 'active'
@@ -53,7 +54,6 @@ const HeaderBar = () => {
   }
   const dropdownActiveTots = () => {
     const path = location.pathname;
-    console.log(path)
     switch (path) {
       case '/totstidbits':
         return 'active'
@@ -73,13 +73,13 @@ const HeaderBar = () => {
         <div className="logo">
           <h1><a href="index.html">
 
-            <img src="./assets/img/submark.png" alt="" className="img-fluid" />
+            <img src="/assets/img/submark.png" alt="" className="img-fluid" />
 
           </a></h1></div>
 
         <nav id="navbar" className={`navbar ${mobileMenu ? 'navbar-mobile' : ''}`}>
           <ul>
-            <li><a id="home-link" className={` nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href={currentUser ? "/profile" : "/"} >Home</a></li>
+            <li><a id="home-link" className={` nav-link scrollto ${location.pathname === '/' ? 'active' : ''}`} href={currentUser ? "/profile" : "/"}>Home</a></li>
 
             {/* Show the marketing pages if the current user is not an admin */}
             {(!currentUser || currentUser.Role !== 'admin') && <>
@@ -146,7 +146,7 @@ export default HeaderBar;
 
 {/* <AppBar position="static">
       <Toolbar>
-        <img src="./assets/img/logo.png" className="img-fluid" style={{width:'100px'}}/>
+        <img src="/assets/img/logo.png" className="img-fluid" style={{width:'100px'}}/>
         <Button color="inherit" component={Link} to="/" className='nav-link' >Home</Button>
         <Button color="inherit" component={Link} to="/profile" className='nav-link'>Profile</Button>
         <Button color="inherit" component={Link} to="/schedule" className='nav-link'>Schedule</Button>
