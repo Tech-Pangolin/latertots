@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import IntroPage from './components/Pages/IntroPage';
 import LoginPage from './components/Pages/LoginPage';
+import ForgotPasswordPage from './components/Pages/ForgotPasswordPage';
+import ActionHandlerPage from './components/Pages/ActionHandlerPage';
 import PrivateRoute from './components/PrivateRoute';
 import UserRegistrationPage from './components/Pages/UserRegistrationPage';
 import UserProfile from './components/Pages/UserProfile';
@@ -23,6 +25,8 @@ function App() {
         <Routes>
           <Route path="/" element={ <IntroPage /> } />
           <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/auth/action" element={<ActionHandlerPage />} />
           <Route path="/teamtots" element={<MeetPage />} />
           <Route path="/events" element={<EventPage />} />
           <Route path="/party" element={<PartyPage />} />
