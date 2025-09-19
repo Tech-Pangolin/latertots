@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
 import { app } from '../config/firebase';
 import { logger } from '../Helpers/logger';
 import { FirebaseDbService } from '../Helpers/firebase';
@@ -21,6 +21,26 @@ export const signInWithEmail = async (email, password) => {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
     logger.error("Error signing in with email and password: ", error.message);
+  }
+};
+
+export const sendPasswordResetEmailToUser = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    logger.info('Password reset email sent successfully to:', email);
+  } catch (error) {
+    logger.error('Password reset request failed:', error.message);
+    throw error;
+  }
+};
+
+export const resetPasswordWithCode = async (code, newPassword) => {
+  try {
+    await confirmPasswordReset(auth, code, newPassword);
+    logger.info('Password reset successfully');
+  } catch (error) {
+    logger.error('Password reset failed:', error.message);
+    throw error;
   }
 };
 
@@ -62,7 +82,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let unsubProfile = () => { }; // This will be used to unsubscribe from the profile listener
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
-
       setLoading(true);
       unsubProfile(); // Unsubscribe from any previous profile listener
 
@@ -100,11 +119,8 @@ export const AuthProvider = ({ children }) => {
             setCurrentUser(loggedInUser);
             setLoading(false);
 
-            logger.info("User profile loaded successfully:", loggedInUser);
-            
             // Redirect to profile page if this is a newly created profile
             if (profileJustCreated) {
-              logger.info("Redirecting new user to profile page");
               window.location.href = '/profile';
               setProfileJustCreated(false); // Reset the flag
             }
