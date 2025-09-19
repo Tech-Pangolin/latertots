@@ -256,12 +256,12 @@ const UserForm = () => {
             </form>)}
         </div>
       </div>
-      {/* {mode === 'update' && (
+      {mode === 'update' && (
         <div className="row">
           <h5 className="mt-5">Change Password</h5>
-          <ChangePasswordForm reloadUserData={reloadUserData} />
+          <ChangePasswordForm />
         </div>
-      )} */}
+      )}
     </div>
   );
 };
