@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 
 const ForgotPasswordPage = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
-    resolver: joiResolver(generateForgotPasswordSchema(true))
+    resolver: joiResolver(generateForgotPasswordSchema())
   });
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);

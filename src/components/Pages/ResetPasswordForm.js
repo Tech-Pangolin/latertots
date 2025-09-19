@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const ResetPasswordForm = ({ oobCode }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
-    resolver: joiResolver(generateResetPasswordSchema(true))
+    resolver: joiResolver(generateResetPasswordSchema())
   });
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);

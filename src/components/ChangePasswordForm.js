@@ -10,7 +10,7 @@ import { reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 
 const ChangePasswordForm = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
-    resolver: joiResolver(generatePasswordSchema(true))
+    resolver: joiResolver(generatePasswordSchema())
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);

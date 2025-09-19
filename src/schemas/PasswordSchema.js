@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-export const generatePasswordSchema = (forFormValidation = false) => {
+export const generatePasswordSchema = () => {
   let schema = Joi.object({
     currentPassword: Joi.string().required()
       .messages({
@@ -24,7 +24,7 @@ export const generatePasswordSchema = (forFormValidation = false) => {
   return schema;
 };
 
-export const generateForgotPasswordSchema = (forFormValidation = false) => {
+export const generateForgotPasswordSchema = () => {
   let schema = Joi.object({
     email: Joi.string().email({
       tlds: { allow: false }
@@ -40,7 +40,7 @@ export const generateForgotPasswordSchema = (forFormValidation = false) => {
   return schema;
 };
 
-export const generateResetPasswordSchema = (forFormValidation = false) => {
+export const generateResetPasswordSchema = () => {
   let schema = Joi.object({
     newPassword: Joi.string().min(8).required()
       .messages({
