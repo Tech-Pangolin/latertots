@@ -21,6 +21,7 @@ const ScheduleChildSitterPage = () => {
   const [selectedDate, setSelectedDate] = useState(DateTime.now());
   const queryClient = useQueryClient();
   const [children, setChildren] = useState([]);
+  const [isLoadingChildren, setIsLoadingChildren] = useState(true);
   const { currentUser, dbService } = useAuth();
   const [modalOpenState, setModalOpenState] = useState(false);
   const navigate = useNavigate();
@@ -30,14 +31,19 @@ const ScheduleChildSitterPage = () => {
   // Fetch children data
   useEffect(() => {
     if (!dbService) return;
+    setIsLoadingChildren(true);
     dbService.fetchAllCurrentUsersChildren(currentUser.email).then((resp) => {
       setChildren(resp);
+      setIsLoadingChildren(false);
+    }).catch((error) => {
+      console.error('Error fetching children:', error);
+      setIsLoadingChildren(false);
     });
   }, [currentUser.email, dbService]);
 
   // Redirect to profile if no children are registered (except for admin users)
   useEffect(() => {
-    if (children.length === 0 && currentUser.Role !== 'admin' && dbService) {
+    if (!isLoadingChildren && children.length === 0 && currentUser.Role !== 'admin' && dbService) {
       navigate('/profile', { 
         state: { 
           alerts: [{
@@ -50,7 +56,7 @@ const ScheduleChildSitterPage = () => {
         } 
       });
     }
-  }, [children, currentUser.Role, navigate, dbService]);
+  }, [isLoadingChildren, children, currentUser.Role, navigate, dbService]);
 
   useEffect(() => {
     logger.info('Events:', events);
@@ -170,10 +176,30 @@ const ScheduleChildSitterPage = () => {
     }
   }), []);
 
+  // Calculate min and max times based on business hours (1 hour before/after)
+  const timeBounds = useMemo(() => {
+    const businessStart = BUSINESS_HRS.startTime; // '07:00'
+    const businessEnd = BUSINESS_HRS.endTime; // '19:00'
+    
+    // Parse business hours
+    const [startHour, startMin] = businessStart.split(':').map(Number);
+    const [endHour, endMin] = businessEnd.split(':').map(Number);
+    
+    // Calculate min time (1 hour before business start)
+    const minHour = startHour - 1;
+    const minTime = `${minHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
+    
+    // Calculate max time (1 hour after business end)
+    const maxHour = endHour + 1;
+    const maxTime = `${maxHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+    
+    return { slotMinTime: minTime, slotMaxTime: maxTime };
+  }, []);
+
   return (
-    <Grid container className="schedule-child-sitter-page">
+    <Grid container className="schedule-child-sitter-page" style={{ minHeight: 'auto' }}>
       <Grid item xs={1} />
-      <Grid item xs={10} className="main" style={{ marginTop: '15px' }}>
+      <Grid item xs={10} className="main" style={{ marginTop: '15px', marginBottom: '15px' }}>
         <FullCalendar
           // TODO: Specify a timezone prop and tie into admin settings
           plugins={pluginsConfig}
@@ -181,6 +207,9 @@ const ScheduleChildSitterPage = () => {
           headerToolbar={headerToolbarConfig}
           customButtons={customButtonsConfig}
           businessHours={BUSINESS_HRS}
+          slotMinTime={timeBounds.slotMinTime}
+          slotMaxTime={timeBounds.slotMaxTime}
+          height="auto"
           showNonCurrentDates={false}
           editable={true}
           droppable={true}
