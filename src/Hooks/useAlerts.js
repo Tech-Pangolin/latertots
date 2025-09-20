@@ -40,26 +40,6 @@ export const useAlerts = () => {
   const location = useLocation();
   const processedAlertsRef = useRef(new Set());
   
-  // Development-only usage tracking to prevent multiple calls on same page
-  // Use a global variable to track usage across hook instances
-  if (typeof window !== 'undefined' && !window.__useAlertsPageUsage) {
-    window.__useAlertsPageUsage = new Set();
-  }
-
-  // Development warning for multiple hook calls on same page
-  if (process.env.NODE_ENV === 'development') {
-    const pageKey = location.pathname;
-    if (window.__useAlertsPageUsage && window.__useAlertsPageUsage.has(pageKey)) {
-      console.warn(
-        '⚠️ useAlerts called multiple times on the same page. ' +
-        'Only call useAlerts once per page in the main page component. ' +
-        'Pass alert functions as props to child components.'
-      );
-    }
-    if (window.__useAlertsPageUsage) {
-      window.__useAlertsPageUsage.add(pageKey);
-    }
-  }
 
   // Handle alerts from navigation state
   useEffect(() => {
