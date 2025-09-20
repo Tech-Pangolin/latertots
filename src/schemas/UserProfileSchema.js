@@ -52,7 +52,7 @@ export const generateUserProfileSchema = (forFormValidation = false) => {
   // fields that are not relevant to the form submission.
   if (forFormValidation) {
     schema = schema.fork([
-      'archived', 'paymentHold', 'photoURL', 'Children', 'Contacts'
+      'archived', 'paymentHold', 'photoURL', 'Children', 'Contacts', 'Role'
     ], (field) => field.forbidden());
   }
 

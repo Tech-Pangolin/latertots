@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
-
+/**
+ * Creates an alert object with a unique ID
+ */
 const createAlert = (type, message, autoDismissDelayMillis = null) => ({
   id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
   type,
@@ -9,10 +11,35 @@ const createAlert = (type, message, autoDismissDelayMillis = null) => ({
   autoDismissDelayMillis
 });
 
+/**
+ * useAlerts Hook - Manages alerts for a single page/route
+ * 
+ * This hook supports two alert patterns:
+ * 
+ * 1. NAVIGATION ALERTS: Alerts passed when navigating to this page
+ *    Example:
+ *    navigate('/profile', { 
+ *      state: { 
+ *        alerts: [{ type: 'warning', message: 'Please register a child' }],
+ *        switchToTab: 'children' 
+ *      } 
+ *    })
+ * 
+ * 2. LOCAL ALERTS: Alerts added within this page
+ *    Example:
+ *    addAlert('success', 'Profile updated successfully!')
+ * 
+ * ⚠️  IMPORTANT: Only call this hook ONCE per page in the main page component.
+ *    Pass { addAlert } as props to child components that need to add alerts.
+ *    Pass { alerts, removeAlert } as props to AlertContainer.
+ * 
+ * @returns {Object} { alerts, addAlert, removeAlert, clearAllAlerts }
+ */
 export const useAlerts = () => {
   const [alerts, setAlerts] = useState([]);
   const location = useLocation();
   const processedAlertsRef = useRef(new Set());
+  
 
   // Handle alerts from navigation state
   useEffect(() => {

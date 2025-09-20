@@ -14,6 +14,7 @@ Object.defineProperty(window, 'history', {
   writable: true,
 });
 
+
 describe('useAlerts Hook', () => {
   const mockUseLocation = useLocation;
 
@@ -61,4 +62,5 @@ describe('useAlerts Hook', () => {
     expect(result.current.alerts).toEqual([]);
     expect(mockReplaceState).not.toHaveBeenCalled();
   });
+
 });
