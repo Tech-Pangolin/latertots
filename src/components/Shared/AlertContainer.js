@@ -1,11 +1,8 @@
 import React from 'react';
 import Alert from './Alert';
-import { useAlerts } from '../../Hooks/useAlerts';
 
 
-const AlertContainer = () => {
-  const { alerts, removeAlert } = useAlerts();
-
+const AlertContainer = ({ alerts, removeAlert }) => {
   if (alerts.length === 0) {
     return null;
   }
