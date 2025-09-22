@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }) => {
             const userPhoto = userProfileData.PhotoURL || null;
 
             // Update the user object with profile data
-            loggedInUser = { ...user, ...userProfileData, photoURL: userPhoto };
+            loggedInUser = { ...user, ...userProfileData, PhotoURL: userPhoto };
 
             // Update the AuthProvider state
             setDbService(new FirebaseDbService(loggedInUser));

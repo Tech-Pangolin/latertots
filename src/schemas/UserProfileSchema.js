@@ -38,7 +38,7 @@ export const generateUserProfileSchema = (forFormValidation = false) => {
     Contacts: Joi.array()
       .items(Joi.object().instance(DocumentReference))
       .optional(),
-    photoURL: Joi.string().uri().optional(),
+    PhotoURL: Joi.string().uri().optional(),
   };
 
   // Add Image field only for form validation (transient upload field)
@@ -97,7 +97,7 @@ export const generateUserProfileSchema = (forFormValidation = false) => {
   // fields that are not relevant to the form submission.
   if (forFormValidation) {
     schema = schema.fork([
-      'archived', 'paymentHold', 'photoURL', 'Children', 'Contacts', 'Role'
+      'archived', 'paymentHold', 'PhotoURL', 'Children', 'Contacts', 'Role'
     ], (field) => field.forbidden());
   }
 

@@ -89,9 +89,9 @@ const UserForm = ({ addAlert }) => {
       
       if (userImage) {
         try {
-          let photoURL = await dbService.uploadProfilePhoto(currentUser.uid, userImage);
-          // Add the photoURL to the user document data
-          validatedFormData.PhotoURL = photoURL;
+          let PhotoURL = await dbService.uploadProfilePhoto(currentUser.uid, userImage);
+          // Add the PhotoURL to the user document data
+          validatedFormData.PhotoURL = PhotoURL;
         } catch (uploadError) {
           // Re-throw with a more user-friendly message for photo upload failures
           throw new Error(`Photo upload failed: ${uploadError.message}`);

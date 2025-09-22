@@ -53,7 +53,7 @@ const UserProfile = () => {
               <h1 className="text-center">{currentUser?.Name}</h1>
             </div>
             <div className="col-12 d-flex justify-content-center">
-              <img className="rounded-circle" width="250px" height="250px" src={currentUser.photoURL ? currentUser.photoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
+              <img className="rounded-circle" width="250px" height="250px" src={currentUser.PhotoURL ? currentUser.PhotoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
             </div>
             <div className='col-12 d-flex justify-content-center mt-5'>
               <a href="/schedule" className="border px-5 py-3 p-1 pink-text blink-text">Book Now</a>

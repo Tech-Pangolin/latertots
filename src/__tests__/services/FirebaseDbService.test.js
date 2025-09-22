@@ -117,7 +117,7 @@ describe('FirebaseDbService Authentication Methods', () => {
       uid: 'google-user-123',
       email: 'google@example.com',
       displayName: 'Google User',
-      photoURL: 'https://example.com/google-photo.jpg',
+      PhotoURL: 'https://example.com/google-photo.jpg',
     };
 
     it('should create profile with Google data', async () => {
@@ -130,7 +130,7 @@ describe('FirebaseDbService Authentication Methods', () => {
         expect.objectContaining({
           Email: mockGoogleUser.email,
           Name: mockGoogleUser.displayName,
-          photoURL: mockGoogleUser.photoURL,
+          PhotoURL: mockGoogleUser.PhotoURL,
           Role: expect.any(Object),
           CellNumber: '',
           City: '',
@@ -149,7 +149,7 @@ describe('FirebaseDbService Authentication Methods', () => {
       const mockGoogleUserMinimal = {
         uid: 'google-user-123',
         email: 'google@example.com',
-        // Missing displayName and photoURL
+        // Missing displayName and PhotoURL
       };
 
       setDoc.mockResolvedValue();
@@ -161,7 +161,7 @@ describe('FirebaseDbService Authentication Methods', () => {
         expect.objectContaining({
           Email: mockGoogleUserMinimal.email,
           Name: '',
-          photoURL: undefined,
+          PhotoURL: undefined,
         })
       );
     });
