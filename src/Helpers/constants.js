@@ -60,4 +60,10 @@ export const MIN_AGE_FOR_CHILD_YEARS = 2;
 export const NOTIFICATION_TYPES = Object.freeze({
   SYSTEM: 'system',
   ADMIN: 'admin',
+})
+
+export const IMAGE_UPLOAD = Object.freeze({
+  ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
+  MAX_IMAGE_SIZE_BYTES: 5 * 1024 * 1024, // 5MB
+  MAX_FILES_PER_UPLOAD: 1,
 }) 

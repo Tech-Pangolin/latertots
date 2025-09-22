@@ -83,17 +83,22 @@ const UserForm = ({ addAlert }) => {
 
   const updateUserMutation = useMutation({
     mutationKey: ['updateUser'],
-    mutationFn: async (dataWithoutPassword, userImage) => {
+    mutationFn: async ({ validatedFormData, userImage }) => {
       if (!dbService) throw new Error("Database service is not initialized");
       const userDocRef = doc(db, 'Users', currentUser.uid);
       
       if (userImage) {
-        let photoURL = await dbService.uploadProfilePhoto(currentUser.uid, userImage);
-        // Add the photoURL to the user document data
-        dataWithoutPassword.PhotoURL = photoURL;
+        try {
+          let photoURL = await dbService.uploadProfilePhoto(currentUser.uid, userImage);
+          // Add the photoURL to the user document data
+          validatedFormData.PhotoURL = photoURL;
+        } catch (uploadError) {
+          // Re-throw with a more user-friendly message for photo upload failures
+          throw new Error(`Photo upload failed: ${uploadError.message}`);
+        }
       }
       
-      await updateDoc(userDocRef, dataWithoutPassword);
+      await updateDoc(userDocRef, validatedFormData);
     },
     onSuccess: () => {
       logger.info('User updated successfully');
@@ -108,8 +113,10 @@ const UserForm = ({ addAlert }) => {
   })
 
   const updateUserOnSubmit = async (data) => {
-    // Remove the image from the data object - safely handle cases where no image is selected
+    // Extract the image before deleting it
     const userImage = data.Image?.[0];
+    
+    // Remove the image from the data object - safely handle cases where no image is selected
     delete data.Image;
     delete data.Photo;
 
@@ -128,7 +135,7 @@ const UserForm = ({ addAlert }) => {
 
     try {
       const validatedFormData = await generateUserProfileSchema(true).validateAsync(filteredData);
-      updateUserMutation.mutate(validatedFormData, userImage);
+      updateUserMutation.mutate({ validatedFormData, userImage });
     } catch (e) {
       logger.error('Error adding/updating document: ', e.message);
       logger.error('Stack Trace:', e.stack);

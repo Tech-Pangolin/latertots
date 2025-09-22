@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
+import { IMAGE_UPLOAD } from "./constants";
 import ReservationSchema from "../schemas/ReservationSchema";
 
 
@@ -223,6 +224,15 @@ export class FirebaseDbService {
         throw new Error(`Invalid file type: ${typeof file}. Please provide a valid File object.`);
       }
 
+      // Security validation: Check file type and size
+      if (!IMAGE_UPLOAD.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        throw new Error(`Invalid file type: ${file.type}. Only JPEG, PNG, GIF, and WebP images are allowed.`);
+      }
+
+      if (file.size > IMAGE_UPLOAD.MAX_IMAGE_SIZE_BYTES) {
+        throw new Error(`File size too large: ${(file.size / 1024 / 1024).toFixed(2)}MB. Maximum allowed size is 5MB.`);
+      }
+
       // Create a storage reference with the user ID as the path
       const storageRef = ref(storage, `profile-photos/${userId}`);
 
@@ -235,6 +245,8 @@ export class FirebaseDbService {
       return downloadURL;
     } catch (error) {
       console.error("Error uploading photo:", error);
+      // Re-throw the error so it can be handled by the calling code
+      throw error;
     }
   };
 

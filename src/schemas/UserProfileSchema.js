@@ -1,9 +1,9 @@
 import Joi from 'joi';
-import { ROLES } from '../Helpers/constants';
+import { ROLES, IMAGE_UPLOAD } from '../Helpers/constants';
 import { DocumentReference } from 'firebase/firestore';
 
 export const generateUserProfileSchema = (forFormValidation = false) => {
-  let schema = Joi.object({
+  let schemaFields = {
     // Administrative fields
     archived: Joi.boolean().default(false).required(),
     paymentHold: Joi.boolean().default(false).required(),
@@ -39,7 +39,52 @@ export const generateUserProfileSchema = (forFormValidation = false) => {
       .items(Joi.object().instance(DocumentReference))
       .optional(),
     photoURL: Joi.string().uri().optional(),
-  })
+  };
+
+  // Add Image field only for form validation (transient upload field)
+  if (forFormValidation) {
+    schemaFields.Image = Joi.any()
+      .custom((value, helpers) => {
+        // Handle FileList object (from HTML file input)
+        if (value && typeof value === 'object' && value.length !== undefined) {
+          // Convert FileList to array for validation
+          const files = Array.from(value);
+          
+          if (files.length > IMAGE_UPLOAD.MAX_FILES_PER_UPLOAD) {
+            return helpers.error('custom.maxFiles', { message: 'Only one image can be uploaded at a time.' });
+          }
+          
+          if (files.length === 0) {
+            return value; // No file selected, that's okay (optional)
+          }
+          
+          const file = files[0];
+          
+          // Validate file type
+          if (!IMAGE_UPLOAD.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            return helpers.error('custom.invalidType', { message: 'Please upload a valid image file (JPEG, PNG, GIF, or WebP).' });
+          }
+          
+          // Validate file size
+          if (file.size > IMAGE_UPLOAD.MAX_IMAGE_SIZE_BYTES) {
+            return helpers.error('custom.fileTooLarge', { message: 'Image file size must be less than 5MB.' });
+          }
+          
+          return value; // File is valid
+        }
+        
+        // If no file selected, that's okay (optional field)
+        return value;
+      })
+      .optional()
+      .messages({
+        'custom.maxFiles': 'Only one image can be uploaded at a time.',
+        'custom.invalidType': 'Please upload a valid image file (JPEG, PNG, GIF, or WebP).',
+        'custom.fileTooLarge': 'Image file size must be less than 5MB.'
+      });
+  }
+
+  let schema = Joi.object(schemaFields)
     .prefs({ abortEarly: false })
     .messages({
       'any.required': 'This field is required.',
