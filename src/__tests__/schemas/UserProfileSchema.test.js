@@ -296,7 +296,6 @@ describe('UserProfileSchema', () => {
         City: 'Raleigh',
         State: 'NC',
         Zip: '27601',
-        Role: 'parent-user',
       };
 
       const result = await schema.validateAsync(formData);

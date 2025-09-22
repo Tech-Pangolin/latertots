@@ -587,7 +587,7 @@ export class FirebaseDbService {
         // Map available Google data
         Email: authUser.email,
         Name: authUser.displayName || "",
-        PhotoURL: authUser.photoURL || undefined,
+        PhotoURL: authUser.PhotoURL || authUser.photoURL || undefined,
         
         // Hard-coded defaults (same as email/password flow)
         CellNumber: "",

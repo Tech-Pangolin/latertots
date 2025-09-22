@@ -1,13 +1,72 @@
+// Mock Firebase modules first, before any imports
+jest.mock('firebase/auth', () => ({
+  createUserWithEmailAndPassword: jest.fn(),
+  deleteUser: jest.fn(),
+}));
+
+jest.mock('@firebase/firestore', () => {
+  // Mock Timestamp constructor for ReservationSchema
+  const MockTimestamp = jest.fn();
+  MockTimestamp.fromDate = jest.fn();
+  MockTimestamp.now = jest.fn();
+
+  // Mock DocumentReference constructor
+  const MockDocumentReference = jest.fn();
+
+  // Create a simple mock that returns a proper object
+  const mockDoc = jest.fn((db, collection, docId) => {
+    return { 
+      id: docId || 'mock-doc-ref',
+      path: `${collection}/${docId}`,
+      collection: collection,
+      db: db
+    };
+  });
+
+  return {
+    doc: mockDoc,
+    setDoc: jest.fn(),
+    getDoc: jest.fn(),
+    updateDoc: jest.fn(),
+    addDoc: jest.fn(),
+    collection: jest.fn(() => ({ id: 'mock-collection' })),
+    arrayUnion: jest.fn(),
+    getDocs: jest.fn(),
+    where: jest.fn(),
+    query: jest.fn(),
+    deleteDoc: jest.fn(),
+    onSnapshot: jest.fn(),
+    Timestamp: MockTimestamp,
+    DocumentReference: MockDocumentReference,
+  };
+});
+
+jest.mock('@firebase/storage', () => ({
+  ref: jest.fn(() => ({ id: 'mock-storage-ref' })),
+  uploadBytes: jest.fn(),
+  getDownloadURL: jest.fn(),
+}));
+
+// Mock Firebase config files
+jest.mock('../../config/firestore', () => ({
+  db: { id: 'mock-db' }
+}));
+
+jest.mock('../../config/firebase', () => ({
+  storage: { id: 'mock-storage' }
+}));
+
+// Mock ReservationSchema to prevent Timestamp dependency issues
+jest.mock('../../schemas/ReservationSchema', () => ({
+  default: jest.fn()
+}));
+
 import { FirebaseDbService } from '../../Helpers/firebase';
 import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, addDoc, collection, arrayUnion } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, addDoc, collection, arrayUnion } from '@firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
 import { createMockUser, createMockAdminUser, createMockFile, FIREBASE_ERRORS } from '../utils/testUtils';
 
-// Mock Firebase modules
-jest.mock('firebase/auth');
-jest.mock('firebase/firestore');
-jest.mock('@firebase/storage');
 
 describe('FirebaseDbService Authentication Methods', () => {
   let dbService;
@@ -16,6 +75,47 @@ describe('FirebaseDbService Authentication Methods', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Re-set the mock implementations after clearing
+    doc.mockImplementation((db, collection, docId) => {
+      return { 
+        id: docId || 'mock-doc-ref',
+        path: `${collection}/${docId}`,
+        collection: collection,
+        db: db
+      };
+    });
+    
+    collection.mockImplementation((db, collectionName) => {
+      return { 
+        id: collectionName,
+        path: collectionName,
+        db: db
+      };
+    });
+    
+    ref.mockImplementation((storage, path) => {
+      return { 
+        id: 'mock-storage-ref',
+        path: path,
+        storage: storage
+      };
+    });
+    
+    arrayUnion.mockImplementation((...values) => {
+      // arrayUnion returns a function that when called returns the values
+      return () => values;
+    });
+    
+    // Reset Firebase Auth mocks and set default implementations
+    createUserWithEmailAndPassword.mockReset();
+    deleteUser.mockReset();
+    
+    // Set default implementations that can be overridden by tests
+    createUserWithEmailAndPassword.mockImplementation(() => Promise.resolve({ 
+      user: { uid: 'new-user-123', email: 'test@example.com', displayName: 'Test User' } 
+    }));
+    deleteUser.mockImplementation(() => Promise.resolve());
     
     mockUser = createMockUser();
     mockFirebaseAuth = {
@@ -42,6 +142,8 @@ describe('FirebaseDbService Authentication Methods', () => {
       setDoc.mockResolvedValue();
 
       const result = await dbService.createUserAndAuthenticate(mockFirebaseAuth, email, password);
+
+      // Debug logging
 
       expect(createUserWithEmailAndPassword).toHaveBeenCalledWith(mockFirebaseAuth, email, password);
       expect(setDoc).toHaveBeenCalledWith(
@@ -85,30 +187,51 @@ describe('FirebaseDbService Authentication Methods', () => {
     });
 
     it('should handle Firebase Auth creation failure', async () => {
-      createUserWithEmailAndPassword.mockRejectedValue(FIREBASE_ERRORS.EMAIL_ALREADY_IN_USE);
+      createUserWithEmailAndPassword.mockImplementation(() => Promise.reject(FIREBASE_ERRORS.EMAIL_ALREADY_IN_USE));
 
-      await expect(
-        dbService.createUserAndAuthenticate(mockFirebaseAuth, email, password)
-      ).rejects.toThrow('Email already in use');
+      // Use manual try-catch instead of expect().rejects.toThrow()
+      let thrownError = null;
+      try {
+        await dbService.createUserAndAuthenticate(mockFirebaseAuth, email, password);
+      } catch (error) {
+        thrownError = error;
+      }
+      
+      expect(thrownError).toBeTruthy();
+      expect(thrownError.message).toContain('Email already in use');
 
       expect(setDoc).not.toHaveBeenCalled();
       expect(deleteUser).not.toHaveBeenCalled();
     });
 
     it('should handle weak password error', async () => {
-      createUserWithEmailAndPassword.mockRejectedValue(FIREBASE_ERRORS.WEAK_PASSWORD);
+      createUserWithEmailAndPassword.mockImplementation(() => Promise.reject(FIREBASE_ERRORS.WEAK_PASSWORD));
 
-      await expect(
-        dbService.createUserAndAuthenticate(mockFirebaseAuth, email, '123')
-      ).rejects.toThrow('Password is too weak');
+      // Use manual try-catch instead of expect().rejects.toThrow()
+      let thrownError = null;
+      try {
+        await dbService.createUserAndAuthenticate(mockFirebaseAuth, email, '123');
+      } catch (error) {
+        thrownError = error;
+      }
+      
+      expect(thrownError).toBeTruthy();
+      expect(thrownError.message).toContain('Password is too weak');
     });
 
     it('should handle invalid email error', async () => {
-      createUserWithEmailAndPassword.mockRejectedValue(FIREBASE_ERRORS.INVALID_EMAIL);
+      createUserWithEmailAndPassword.mockImplementation(() => Promise.reject(FIREBASE_ERRORS.INVALID_EMAIL));
 
-      await expect(
-        dbService.createUserAndAuthenticate(mockFirebaseAuth, 'invalid-email', password)
-      ).rejects.toThrow('Invalid email');
+      // Use manual try-catch instead of expect().rejects.toThrow()
+      let thrownError = null;
+      try {
+        await dbService.createUserAndAuthenticate(mockFirebaseAuth, 'invalid-email', password);
+      } catch (error) {
+        thrownError = error;
+      }
+      
+      expect(thrownError).toBeTruthy();
+      expect(thrownError.message).toContain('Invalid email');
     });
   });
 
