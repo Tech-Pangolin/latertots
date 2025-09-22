@@ -9,6 +9,7 @@ import ContactRegistration from './ContactRegistration';
 import AlertContainer from '../Shared/AlertContainer';
 import { useChildrenRQ } from '../../Hooks/query-related/useChildrenRQ';
 import { useContactsRQ } from '../../Hooks/query-related/useContactsRQ';
+import { useAlerts } from '../../Hooks/useAlerts';
 
 
 const UserProfile = () => {
@@ -16,6 +17,7 @@ const UserProfile = () => {
   const { data: children = [] } = useChildrenRQ();
   const { data: contacts = [] } = useContactsRQ();
   const location = useLocation();
+  const { alerts, addAlert, removeAlert } = useAlerts();
 
   const [openChildModal, setOpenChildModal] = useState(false);
   const [openContactsModal, setOpenContactsModal] = useState(false);
@@ -40,13 +42,7 @@ const UserProfile = () => {
 
 
   return (
-    <div className="container-fluid rounded bg-blue">
-      {/* Alert Container */}
-      <div className="row">
-        <div className="col-12 p-3">
-          <AlertContainer />
-        </div>
-      </div>
+    <div className="container-fluid bg-blue">
 
       <div className="row">
 
@@ -57,7 +53,7 @@ const UserProfile = () => {
               <h1 className="text-center">{currentUser?.Name}</h1>
             </div>
             <div className="col-12 d-flex justify-content-center">
-              <img className="rounded-circle" width="250px" height="250px" src={currentUser.photoURL ? currentUser.photoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
+              <img className="rounded-circle" width="250px" height="250px" src={currentUser.PhotoURL ? currentUser.PhotoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
             </div>
             <div className='col-12 d-flex justify-content-center mt-5'>
               <a href="/schedule" className="border px-5 py-3 p-1 pink-text blink-text">Book Now</a>
@@ -67,6 +63,7 @@ const UserProfile = () => {
 
 
         <div className='col-md-7 profile'>
+          <AlertContainer alerts={alerts} removeAlert={removeAlert} />
 
           {/* Tab Navigation Header */}
           <ul className="nav nav-tabs mt-5" id="myTab" role="tablist">
@@ -123,7 +120,7 @@ const UserProfile = () => {
             {/* currentUser's Profile Tab Content */}
             <div className={`tab-pane fade ${activeTab === 'home' ? 'show active' : ''}`} id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabIndex="0">
               <div className='mt-5'>
-                <UserForm />
+                <UserForm addAlert={addAlert} />
               </div>
             </div>
 

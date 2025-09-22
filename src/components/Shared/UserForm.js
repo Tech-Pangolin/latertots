@@ -5,15 +5,13 @@ import { doc, updateDoc } from "firebase/firestore";
 import { signInWithGoogle, useAuth } from "../AuthProvider";
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
-import ChangePasswordForm from "../ChangePasswordForm";
 import { useMutation } from "@tanstack/react-query";
 import { FirebaseDbService } from "../../Helpers/firebase";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { generateUserProfileSchema } from "../../schemas/UserProfileSchema";
 import { useNavigate } from "react-router-dom";
 import GoogleIcon from "./GoogleIcon";
-
-const UserForm = () => {
+const UserForm = ({ addAlert }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: joiResolver(generateUserProfileSchema(true)),
   });
@@ -85,28 +83,40 @@ const UserForm = () => {
 
   const updateUserMutation = useMutation({
     mutationKey: ['updateUser'],
-    mutationFn: async (dataWithoutPassword, userImage) => {
+    mutationFn: async ({ validatedFormData, userImage }) => {
       if (!dbService) throw new Error("Database service is not initialized");
       const userDocRef = doc(db, 'Users', currentUser.uid);
+      
       if (userImage) {
-        let photoURL = await dbService.uploadProfilePhoto(currentUser.uid, userImage);
-        // Add the photoURL to the user document data
-        dataWithoutPassword.PhotoURL = photoURL;
+        try {
+          let PhotoURL = await dbService.uploadProfilePhoto(currentUser.uid, userImage);
+          // Add the PhotoURL to the user document data
+          validatedFormData.PhotoURL = PhotoURL;
+        } catch (uploadError) {
+          // Re-throw with a more user-friendly message for photo upload failures
+          throw new Error(`Photo upload failed: ${uploadError.message}`);
+        }
       }
-      await updateDoc(userDocRef, dataWithoutPassword);
+      
+      await updateDoc(userDocRef, validatedFormData);
     },
     onSuccess: () => {
       logger.info('User updated successfully');
+      addAlert('success', 'Profile updated successfully!');
+      setError(null);
     },
     onError: (error) => {
       logger.error('Failed to update user:', error.message);
+      addAlert('error', `Update failed: ${error.message}`);
       setError(error.message);
     }
   })
 
   const updateUserOnSubmit = async (data) => {
-    // Remove the image from the data object
-    const userImage = data.Image[0];
+    // Extract the image before deleting it
+    const userImage = data.Image?.[0];
+    
+    // Remove the image from the data object - safely handle cases where no image is selected
     delete data.Image;
     delete data.Photo;
 
@@ -114,9 +124,18 @@ const UserForm = () => {
     const dataWithoutPassword = { ...data };
     delete dataWithoutPassword.Password;
 
+    // EXPLICITLY filter to only include the fields we want to update
+    const allowedFields = ['Name', 'Email', 'CellNumber', 'StreetAddress', 'City', 'State', 'Zip'];
+    const filteredData = {};
+    allowedFields.forEach(field => {
+      if (dataWithoutPassword[field] !== undefined) {
+        filteredData[field] = dataWithoutPassword[field];
+      }
+    });
+
     try {
-      const validatedFormData = await generateUserProfileSchema().validateAsync(dataWithoutPassword);
-      updateUserMutation.mutate(validatedFormData, userImage);
+      const validatedFormData = await generateUserProfileSchema(true).validateAsync(filteredData);
+      updateUserMutation.mutate({ validatedFormData, userImage });
     } catch (e) {
       logger.error('Error adding/updating document: ', e.message);
       logger.error('Stack Trace:', e.stack);
@@ -165,11 +184,26 @@ const UserForm = () => {
               {passwordMismatch && <p>Passwords do not match</p>}
               {error && <p className="mt-3">{error}</p>}
               <div className="row ">
-                <div className="col-12 col-md-6 mt-3"> <button type="submit" className="register-btn w-100">Sign Up</button></div>
-                <div className="col-12 col-md-6 mt-3"> <button onClick={signInWithGoogle} className="google-btn w-100" type="button">
-                  <GoogleIcon size={16} />
-                  <span className="ms-2">Sign up with Google</span>
-                </button></div>
+                <div className="col-12 col-md-6 mt-3"> 
+                  <button 
+                    type="submit" 
+                    className="register-btn w-100"
+                    disabled={createUserMutation.isLoading}
+                  >
+                    {createUserMutation.isLoading ? 'Creating...' : 'Sign Up'}
+                  </button>
+                </div>
+                <div className="col-12 col-md-6 mt-3"> 
+                  <button 
+                    onClick={signInWithGoogle} 
+                    className="google-btn w-100" 
+                    type="button"
+                    disabled={createUserMutation.isLoading}
+                  >
+                    <GoogleIcon size={16} />
+                    <span className="ms-2">Sign up with Google</span>
+                  </button>
+                </div>
               </div>
               <div className="d-flex justify-content-center">
 
@@ -252,7 +286,14 @@ const UserForm = () => {
                 {errors.Zip?.message && <p>{errors.Zip.message}</p>}
               </div>
               <div className="col-12">
-                <button type="submit" className="btn btn-primary mt-5  register-start">{mode === 'create' ? "Create" : "Update"} User</button></div>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary mt-5 register-start"
+                  disabled={updateUserMutation.isLoading}
+                >
+                  {updateUserMutation.isLoading ? 'Updating...' : (mode === 'create' ? "Create" : "Update") + " User"}
+                </button>
+              </div>
             </form>)}
         </div>
       </div>

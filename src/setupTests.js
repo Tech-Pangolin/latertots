@@ -119,7 +119,7 @@ global.mockFirebaseUser = {
   uid: 'test-user-123',
   email: 'test@example.com',
   displayName: 'Test User',
-  photoURL: 'https://example.com/photo.jpg',
+  PhotoURL: 'https://example.com/photo.jpg',
   Role: 'parent-user',
   Name: 'Test User',
   CellNumber: '123-456-7890',

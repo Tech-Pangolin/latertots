@@ -108,11 +108,11 @@ export const AuthProvider = ({ children }) => {
             userProfileData.Contacts = cleanupReferencesArray(userProfileData.Contacts);
             userProfileData.Role = userProfileData.Role.path.split('/').pop();
 
-            // Try to fetch avatar
-            const userPhoto = await tempDbService.fetchAvatarPhotoByUserId(user.uid);
+            // Use PhotoURL directly from the real-time data (eliminates redundant database call)
+            const userPhoto = userProfileData.PhotoURL || null;
 
             // Update the user object with profile data
-            loggedInUser = { ...user, ...userProfileData, photoURL: userPhoto };
+            loggedInUser = { ...user, ...userProfileData, PhotoURL: userPhoto };
 
             // Update the AuthProvider state
             setDbService(new FirebaseDbService(loggedInUser));

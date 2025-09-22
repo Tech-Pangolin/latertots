@@ -6,7 +6,7 @@ import UserProfile from '../../components/Pages/UserProfile';
 // Mock all the dependencies
 jest.mock('../../components/AuthProvider', () => ({
   useAuth: () => ({
-    currentUser: { Name: 'Test User', Email: 'test@example.com', photoURL: null },
+    currentUser: { Name: 'Test User', Email: 'test@example.com', PhotoURL: null },
   }),
 }));
 

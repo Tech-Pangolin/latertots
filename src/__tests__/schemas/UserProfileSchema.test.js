@@ -19,7 +19,7 @@ describe('UserProfileSchema', () => {
     ...validUserData,
     Children: [],
     Contacts: [],
-    photoURL: 'https://example.com/photo.jpg',
+    PhotoURL: 'https://example.com/photo.jpg',
   };
 
   describe('Required Fields Validation', () => {
@@ -215,13 +215,13 @@ describe('UserProfileSchema', () => {
   });
 
   describe('Optional Fields', () => {
-    it('should allow optional fields (Children, Contacts, photoURL)', async () => {
+    it('should allow optional fields (Children, Contacts, PhotoURL)', async () => {
       const schema = generateUserProfileSchema();
       const result = await schema.validateAsync(validUserDataWithOptional);
       
       expect(result.Children).toEqual([]);
       expect(result.Contacts).toEqual([]);
-      expect(result.photoURL).toBe('https://example.com/photo.jpg');
+      expect(result.PhotoURL).toBe('https://example.com/photo.jpg');
     });
 
     it('should work without optional fields', async () => {
@@ -230,20 +230,20 @@ describe('UserProfileSchema', () => {
       
       expect(result.Children).toBeUndefined();
       expect(result.Contacts).toBeUndefined();
-      expect(result.photoURL).toBeUndefined();
+      expect(result.PhotoURL).toBeUndefined();
     });
 
-    it('should validate photoURL format when provided', async () => {
+    it('should validate PhotoURL format when provided', async () => {
       const schema = generateUserProfileSchema();
-      const dataWithPhoto = { ...validUserData, photoURL: 'https://example.com/photo.jpg' };
+      const dataWithPhoto = { ...validUserData, PhotoURL: 'https://example.com/photo.jpg' };
       const result = await schema.validateAsync(dataWithPhoto);
       
-      expect(result.photoURL).toBe('https://example.com/photo.jpg');
+      expect(result.PhotoURL).toBe('https://example.com/photo.jpg');
     });
 
-    it('should reject invalid photoURL format', async () => {
+    it('should reject invalid PhotoURL format', async () => {
       const schema = generateUserProfileSchema();
-      const invalidData = { ...validUserData, photoURL: 'not-a-url' };
+      const invalidData = { ...validUserData, PhotoURL: 'not-a-url' };
 
       await expect(schema.validateAsync(invalidData)).rejects.toThrow('Please provide a valid URL for the profile picture');
     });
@@ -296,7 +296,6 @@ describe('UserProfileSchema', () => {
         City: 'Raleigh',
         State: 'NC',
         Zip: '27601',
-        Role: 'parent-user',
       };
 
       const result = await schema.validateAsync(formData);
@@ -305,7 +304,7 @@ describe('UserProfileSchema', () => {
       expect(result.Email).toBe('john.doe@example.com');
       expect(result.archived).toBe(false);
       expect(result.paymentHold).toBe(false);
-      expect(result.photoURL).toBeUndefined();
+      expect(result.PhotoURL).toBeUndefined();
       expect(result.Children).toBeUndefined();
       expect(result.Contacts).toBeUndefined();
     });
@@ -321,7 +320,7 @@ describe('UserProfileSchema', () => {
         State: 'NC',
         Zip: '27601',
         archived: false, // This should be forbidden
-        photoURL: 'https://example.com/photo.jpg', // This should be forbidden
+        PhotoURL: 'https://example.com/photo.jpg', // This should be forbidden
       };
 
       await expect(schema.validateAsync(formDataWithForbidden)).rejects.toThrow();
@@ -393,9 +392,9 @@ describe('UserProfileSchema', () => {
       await expect(schema.validateAsync(invalidData)).rejects.toThrow('Format "12345" or "12345-6789"');
     });
 
-    it('should show custom error message for photoURL', async () => {
+    it('should show custom error message for PhotoURL', async () => {
       const schema = generateUserProfileSchema();
-      const invalidData = { ...validUserData, photoURL: 'invalid-url' };
+      const invalidData = { ...validUserData, PhotoURL: 'invalid-url' };
 
       await expect(schema.validateAsync(invalidData)).rejects.toThrow('Please provide a valid URL for the profile picture');
     });
