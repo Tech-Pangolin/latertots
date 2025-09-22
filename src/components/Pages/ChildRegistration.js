@@ -74,7 +74,7 @@ const ChildRegistration = ({ setOpenState }) => {
       <div className="row d-flex justify-content-center">
         <form onSubmit={handleSubmit(onSubmit)} className='col-md-12'>
           <label htmlFor="Name" className="form-label">Name:</label>
-          <input type="text" disabled={child?.Name} id="Name" {...register('Name')} className="form-control" />
+          <input type="text" disabled={child?.Name} id="NameChild" {...register('Name')} className="form-control" />
           {errors.Name?.message && <p>{errors.Name.message}</p>}
 
           <label htmlFor="DOB" className="form-label">DOB:</label>

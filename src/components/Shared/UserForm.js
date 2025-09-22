@@ -10,7 +10,9 @@ import { FirebaseDbService } from "../../Helpers/firebase";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { generateUserProfileSchema } from "../../schemas/UserProfileSchema";
 import { useNavigate } from "react-router-dom";
+import ChangePasswordForm from "../ChangePasswordForm";
 import GoogleIcon from "./GoogleIcon";
+
 const UserForm = ({ addAlert }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: joiResolver(generateUserProfileSchema(true)),

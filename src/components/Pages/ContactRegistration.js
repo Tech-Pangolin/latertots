@@ -79,7 +79,7 @@ function ContactRegistration({ setOpenState }) {
       <div className="row">
         <form onSubmit={handleSubmit(onSubmit)} className='col-12'>
           <label htmlFor="Name" className="form-label">Name:</label>
-          <input type="text" id="Name" {...register('Name')} className="form-control mb-4" />
+          <input type="text" id="NameContact" {...register('Name')} className="form-control mb-4" />
           {errors.Name?.message && <p className='text-danger'>{errors.Name.message}</p>}
 
           <label htmlFor="Phone" className="form-label">Phone:</label>
