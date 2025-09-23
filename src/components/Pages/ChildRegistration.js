@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../AuthProvider';
 import { useLocation } from 'react-router-dom';
@@ -9,8 +9,12 @@ import { logger } from '../../Helpers/logger';
 import { joiResolver } from '@hookform/resolvers/joi';
 import { generateChildSchema } from '../../schemas/ChildSchema';
 import { GENDERS, ALERT_TYPES } from '../../Helpers/constants';
+import { withFirebaseRetry } from '../../Helpers/retryHelpers';
 
 const ChildRegistration = ({ setOpenState, addAlert }) => {
+  const [isUpdatingChild, setIsUpdatingChild] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: joiResolver(generateChildSchema(true))
   });
@@ -29,20 +33,11 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
     }
   }, [child, reset]);
 
+  // Separate mutation for child data updates only
   const updateChildMutation = useMutation({
     mutationKey: ['updateChild'],
-    mutationFn: async ({ validatedFormData, childImage }) => {
+    mutationFn: async (validatedFormData) => {
       if (!dbService) throw new Error("Database service is not initialized");
-      
-      // Handle photo upload if present
-      if (childImage) {
-        try {
-          let PhotoURL = await dbService.uploadChildPhoto(child.id, childImage);
-          validatedFormData.PhotoURL = PhotoURL;
-        } catch (uploadError) {
-          throw new Error(`Photo upload failed: ${uploadError.message}`);
-        }
-      }
       
       const childRef = doc(db, 'Children', child.id);
       return await updateDoc(childRef, validatedFormData);
@@ -51,11 +46,32 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
       queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
       reset();
       setOpenState(false);
-      addAlert(ALERT_TYPES.SUCCESS, 'Child updated successfully!');
     },
     onError: (error) => {
       logger.error('Error updating child document:', error);
       addAlert(ALERT_TYPES.ERROR, `Update failed: ${error.message}`);
+    }
+  });
+
+  // Separate mutation for photo uploads only
+  const uploadPhotoMutation = useMutation({
+    mutationKey: ['uploadChildPhoto'],
+    mutationFn: async ({ childId, image }) => {
+      if (!dbService) throw new Error("Database service is not initialized");
+      
+      const PhotoURL = await withFirebaseRetry(
+        () => dbService.uploadChildPhoto(childId, image)
+      );
+      
+      // Update the child document with the photo URL
+      const childRef = doc(db, 'Children', childId);
+      await updateDoc(childRef, { PhotoURL });
+      
+      return PhotoURL;
+    },
+    onError: (error) => {
+      logger.error('Error uploading child photo:', error);
+      // Photo upload errors are handled in the onSubmit flow
     }
   });
 
@@ -76,31 +92,61 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
       const validatedPayload = await generateChildSchema().validateAsync(payload);
 
       if (child) {
-        // Update existing child
-        updateChildMutation.mutate({ 
-          validatedFormData: validatedPayload, 
-          childImage
-        });
+        // Update existing child - use sequential mutations
+        try {
+          // Step 1: Update child data first
+          setIsUpdatingChild(true);
+          await updateChildMutation.mutateAsync(validatedPayload);
+          setIsUpdatingChild(false);
+          
+          // Step 2: Upload photo only if child update succeeded
+          if (childImage) {
+            try {
+              setIsUploadingPhoto(true);
+              await uploadPhotoMutation.mutateAsync({ 
+                childId: child.id, 
+                image: childImage 
+              });
+              setIsUploadingPhoto(false);
+              addAlert(ALERT_TYPES.SUCCESS, 'Child updated successfully with photo!');
+            } catch (photoError) {
+              setIsUploadingPhoto(false);
+              addAlert(ALERT_TYPES.WARNING, 'Child updated successfully, but photo upload failed. You can try uploading again by editing the child\'s profile.');
+            }
+          } else {
+            addAlert(ALERT_TYPES.SUCCESS, 'Child updated successfully!');
+          }
+        } catch (childError) {
+          setIsUpdatingChild(false);
+          addAlert(ALERT_TYPES.ERROR, `Update failed: ${childError.message}`);
+        }
       } else {
         // Create new child - need to create document first to get ID for photo upload
         const docRef = await addDoc(collection(db, "Children"), validatedPayload);
         const userRef = doc(collection(db, "Users"), currentUser.uid);
         await updateDoc(userRef, { Children: arrayUnion(docRef) });
         
-        // Now upload photo with the new child ID
+        
+        // Now upload photo with retry logic for race condition
         if (childImage) {
           try {
-            let PhotoURL = await dbService.uploadChildPhoto(docRef.id, childImage);
+            // Use retry logic to handle race condition between child creation and storage rules
+            const PhotoURL = await withFirebaseRetry(
+              () => dbService.uploadChildPhoto(docRef.id, childImage)
+            );
+            
             await updateDoc(docRef, { PhotoURL });
+            addAlert(ALERT_TYPES.SUCCESS, 'Child registered successfully with photo!');
           } catch (uploadError) {
-            addAlert(ALERT_TYPES.ERROR, `Photo upload failed: ${uploadError.message}`);
+            addAlert(ALERT_TYPES.WARNING, 'Child registered successfully, but photo upload failed. You can add a photo later by editing the child\'s profile.');
           }
+        } else {
+          addAlert(ALERT_TYPES.SUCCESS, 'Child registered successfully!');
         }
         
         queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
         reset();
         setOpenState(false);
-        addAlert(ALERT_TYPES.SUCCESS, 'Child registered successfully!');
       }
     } catch (error) {
       if (error.isJoi) {
@@ -157,7 +203,15 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
             {errors.Image?.message && <p className="text-danger">{errors.Image.message}</p>}
           </div>
 
-          <button type="submit" className="my-5 btn btn-primary login-btn w-100">Submit</button>
+          <button 
+            type="submit" 
+            className="my-5 btn btn-primary login-btn w-100"
+            disabled={isUpdatingChild || isUploadingPhoto}
+          >
+            {isUpdatingChild ? 'Updating Child...' : 
+             isUploadingPhoto ? 'Uploading Photo...' : 
+             'Submit'}
+          </button>
         </form>
       </div>
     </div>
