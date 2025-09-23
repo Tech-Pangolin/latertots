@@ -149,7 +149,7 @@ const UserProfile = () => {
                         <div className="d-flex justify-content-end">
                           <button type="button" className="btn-close" onClick={() => setOpenChildModal(false)} aria-label="Close"></button>
                         </div>
-                        <ChildRegistration setOpenState={setOpenChildModal} />
+                        <ChildRegistration setOpenState={setOpenChildModal} addAlert={addAlert} />
                       </div>
                     </div>
                   </div>
