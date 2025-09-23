@@ -80,7 +80,7 @@ export const withFirebaseRetry = async (operation, options = {}) => {
       );
     },
     onRetry: (error, attempt, delay) => {
-      console.warn(`Firebase operation failed, retrying in ${delay}ms (attempt ${attempt}):`, error.message);
+      // Retry callback - can be used for logging if needed
     },
     ...options
   });

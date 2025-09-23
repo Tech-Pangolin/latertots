@@ -132,12 +132,7 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
           try {
             // Use retry logic to handle race condition between child creation and storage rules
             const PhotoURL = await withFirebaseRetry(
-              () => dbService.uploadChildPhoto(docRef.id, childImage),
-              {
-                onRetry: (error, attempt, delay) => {
-                  console.log(`Photo upload retry ${attempt} in ${delay}ms due to: ${error.message}`);
-                }
-              }
+              () => dbService.uploadChildPhoto(docRef.id, childImage)
             );
             
             await updateDoc(docRef, { PhotoURL });
