@@ -2,6 +2,27 @@ import React, { useEffect, useState } from 'react';
 
 
 const FooterBar = () => {
+    const [sendSuccess, setSendSuccess] = useState(false);
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+
+        const data = {
+            name: "Newsletter Subscriber",
+            email: formData.get('email'),
+            subject: "Add to Newsletter",
+            message: "No message",
+        };
+        console.log(data)
+        fetch("https://nodemailer-base.onrender.com/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(data => {setSendSuccess(true); console.log(data)})
+            .catch(error => console.error("Error:", error));
+    }
     return (
         <footer id="footer">
             <div className="footer-top">
@@ -28,10 +49,10 @@ const FooterBar = () => {
                         <div className="col-lg-4 col-md-6 footer-newsletter">
                             <h4>Our Newsletter</h4>
                             <p>Sign up for event notifications</p>
-                            <form action="" method="post">
-                                <input type="email" name="email" /><input type="submit" value="Subscribe" />
+                            <form onSubmit={handleSubmit}>
+                              <input type="email" name="email" required />
+                                <input type="submit" value={!sendSuccess ? "Subscribe" : "Sent!"} />
                             </form>
-
                         </div>
 
                     </div>
