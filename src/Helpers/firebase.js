@@ -237,8 +237,15 @@ export class FirebaseDbService {
       // Create a storage reference with dynamic path based on entity type
       const storageRef = ref(storage, `${entityType}-photos/${entityId}`);
 
-      // Upload the file to Firebase Storage
-      const snapshot = await uploadBytes(storageRef, file);
+      // Upload the file with custom metadata for security
+      const metadata = {
+        customMetadata: {
+          owner: this.userContext.uid,
+          entityType: entityType,
+          entityId: entityId
+        }
+      };
+      const snapshot = await uploadBytes(storageRef, file, metadata);
 
       // Get the download URL of the uploaded photo
       const downloadURL = await getDownloadURL(snapshot.ref);
