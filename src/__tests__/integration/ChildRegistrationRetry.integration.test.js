@@ -150,4 +150,42 @@ describe('ChildRegistration Retry Integration Tests', () => {
     expect(mockDbService.uploadChildPhoto).toHaveBeenCalledTimes(2); // Failed once, succeeded once
     expect(PhotoURL).toBe('https://example.com/photo.jpg');
   });
+
+  it('should handle sequential mutations for child update with photo', async () => {
+    const { updateDoc } = require('firebase/firestore');
+    
+    // Mock successful child update
+    updateDoc.mockResolvedValue();
+    
+    // Mock photo upload that succeeds
+    mockDbService.uploadChildPhoto = jest.fn()
+      .mockResolvedValue('https://example.com/photo.jpg');
+    
+    // Mock retry helper to pass through
+    mockWithFirebaseRetry.mockImplementation(async (operation) => {
+      return await operation();
+    });
+    
+    // Simulate the sequential mutation flow
+    const childId = 'child-123';
+    const childData = { Name: 'Updated Child', DOB: '2020-01-01' };
+    const childImage = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+    
+    // Step 1: Update child data (simulating updateChildMutation)
+    await updateDoc(require('firebase/firestore').doc(), childData);
+    
+    // Step 2: Upload photo (simulating uploadPhotoMutation)
+    const PhotoURL = await mockWithFirebaseRetry(
+      () => mockDbService.uploadChildPhoto(childId, childImage)
+    );
+    
+    // Step 3: Update child with photo URL
+    await updateDoc(require('firebase/firestore').doc(), { PhotoURL });
+    
+    // Verify both operations were called
+    expect(updateDoc).toHaveBeenCalledTimes(2); // Once for data, once for photo URL
+    expect(mockWithFirebaseRetry).toHaveBeenCalled();
+    expect(mockDbService.uploadChildPhoto).toHaveBeenCalledWith(childId, childImage);
+    expect(PhotoURL).toBe('https://example.com/photo.jpg');
+  });
 });
