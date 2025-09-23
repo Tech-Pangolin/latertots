@@ -210,14 +210,15 @@ export class FirebaseDbService {
   }
 
   /**
-   * Uploads a photo to Firebase Storage, referencing the current user.
+   * Uploads a photo to Firebase Storage with dynamic entity type and ID.
    * 
-   * @param {string} userId - The ID of the current user.
+   * @param {string} entityType - The type of entity (e.g., 'profile', 'child')
+   * @param {string} entityId - The ID of the entity
    * @param {File} file - The photo file to upload.
    * @returns {Promise<string>} - A promise that resolves to the download URL of the uploaded photo.
    * @throws {Error} - If there is an error uploading the photo.
    */
-  uploadProfilePhoto = async (userId, file) => {
+  uploadPhoto = async (entityType, entityId, file) => {
     this.validateAuth();
     try {
       if (!(file instanceof File)) {
@@ -233,8 +234,8 @@ export class FirebaseDbService {
         throw new Error(`File size too large: ${(file.size / 1024 / 1024).toFixed(2)}MB. Maximum allowed size is 5MB.`);
       }
 
-      // Create a storage reference with the user ID as the path
-      const storageRef = ref(storage, `profile-photos/${userId}`);
+      // Create a storage reference with dynamic path based on entity type
+      const storageRef = ref(storage, `${entityType}-photos/${entityId}`);
 
       // Upload the file to Firebase Storage
       const snapshot = await uploadBytes(storageRef, file);
@@ -248,6 +249,30 @@ export class FirebaseDbService {
       // Re-throw the error so it can be handled by the calling code
       throw error;
     }
+  };
+
+  /**
+   * Uploads a profile photo to Firebase Storage, referencing the current user.
+   * 
+   * @param {string} userId - The ID of the current user.
+   * @param {File} file - The photo file to upload.
+   * @returns {Promise<string>} - A promise that resolves to the download URL of the uploaded photo.
+   * @throws {Error} - If there is an error uploading the photo.
+   */
+  uploadProfilePhoto = async (userId, file) => {
+    return this.uploadPhoto('profile', userId, file);
+  };
+
+  /**
+   * Uploads a child photo to Firebase Storage.
+   * 
+   * @param {string} childId - The ID of the child.
+   * @param {File} file - The photo file to upload.
+   * @returns {Promise<string>} - A promise that resolves to the download URL of the uploaded photo.
+   * @throws {Error} - If there is an error uploading the photo.
+   */
+  uploadChildPhoto = async (childId, file) => {
+    return this.uploadPhoto('child', childId, file);
   };
 
   /**

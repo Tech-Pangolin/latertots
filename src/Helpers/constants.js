@@ -62,6 +62,13 @@ export const NOTIFICATION_TYPES = Object.freeze({
   ADMIN: 'admin',
 })
 
+export const ALERT_TYPES = Object.freeze({
+  SUCCESS: 'success',
+  INFO: 'info',
+  WARNING: 'warning',
+  ERROR: 'danger', // Semantic 'error' maps to Bootstrap 'danger' class
+})
+
 export const IMAGE_UPLOAD = Object.freeze({
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
   MAX_IMAGE_SIZE_BYTES: 5 * 1024 * 1024, // 5MB

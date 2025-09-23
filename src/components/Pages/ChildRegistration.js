@@ -2,15 +2,15 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../AuthProvider';
 import { useLocation } from 'react-router-dom';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, addDoc, collection, arrayUnion } from 'firebase/firestore';
 import { db } from '../../config/firestore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logger } from '../../Helpers/logger';
 import { joiResolver } from '@hookform/resolvers/joi';
 import { generateChildSchema } from '../../schemas/ChildSchema';
-import { GENDERS } from '../../Helpers/constants';
+import { GENDERS, ALERT_TYPES } from '../../Helpers/constants';
 
-const ChildRegistration = ({ setOpenState }) => {
+const ChildRegistration = ({ setOpenState, addAlert }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: joiResolver(generateChildSchema(true))
   });
@@ -29,41 +29,87 @@ const ChildRegistration = ({ setOpenState }) => {
     }
   }, [child, reset]);
 
-  const createChildMutation = useMutation({
-    mutationKey: ['createChild'],
-    mutationFn: async (data) => await dbService.createChildDocument(data),
+  const updateChildMutation = useMutation({
+    mutationKey: ['updateChild'],
+    mutationFn: async ({ validatedFormData, childImage }) => {
+      if (!dbService) throw new Error("Database service is not initialized");
+      
+      // Handle photo upload if present
+      if (childImage) {
+        try {
+          let PhotoURL = await dbService.uploadChildPhoto(child.id, childImage);
+          validatedFormData.PhotoURL = PhotoURL;
+        } catch (uploadError) {
+          throw new Error(`Photo upload failed: ${uploadError.message}`);
+        }
+      }
+      
+      const childRef = doc(db, 'Children', child.id);
+      return await updateDoc(childRef, validatedFormData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
-      reset(); // Reset the form after successful submission
-      setOpenState(false); // Close the modal after submission
+      reset();
+      setOpenState(false);
+      addAlert(ALERT_TYPES.SUCCESS, 'Child updated successfully!');
     },
     onError: (error) => {
-      logger.error('Error creating child document:', error);
+      logger.error('Error updating child document:', error);
+      addAlert(ALERT_TYPES.ERROR, `Update failed: ${error.message}`);
     }
-  })
+  });
 
   const onSubmit = async (data) => {
+    // STAGE 1: Extract image before processing (following UserForm pattern)
+    const childImage = data.Image?.[0];
+    
+    // Remove the image from the data object
+    delete data.Image;
+
     const payload = {
       ...data,
       archived: false,
-    }
+    };
 
     try {
+      // STAGE 2: Validate remaining data (no Image field)
       const validatedPayload = await generateChildSchema().validateAsync(payload);
 
       if (child) {
-        // Update the existing child document
-        const childRef = doc(db, 'Children', child.id);
-        await updateDoc(childRef, validatedPayload);
+        // Update existing child
+        updateChildMutation.mutate({ 
+          validatedFormData: validatedPayload, 
+          childImage
+        });
       } else {
-        // Create a new child document
-        createChildMutation.mutate(validatedPayload);
+        // Create new child - need to create document first to get ID for photo upload
+        const docRef = await addDoc(collection(db, "Children"), validatedPayload);
+        const userRef = doc(collection(db, "Users"), currentUser.uid);
+        await updateDoc(userRef, { Children: arrayUnion(docRef) });
+        
+        // Now upload photo with the new child ID
+        if (childImage) {
+          try {
+            let PhotoURL = await dbService.uploadChildPhoto(docRef.id, childImage);
+            await updateDoc(docRef, { PhotoURL });
+          } catch (uploadError) {
+            addAlert(ALERT_TYPES.ERROR, `Photo upload failed: ${uploadError.message}`);
+          }
+        }
+        
+        queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
+        reset();
+        setOpenState(false);
+        addAlert(ALERT_TYPES.SUCCESS, 'Child registered successfully!');
       }
     } catch (error) {
       if (error.isJoi) {
         logger.error('Child registration failed validation:', error.details);
+        addAlert(ALERT_TYPES.ERROR, 'Please check your input and try again.');
+      } else {
+        logger.error('Error adding document: ', error);
+        addAlert(ALERT_TYPES.ERROR, `Registration failed: ${error.message}`);
       }
-      logger.error('Error adding document: ', error);
     }
   };
 
@@ -74,7 +120,7 @@ const ChildRegistration = ({ setOpenState }) => {
       <div className="row d-flex justify-content-center">
         <form onSubmit={handleSubmit(onSubmit)} className='col-md-12'>
           <label htmlFor="Name" className="form-label">Name:</label>
-          <input type="text" disabled={child?.Name} id="Name" {...register('Name')} className="form-control" />
+          <input type="text" disabled={child?.Name} id="NameChild" {...register('Name')} className="form-control" />
           {errors.Name?.message && <p>{errors.Name.message}</p>}
 
           <label htmlFor="DOB" className="form-label">DOB:</label>
@@ -97,6 +143,19 @@ const ChildRegistration = ({ setOpenState }) => {
 
           <label htmlFor="Notes" className="form-label">Notes:</label>
           <input type="text" id="Notes" {...register('Notes')} className="form-control" />
+
+          {/* Photo upload field */}
+          <div className="mb-3">
+            <label htmlFor="Image" className="form-label">Photo</label>
+            <input
+              type="file"
+              id="Image"
+              {...register("Image")}
+              className="form-control"
+              accept="image/*"
+            />
+            {errors.Image?.message && <p className="text-danger">{errors.Image.message}</p>}
+          </div>
 
           <button type="submit" className="my-5 btn btn-primary login-btn w-100">Submit</button>
         </form>

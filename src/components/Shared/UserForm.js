@@ -10,7 +10,10 @@ import { FirebaseDbService } from "../../Helpers/firebase";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { generateUserProfileSchema } from "../../schemas/UserProfileSchema";
 import { useNavigate } from "react-router-dom";
+import ChangePasswordForm from "../ChangePasswordForm";
 import GoogleIcon from "./GoogleIcon";
+import { ALERT_TYPES } from "../../Helpers/constants";
+
 const UserForm = ({ addAlert }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: joiResolver(generateUserProfileSchema(true)),
@@ -102,12 +105,12 @@ const UserForm = ({ addAlert }) => {
     },
     onSuccess: () => {
       logger.info('User updated successfully');
-      addAlert('success', 'Profile updated successfully!');
+      addAlert(ALERT_TYPES.SUCCESS, 'Profile updated successfully!');
       setError(null);
     },
     onError: (error) => {
       logger.error('Failed to update user:', error.message);
-      addAlert('error', `Update failed: ${error.message}`);
+      addAlert(ALERT_TYPES.ERROR, `Update failed: ${error.message}`);
       setError(error.message);
     }
   })

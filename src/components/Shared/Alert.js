@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { ALERT_TYPES } from '../../Helpers/constants';
 
 const Alert = ({ 
-  type = 'info', // info, warning, success, danger
+  type = ALERT_TYPES.INFO, // Use semantic alert types
   message, 
   autoDismissDelayMillis,
   onDismiss,
