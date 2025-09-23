@@ -4,7 +4,6 @@ import { collection, documentId, query, where } from "firebase/firestore";
 import { db } from "../../config/firestore";
 import { COLLECTIONS } from "../../Helpers/constants";
 import { useEffect, useMemo } from "react";
-import { logger } from "../../Helpers/logger";
 
 export function useContactsRQ(forceUserMode = false) {
   const { dbService, currentUser } = useAuth();
@@ -32,7 +31,7 @@ export function useContactsRQ(forceUserMode = false) {
   const queryResult = useQuery({
     queryKey,
     queryFn: () => dbService.fetchDocs(isAdmin ? allContacts : myContacts),
-    onError: (error) => logger.error("Error fetching /Contacts data:", error),
+    onError: (error) => console.error("Error fetching /Contacts data:", error),
     enabled: currentUser.Contacts.length > 0 || isAdmin, 
     initialData: []
   })

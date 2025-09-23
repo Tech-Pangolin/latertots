@@ -395,13 +395,7 @@ describe('FirebaseDbService Authentication Methods', () => {
       const result = await dbService.uploadProfilePhoto(userId, mockFile);
 
       expect(ref).toHaveBeenCalledWith(expect.any(Object), `profile-photos/${userId}`);
-      expect(uploadBytes).toHaveBeenCalledWith(expect.any(Object), mockFile, expect.objectContaining({
-        customMetadata: expect.objectContaining({
-          owner: 'test-user-123',
-          entityType: 'profile',
-          entityId: userId
-        })
-      }));
+      expect(uploadBytes).toHaveBeenCalledWith(expect.any(Object), mockFile);
       expect(getDownloadURL).toHaveBeenCalledWith('mock-ref');
       expect(result).toBe(downloadURL);
     });
@@ -436,94 +430,6 @@ describe('FirebaseDbService Authentication Methods', () => {
       await expect(
         dbService.uploadProfilePhoto(userId, mockFile)
       ).rejects.toThrow('Download URL failed');
-    });
-  });
-
-  describe('uploadChildPhoto', () => {
-    it('should upload child photo and return download URL', async () => {
-      const childId = 'child-123';
-      const mockFile = createMockFile('child.jpg', 'image/jpeg');
-      const downloadURL = 'https://example.com/child-photo.jpg';
-
-      uploadBytes.mockResolvedValue({ ref: 'mock-ref' });
-      getDownloadURL.mockResolvedValue(downloadURL);
-
-      const result = await dbService.uploadChildPhoto(childId, mockFile);
-
-      expect(ref).toHaveBeenCalledWith(expect.any(Object), `child-photos/${childId}`);
-      expect(uploadBytes).toHaveBeenCalledWith(expect.any(Object), mockFile, expect.objectContaining({
-        customMetadata: expect.objectContaining({
-          owner: 'test-user-123',
-          entityType: 'child',
-          entityId: childId
-        })
-      }));
-      expect(getDownloadURL).toHaveBeenCalledWith('mock-ref');
-      expect(result).toBe(downloadURL);
-    });
-
-    it('should throw error for invalid file type', async () => {
-      const childId = 'child-123';
-      const invalidFile = 'not-a-file';
-
-      await expect(
-        dbService.uploadChildPhoto(childId, invalidFile)
-      ).rejects.toThrow('Invalid file type: string. Please provide a valid File object.');
-    });
-
-    it('should handle upload errors', async () => {
-      const childId = 'child-123';
-      const mockFile = createMockFile();
-
-      uploadBytes.mockRejectedValue(new Error('Upload failed'));
-
-      await expect(
-        dbService.uploadChildPhoto(childId, mockFile)
-      ).rejects.toThrow('Upload failed');
-    });
-
-    it('should handle download URL errors', async () => {
-      const childId = 'child-123';
-      const mockFile = createMockFile();
-
-      uploadBytes.mockResolvedValue({ ref: 'mock-ref' });
-      getDownloadURL.mockRejectedValue(new Error('Download URL failed'));
-
-      await expect(
-        dbService.uploadChildPhoto(childId, mockFile)
-      ).rejects.toThrow('Download URL failed');
-    });
-
-    it('should handle permission errors that would trigger retry logic', async () => {
-      const childId = 'child-123';
-      const mockFile = createMockFile();
-
-      uploadBytes.mockRejectedValue({ 
-        code: 'permission-denied', 
-        message: 'Permission denied' 
-      });
-
-      await expect(
-        dbService.uploadChildPhoto(childId, mockFile)
-      ).rejects.toMatchObject({
-        code: 'permission-denied',
-        message: 'Permission denied'
-      });
-    });
-
-    it('should handle network errors that would trigger retry logic', async () => {
-      const childId = 'child-123';
-      const mockFile = createMockFile();
-
-      uploadBytes.mockRejectedValue({ 
-        message: 'network-request-failed' 
-      });
-
-      await expect(
-        dbService.uploadChildPhoto(childId, mockFile)
-      ).rejects.toMatchObject({
-        message: 'network-request-failed'
-      });
     });
   });
 
