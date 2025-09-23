@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logger } from '../../Helpers/logger';
 import { joiResolver } from '@hookform/resolvers/joi';
 import { generateChildSchema } from '../../schemas/ChildSchema';
-import { GENDERS } from '../../Helpers/constants';
+import { GENDERS, ALERT_TYPES } from '../../Helpers/constants';
 
 const ChildRegistration = ({ setOpenState, addAlert }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
@@ -51,11 +51,11 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
       queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
       reset();
       setOpenState(false);
-      addAlert('success', 'Child updated successfully!');
+      addAlert(ALERT_TYPES.SUCCESS, 'Child updated successfully!');
     },
     onError: (error) => {
       logger.error('Error updating child document:', error);
-      addAlert('error', `Update failed: ${error.message}`);
+      addAlert(ALERT_TYPES.ERROR, `Update failed: ${error.message}`);
     }
   });
 
@@ -93,22 +93,22 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
             let PhotoURL = await dbService.uploadChildPhoto(docRef.id, childImage);
             await updateDoc(docRef, { PhotoURL });
           } catch (uploadError) {
-            addAlert('error', `Photo upload failed: ${uploadError.message}`);
+            addAlert(ALERT_TYPES.ERROR, `Photo upload failed: ${uploadError.message}`);
           }
         }
         
         queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
         reset();
         setOpenState(false);
-        addAlert('success', 'Child registered successfully!');
+        addAlert(ALERT_TYPES.SUCCESS, 'Child registered successfully!');
       }
     } catch (error) {
       if (error.isJoi) {
         logger.error('Child registration failed validation:', error.details);
-        addAlert('error', 'Please check your input and try again.');
+        addAlert(ALERT_TYPES.ERROR, 'Please check your input and try again.');
       } else {
         logger.error('Error adding document: ', error);
-        addAlert('error', `Registration failed: ${error.message}`);
+        addAlert(ALERT_TYPES.ERROR, `Registration failed: ${error.message}`);
       }
     }
   };
