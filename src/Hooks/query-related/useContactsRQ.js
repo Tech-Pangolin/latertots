@@ -5,10 +5,13 @@ import { db } from "../../config/firestore";
 import { COLLECTIONS } from "../../Helpers/constants";
 import { useEffect, useMemo } from "react";
 
-export function useContactsRQ() {
+export function useContactsRQ(forceUserMode = false) {
   const { dbService, currentUser } = useAuth();
-  const isAdmin = currentUser?.Role === 'admin';
   const queryClient = useQueryClient();
+  
+  // Only use admin mode if user is admin AND not forced to user mode
+  const isAdmin = currentUser?.Role === 'admin' && !forceUserMode;
+  
   const queryKey = isAdmin ? ['adminAllContacts'] : ['fetchContacts', currentUser.Email];
 
   const allContacts = useMemo(() => query(

@@ -14,8 +14,8 @@ import { useAlerts } from '../../Hooks/useAlerts';
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
-  const { data: children = [] } = useChildrenRQ();
-  const { data: contacts = [] } = useContactsRQ();
+  const { data: children = [] } = useChildrenRQ(true); // Force user mode to show only user's own children
+  const { data: contacts = [] } = useContactsRQ(true); // Force user mode to show only user's own contacts
   const location = useLocation();
   const { alerts, addAlert, removeAlert } = useAlerts();
 

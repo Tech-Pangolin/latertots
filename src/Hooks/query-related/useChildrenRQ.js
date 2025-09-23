@@ -5,10 +5,13 @@ import { db } from "../../config/firestore";
 import { useEffect, useMemo } from "react";
 import { COLLECTIONS } from "../../Helpers/constants";
 import { logger } from "../../Helpers/logger";
-export function useChildrenRQ() {
+export function useChildrenRQ(forceUserMode = false) {
   const { dbService, currentUser } = useAuth();
   const queryClient = useQueryClient();
-  const isAdmin = currentUser?.Role === 'admin';
+  
+  // Only use admin mode if user is admin AND not forced to user mode
+  const isAdmin = currentUser?.Role === 'admin' && !forceUserMode;
+  
   const queryKey = useMemo(() => {
     return isAdmin ? ['adminAllChildren'] : ['fetchChildren', currentUser.Email];
   }, [currentUser?.Email, isAdmin]);
