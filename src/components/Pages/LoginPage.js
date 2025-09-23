@@ -30,7 +30,7 @@ function LoginPage() {
   };
 
   return (
-    <div className='container-fluid' style={{ background: `url('/assets/img/login/loginbg.png')`, backgroundSize: 'cover', backgroundPosition: 'center', width: '100%', minHeight: '100vh' }}>
+    <div className='container-fluid' style={{ background: `url('/assets/img/login/loginbg-fw.png')`, backgroundSize: 'cover', backgroundPosition: 'center', width: '100%', minHeight: '100vh' }}>
       <div className="container">
         <div className="row">
           <div className="col d-flex justify-content-center mt-3">
@@ -72,7 +72,7 @@ function LoginPage() {
               </div>
               <div className='row'>
                 <div className='col-12'>
-                  <a href="/register" className="register-btn w-100 mt-2 text-center" type="button">
+                  <a href="/register" className="register-btn w-100 text-center my-2" type="button">
                     Register
                   </a>
                 </div>

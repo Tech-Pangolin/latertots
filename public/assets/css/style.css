@@ -2309,6 +2309,12 @@ Events
   color:grey
 }
 
+.or{
+  font-family: "Manjari", sans-serif;
+  font-size: 18px;
+  color:#e51377;
+}
+
 /*
 Careers
 */
@@ -2375,12 +2381,12 @@ blockquote p {
 }
 
 /** Profile Page **/
-#home-tab, #profile-tab, #contact-tab{
+#home-tab, #profile-tab, #contact-tab, #security-tab {
   font-size:22px;
   font-family: 'Manjari', sans-serif;
   color: #FFF;
 }
-#home-tab.active, #profile-tab.active, #contact-tab.active{
+#home-tab.active, #profile-tab.active, #contact-tab.active, #security-tab.active  {
  
   color: #000;
 }

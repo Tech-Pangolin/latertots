@@ -148,13 +148,14 @@ const UserForm = ({ addAlert }) => {
 
   return (
     <div className="container" style={{}}>
-      <div className="row justify-content-center">
-        <div className="col register-form">
+      <div className="row">
+        {/* <div className="col register-form"> */}
 
           {/* Create User Form */}
           {(mode === "create") &&
-            <form onSubmit={createUserOnSubmit} className="row">
-              <div className="mb-3 col-12 col-md-6">
+          <div className="d-flex justify-content-center">
+            <form onSubmit={createUserOnSubmit} >
+              <div className="mb-3 col-12">
                 <label htmlFor="email" className="form-label">Email:</label>
                 <input className="form-control"
                   type="email"
@@ -164,7 +165,7 @@ const UserForm = ({ addAlert }) => {
                   required
                 />
               </div>
-              <div className="mb-3 col-12 col-md-6">
+              <div className="mb-3 col-12">
                 <label htmlFor="password" className="form-label">Password:</label>
                 <input className="form-control"
                   type="password"
@@ -174,7 +175,7 @@ const UserForm = ({ addAlert }) => {
                   required
                 />
               </div>
-              <div>
+              <div className="mb-3 col-12">
                 <label htmlFor="confirm" className="form-label">Confirm Password:</label>
                 <input className="form-control"
                   type="password"
@@ -187,7 +188,7 @@ const UserForm = ({ addAlert }) => {
               {passwordMismatch && <p>Passwords do not match</p>}
               {error && <p className="mt-3">{error}</p>}
               <div className="row ">
-                <div className="col-12 col-md-6 mt-3"> 
+                <div className="col-12 my-3"> 
                   <button 
                     type="submit" 
                     className="register-btn w-100"
@@ -196,7 +197,8 @@ const UserForm = ({ addAlert }) => {
                     {createUserMutation.isLoading ? 'Creating...' : 'Sign Up'}
                   </button>
                 </div>
-                <div className="col-12 col-md-6 mt-3"> 
+                <div className="text-center my-3 or">or</div>
+                <div className="col-12 my-3"> 
                   <button 
                     onClick={signInWithGoogle} 
                     className="google-btn w-100" 
@@ -208,11 +210,12 @@ const UserForm = ({ addAlert }) => {
                   </button>
                 </div>
               </div>
-              <div className="d-flex justify-content-center">
+              {/* <div className="d-flex justify-content-center">
 
 
-              </div>
+              </div> */}
             </form>
+            </div>
           }
 
           {/* Update User Form */}
@@ -298,14 +301,14 @@ const UserForm = ({ addAlert }) => {
                 </button>
               </div>
             </form>)}
-        </div>
+        {/* </div> */}
       </div>
-      {mode === 'update' && (
-        <div className="row">
-          <h5 className="mt-5">Change Password</h5>
-          <ChangePasswordForm />
-        </div>
-      )}
+      {/* {mode === 'update' && ( */}
+        {/* // <div className="row">
+        //   <h5 className="mt-5">Change Password</h5>
+        //   <ChangePasswordForm />
+        // </div> */}
+      {/* )} */}
     </div>
   );
 };

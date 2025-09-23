@@ -10,6 +10,7 @@ import AlertContainer from '../Shared/AlertContainer';
 import { useChildrenRQ } from '../../Hooks/query-related/useChildrenRQ';
 import { useContactsRQ } from '../../Hooks/query-related/useContactsRQ';
 import { useAlerts } from '../../Hooks/useAlerts';
+import ChangePasswordForm from '../ChangePasswordForm';
 
 
 const UserProfile = () => {
@@ -48,7 +49,7 @@ const UserProfile = () => {
 
         {/* Avatar and Book Now Button  */}
         <div className='col-md-4'>
-          <div className="row">
+          <div className="row mt-5">
             <div className='col-12'>
               <h1 className="text-center">{currentUser?.Name}</h1>
             </div>
@@ -68,14 +69,14 @@ const UserProfile = () => {
           {/* Tab Navigation Header */}
           <ul className="nav nav-tabs mt-5" id="myTab" role="tablist">
             <li className="nav-item" role="presentation">
-              <button 
-                className={`nav-link ${activeTab === 'home' ? 'active' : ''}`} 
-                id="home-tab" 
-                data-bs-toggle="tab" 
-                data-bs-target="#home-tab-pane" 
-                type="button" 
-                role="tab" 
-                aria-controls="home-tab-pane" 
+              <button
+                className={`nav-link ${activeTab === 'home' ? 'active' : ''}`}
+                id="home-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#home-tab-pane"
+                type="button"
+                role="tab"
+                aria-controls="home-tab-pane"
                 aria-selected={activeTab === 'home'}
                 onClick={() => setActiveTab('home')}
               >
@@ -83,14 +84,14 @@ const UserProfile = () => {
               </button>
             </li>
             <li className="nav-item" role="presentation">
-              <button 
-                className={`nav-link ${activeTab === 'children' ? 'active' : ''}`} 
-                id="profile-tab" 
-                data-bs-toggle="tab" 
-                data-bs-target="#profile-tab-pane" 
-                type="button" 
-                role="tab" 
-                aria-controls="profile-tab-pane" 
+              <button
+                className={`nav-link ${activeTab === 'children' ? 'active' : ''}`}
+                id="profile-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#profile-tab-pane"
+                type="button"
+                role="tab"
+                aria-controls="profile-tab-pane"
                 aria-selected={activeTab === 'children'}
                 onClick={() => setActiveTab('children')}
               >
@@ -98,18 +99,33 @@ const UserProfile = () => {
               </button>
             </li>
             <li className="nav-item" role="presentation">
-              <button 
-                className={`nav-link ${activeTab === 'contacts' ? 'active' : ''}`} 
-                id="contact-tab" 
-                data-bs-toggle="tab" 
-                data-bs-target="#contact-tab-pane" 
-                type="button" 
-                role="tab" 
-                aria-controls="contact-tab-pane" 
+              <button
+                className={`nav-link ${activeTab === 'contacts' ? 'active' : ''}`}
+                id="contact-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#contact-tab-pane"
+                type="button"
+                role="tab"
+                aria-controls="contact-tab-pane"
                 aria-selected={activeTab === 'contacts'}
                 onClick={() => setActiveTab('contacts')}
               >
                 Contacts
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'security' ? 'active' : ''}`}
+                id="security-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#security-tab-pane"
+                type="button"
+                role="tab"
+                aria-controls="security-tab-pane"
+                aria-selected={activeTab === 'security'}
+                onClick={() => setActiveTab('security')}
+              >
+                Security
               </button>
             </li>
           </ul>
@@ -178,32 +194,41 @@ const UserProfile = () => {
                 <ContactsTable contacts={contacts} />
               </div>
             </div>
+            <div className={`tab-pane fade ${activeTab === 'security' ? 'show active' : ''}`} id="security-tab-pane" role="tabpanel" aria-labelledby="security-tab" tabIndex="0">
+              <div className='px-5 py-5'>
+                <div className=" row"  >
+                  <div className="col-2"><h4 className="mt-2">Security</h4></div>
+                </div>
+                <h5 className="mt-5">Change Password</h5>
+                <ChangePasswordForm />
+              </div>
+            </div>
+          </div>
 
-            <div
-              className={`modal fade ${openContactsModal ? 'show' : ''}`}
-              style={{ display: openContactsModal ? 'block' : 'none' }}
-              tabIndex="-1"
-              aria-labelledby="newContactModalLabel"
-              aria-hidden="true"
-            >
-              <div className="modal-dialog">
-                <div className="modal-content">
-                  <div className="modal-body">
-                    <div className="d-flex justify-content-end">
-                      <button type="button" className="btn-close" onClick={() => setOpenContactsModal(false)} aria-label="Close"></button>
-                    </div>
-                    <ContactRegistration setOpenState={setOpenContactsModal} />
+          <div
+            className={`modal fade ${openContactsModal ? 'show' : ''}`}
+            style={{ display: openContactsModal ? 'block' : 'none' }}
+            tabIndex="-1"
+            aria-labelledby="newContactModalLabel"
+            aria-hidden="true"
+          >
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-body">
+                  <div className="d-flex justify-content-end">
+                    <button type="button" className="btn-close" onClick={() => setOpenContactsModal(false)} aria-label="Close"></button>
                   </div>
+                  <ContactRegistration setOpenState={setOpenContactsModal} />
                 </div>
               </div>
             </div>
-            {openContactsModal && <div className="modal-backdrop fade show"></div>}
-
           </div>
+          {openContactsModal && <div className="modal-backdrop fade show"></div>}
+
         </div>
       </div>
-
     </div>
+
 
   );
 };
