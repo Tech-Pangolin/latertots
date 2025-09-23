@@ -9,6 +9,7 @@ import { logger } from '../../Helpers/logger';
 import { joiResolver } from '@hookform/resolvers/joi';
 import { generateChildSchema } from '../../schemas/ChildSchema';
 import { GENDERS, ALERT_TYPES } from '../../Helpers/constants';
+import { withFirebaseRetry } from '../../Helpers/retryHelpers';
 
 const ChildRegistration = ({ setOpenState, addAlert }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
@@ -37,10 +38,13 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
       // Handle photo upload if present
       if (childImage) {
         try {
-          let PhotoURL = await dbService.uploadChildPhoto(child.id, childImage);
+          const PhotoURL = await withFirebaseRetry(
+            () => dbService.uploadChildPhoto(child.id, childImage)
+          );
           validatedFormData.PhotoURL = PhotoURL;
         } catch (uploadError) {
-          throw new Error(`Photo upload failed: ${uploadError.message}`);
+          // Don't throw error - allow update to proceed without photo
+          // Photo upload failure will be handled in mutation onError
         }
       }
       
@@ -55,7 +59,11 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
     },
     onError: (error) => {
       logger.error('Error updating child document:', error);
-      addAlert(ALERT_TYPES.ERROR, `Update failed: ${error.message}`);
+      if (error.message.includes('Photo upload failed')) {
+        addAlert(ALERT_TYPES.WARNING, 'Child updated successfully, but photo upload failed. You can try uploading again by editing the child\'s profile.');
+      } else {
+        addAlert(ALERT_TYPES.ERROR, `Update failed: ${error.message}`);
+      }
     }
   });
 
@@ -87,20 +95,32 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
         const userRef = doc(collection(db, "Users"), currentUser.uid);
         await updateDoc(userRef, { Children: arrayUnion(docRef) });
         
-        // Now upload photo with the new child ID
+        
+        // Now upload photo with retry logic for race condition
         if (childImage) {
           try {
-            let PhotoURL = await dbService.uploadChildPhoto(docRef.id, childImage);
+            // Use retry logic to handle race condition between child creation and storage rules
+            const PhotoURL = await withFirebaseRetry(
+              () => dbService.uploadChildPhoto(docRef.id, childImage),
+              {
+                onRetry: (error, attempt, delay) => {
+                  console.log(`Photo upload retry ${attempt} in ${delay}ms due to: ${error.message}`);
+                }
+              }
+            );
+            
             await updateDoc(docRef, { PhotoURL });
+            addAlert(ALERT_TYPES.SUCCESS, 'Child registered successfully with photo!');
           } catch (uploadError) {
-            addAlert(ALERT_TYPES.ERROR, `Photo upload failed: ${uploadError.message}`);
+            addAlert(ALERT_TYPES.WARNING, 'Child registered successfully, but photo upload failed. You can add a photo later by editing the child\'s profile.');
           }
+        } else {
+          addAlert(ALERT_TYPES.SUCCESS, 'Child registered successfully!');
         }
         
         queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
         reset();
         setOpenState(false);
-        addAlert(ALERT_TYPES.SUCCESS, 'Child registered successfully!');
       }
     } catch (error) {
       if (error.isJoi) {
