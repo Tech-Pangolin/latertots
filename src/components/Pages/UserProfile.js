@@ -42,13 +42,12 @@ const UserProfile = () => {
   const handleClose = () => setOpen(false);
 
   function canSchedule(){
-    const {StreetAddress, City, State, ZipCode, CellNumber} = currentUser || {};
-    if (!currentUser) return false;
-    if (!StreetAddress || !City || !State || !ZipCode || !CellNumber) return false;
-
-    return children.length > 0;
+    const {StreetAddress, City, State, Zip, CellNumber} = currentUser || {};
+    if (!StreetAddress || !City || !State || !Zip || !CellNumber) return false;
+    if(children.length === 0) return false;
+    return true;
   }
-
+console.log("canSchedule", canSchedule());
 
   return (
     <div className="container-fluid bg-blue">
@@ -63,8 +62,10 @@ const UserProfile = () => {
             </div>
             <div className="col-12 d-flex justify-content-center">
               <img className="rounded-circle" width="250px" height="250px" src={currentUser.PhotoURL ? currentUser.PhotoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
-            </div>
+            </div>  
+             {!canSchedule() && <span className="text-danger me-2">Complete your profile to book with us!</span>}
             <div className='col-12 d-flex justify-content-center mt-5'>
+           
               <a href="/schedule"  disabled={!canSchedule()} className="border px-5 py-3 p-1 pink-text blink-text">Book Now</a>
             </div>
           </div>

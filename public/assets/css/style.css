@@ -2462,7 +2462,7 @@ blockquote p {
 }
 
 .profile .tab-content {
-  padding: 20px;
+  padding: 1px 20px 20px 20px;
   background-color: #FFF;
   border-radius: 0 10px 10px 10px;
   box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.12);

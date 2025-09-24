@@ -10,7 +10,7 @@ import { FirebaseDbService } from "../../Helpers/firebase";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { generateUserProfileSchema } from "../../schemas/UserProfileSchema";
 import { useNavigate } from "react-router-dom";
-import ChangePasswordForm from "../ChangePasswordForm";
+
 import GoogleIcon from "./GoogleIcon";
 import { ALERT_TYPES } from "../../Helpers/constants";
 
@@ -221,12 +221,12 @@ const UserForm = ({ addAlert }) => {
           {/* Update User Form */}
           {(mode === "update") && (
             <form onSubmit={handleSubmit(updateUserOnSubmit)} className="row">
-              <div className="mb-3">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="Name" className="form-label">Name *</label>
                 <input type="text" className="form-control" {...register("Name")} />
                 {errors.Name?.message && <div className="">{errors.Name.message}</div>}
               </div>
-              <div className="mb-3">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="Email" className="form-label">Email</label>
                 <input
                   className="form-control"
@@ -236,16 +236,7 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.Email?.message && <p>{errors.Email.message}</p>}
               </div>
-              <div className="col-10 mb-3">
-                <label htmlFor="Image" className="form-label">Photo</label>
-                <input
-                  type="file"
-                  {...register("Image")}
-                  className="form-control"
-                />
-                {errors.Image?.message && <p>{errors.Image.message}</p>}
-              </div>
-              <div className="mb-3  col-4">
+                <div className="mb-3  col-4">
                 <label htmlFor="CellNumber" className="form-label">Cell #</label>
                 <input
                   className="form-control"
@@ -254,8 +245,7 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.CellNumber?.message && <p>{errors.CellNumber.message}</p>}
               </div>
-
-              <div className="mb-3 col-6">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="StreetAddress" className="form-label">Street Address</label>
                 <input
                   className="form-control"
@@ -264,7 +254,7 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.StreetAddress?.message && <p>{errors.StreetAddress.message}</p>}
               </div>
-              <div className="mb-3 col-4">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="City" className="form-label">City</label>
                 <input
                   className="form-control"
@@ -273,7 +263,7 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.City?.message && <p>{errors.City.message}</p>}
               </div>
-              <div className="mb-3 col-4">
+              <div className="mb-3 col-12 col-lg-2">
                 <label htmlFor="State" className="form-label">State</label>
                 <input
                   className="form-control"
@@ -282,7 +272,7 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.State?.message && <p>{errors.State.message}</p>}
               </div>
-              <div className="mb-3 col-2">
+              <div className="mb-3 col-12 col-lg-2">
                 <label htmlFor="Zip" className="form-label">Zip</label>
                 <input
                   className="form-control"
@@ -291,6 +281,18 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.Zip?.message && <p>{errors.Zip.message}</p>}
               </div>
+              <div className="col-12 mb-3">
+                <label htmlFor="Image" className="form-label">Photo</label>
+                <input
+                  type="file"
+                  {...register("Image")}
+                  className="form-control"
+                />
+                {errors.Image?.message && <p>{errors.Image.message}</p>}
+              </div>
+            
+
+              
               <div className="col-12">
                 <button 
                   type="submit" 
