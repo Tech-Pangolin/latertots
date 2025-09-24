@@ -41,6 +41,14 @@ const UserProfile = () => {
   };
   const handleClose = () => setOpen(false);
 
+  function canSchedule(){
+    const {StreetAddress, City, State, ZipCode, CellNumber} = currentUser || {};
+    if (!currentUser) return false;
+    if (!StreetAddress || !City || !State || !ZipCode || !CellNumber) return false;
+
+    return children.length > 0;
+  }
+
 
   return (
     <div className="container-fluid bg-blue">
@@ -57,7 +65,7 @@ const UserProfile = () => {
               <img className="rounded-circle" width="250px" height="250px" src={currentUser.PhotoURL ? currentUser.PhotoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
             </div>
             <div className='col-12 d-flex justify-content-center mt-5'>
-              <a href="/schedule" className="border px-5 py-3 p-1 pink-text blink-text">Book Now</a>
+              <a href="/schedule"  disabled={!canSchedule()} className="border px-5 py-3 p-1 pink-text blink-text">Book Now</a>
             </div>
           </div>
         </div>
@@ -144,7 +152,7 @@ const UserProfile = () => {
             <div className={`tab-pane fade ${activeTab === 'children' ? 'show active' : ''}`} id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabIndex="0">
               <div className='px-5 py-5'>
                 <div className='row'>
-                  <div className="col-2"> <h3 className="mt-2">Children</h3></div>
+                  <div className="col-12 col-lg-2"> <h3 className="mt-2">Children</h3></div>
                   <div className="col-9">
                     <button type="button" className="btn btn-outline-primary btn-lg" onClick={() => setOpenChildModal(true)}>
                       Add Children&nbsp;<i className="bi bi-person-plus-fill"></i>
@@ -172,26 +180,33 @@ const UserProfile = () => {
                 </div>
                 {openChildModal && <div className="modal-backdrop fade show"></div>}
 
-                <div className="mt-3 d-flex justify-content-between-start align-items-center experience">
+                <div className="mt-3 experience">
+                  <div className="row">
                   {children.length > 0 &&
                     children.map((child) => (<ChildCard key={child.id} child={child} onNameClick={handleNameClick} />))
                   }
+                  </div>
+                  {children.length === 0 && <p className='mt-5'>No children added yet.</p>}
                 </div>
               </div>
             </div>
 
             {/* currentUser's Contacts Tab Content */}
             <div className={`tab-pane fade ${activeTab === 'contacts' ? 'show active' : ''}`} id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabIndex="0">
-              <div className='px-5 py-5'>
+              <div className='px-lg-5 py-lg-5'>
                 <div className=" row"  >
-                  <div className="col-2"><h4 className="mt-2">Contacts</h4></div>
-                  <div className="col-3">
+                  <div className="col-12 col-lg-2 "><h4 className="mt-2">Contacts</h4></div>
+                  <div className="col-12 col-lg-3">
                     <button type="button" className="btn btn-outline-primary btn-lg" onClick={() => setOpenContactsModal(true)}>
                       Add Contact&nbsp;<i className="bi bi-person-plus-fill"></i>
                     </button>
                   </div>
                 </div>
-                <ContactsTable contacts={contacts} />
+                <div className='row'>
+                  <div className="col-12">
+                    <ContactsTable contacts={contacts} />
+                  </div>
+                </div>
               </div>
             </div>
             <div className={`tab-pane fade ${activeTab === 'security' ? 'show active' : ''}`} id="security-tab-pane" role="tabpanel" aria-labelledby="security-tab" tabIndex="0">

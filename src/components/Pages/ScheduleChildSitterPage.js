@@ -25,9 +25,9 @@ const ScheduleChildSitterPage = () => {
   const { currentUser, dbService } = useAuth();
   const [modalOpenState, setModalOpenState] = useState(false);
   const navigate = useNavigate();
-
   const { data: events = [], setMonthYear } = useReservationsByMonthDayRQ()
-
+  console.log(events[0]?.start)
+  // console.log(luxonDateTimeFromJSDate(new Date(events[0]?.start)))
   // Fetch children data
   useEffect(() => {
     if (!dbService) return;
@@ -44,8 +44,8 @@ const ScheduleChildSitterPage = () => {
   // Redirect to profile if no children are registered (except for admin users)
   useEffect(() => {
     if (!isLoadingChildren && children.length === 0 && currentUser.Role !== 'admin' && dbService) {
-      navigate('/profile', { 
-        state: { 
+      navigate('/profile', {
+        state: {
           alerts: [{
             id: Date.now().toString(),
             type: 'warning',
@@ -53,7 +53,7 @@ const ScheduleChildSitterPage = () => {
             autoDismissDelayMillis: null
           }],
           switchToTab: 'children'
-        } 
+        }
       });
     }
   }, [isLoadingChildren, children, currentUser.Role, navigate, dbService]);
@@ -62,7 +62,21 @@ const ScheduleChildSitterPage = () => {
     logger.info('Events:', events);
     logger.info("children:", children);
   }, [events]);
+  const formatDateTime = (dt) => {
+    const options = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short'
+    };
 
+    const readableTime = new Date(dt).toLocaleString('en-US', options);
+    return readableTime;
+  }
   const getViewDates = useCallback((args) => {
     setSelectedDate(luxonDateTimeFromISOString(args.startStr));
     setMonthYear({
@@ -144,8 +158,8 @@ const ScheduleChildSitterPage = () => {
     },
     onError: (err) => console.error("Error archiving reservation: ", err)
   })
-
   const handleEventClick = useCallback(({ event }) => {
+    console.log(event, children);
     // Only allow deletion of children reservations that belong to the current user
     const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
 
@@ -154,6 +168,14 @@ const ScheduleChildSitterPage = () => {
     }
   }, [children, currentUser, archiveReservationMutation]);
 
+  const handleEventClickMobile = useCallback(({ event }) => {
+    // Only allow deletion of children reservations that belong to the current user
+    const belongsToCurrentUser = children.some(child => child.id === event.childId);
+
+    if (currentUser.Role === 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
+      archiveReservationMutation.mutate(event.id);
+    }
+  }, [children, currentUser, archiveReservationMutation]);
   // Enforce rules for where events can be dropped or resized
   const eventAllow = useCallback((dropInfo) => {
     if (!checkAgainstBusinessHours(dropInfo) || !checkFutureStartTime(dropInfo)) {
@@ -180,19 +202,19 @@ const ScheduleChildSitterPage = () => {
   const timeBounds = useMemo(() => {
     const businessStart = BUSINESS_HRS.startTime; // '07:00'
     const businessEnd = BUSINESS_HRS.endTime; // '19:00'
-    
+
     // Parse business hours
     const [startHour, startMin] = businessStart.split(':').map(Number);
     const [endHour, endMin] = businessEnd.split(':').map(Number);
-    
+
     // Calculate min time (1 hour before business start)
     const minHour = startHour - 1;
     const minTime = `${minHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
-    
+
     // Calculate max time (1 hour after business end)
     const maxHour = endHour + 1;
     const maxTime = `${maxHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
-    
+
     return { slotMinTime: minTime, slotMaxTime: maxTime };
   }, []);
 
@@ -200,29 +222,49 @@ const ScheduleChildSitterPage = () => {
     <Grid container className="schedule-child-sitter-page" style={{ minHeight: 'auto' }}>
       <Grid item xs={1} />
       <Grid item xs={10} className="main" style={{ marginTop: '15px', marginBottom: '15px' }}>
-        <FullCalendar
-          // TODO: Specify a timezone prop and tie into admin settings
-          plugins={pluginsConfig}
-          initialView="timeGridWeek"
-          headerToolbar={headerToolbarConfig}
-          customButtons={customButtonsConfig}
-          businessHours={BUSINESS_HRS}
-          slotMinTime={timeBounds.slotMinTime}
-          slotMaxTime={timeBounds.slotMaxTime}
-          height="auto"
-          showNonCurrentDates={false}
-          editable={true}
-          droppable={true}
-          datesSet={getViewDates}
-          events={events}
-          eventAllow={eventAllow}
-          eventContent={renderEventContent}
-          eventClick={handleEventClick}
-          eventDrop={handleEventMove}
-          eventResize={handleEventResize}
-          nowIndicator={true}
-          allDaySlot={false}
-        />
+        <div className='d-block d-md-none'>
+          <h2 className='mb-3'>Schedule Child Sitter</h2>
+          <button onClick={() => setModalOpenState(true)} className="btn btn-secondary">New Reservation</button>
+          <h5 className='mt-4'>Current Reservations</h5>
+          {events.length === 0 && <p>No reservations scheduled.</p>}
+          {events.length > 0 && events.map(event => (
+
+            <div key={event.id} className="card mb-2">
+              <div className="card-body d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 className="card-title">{event.title}</h5>
+                  <p className="card-text">{formatDateTime(event.start)} - {formatDateTime(event.end)}</p>
+                </div>
+                <button className="btn btn-danger btn-sm" onClick={() => handleEventClickMobile({ event })}>Cancel</button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="d-none d-md-block mb-3">
+          <FullCalendar
+            // TODO: Specify a timezone prop and tie into admin settings
+            plugins={pluginsConfig}
+            initialView="timeGridWeek"
+            headerToolbar={headerToolbarConfig}
+            customButtons={customButtonsConfig}
+            businessHours={BUSINESS_HRS}
+            slotMinTime={timeBounds.slotMinTime}
+            slotMaxTime={timeBounds.slotMaxTime}
+            height="auto"
+            showNonCurrentDates={false}
+            editable={true}
+            droppable={true}
+            datesSet={getViewDates}
+            events={events}
+            eventAllow={eventAllow}
+            eventContent={renderEventContent}
+            eventClick={handleEventClick}
+            eventDrop={handleEventMove}
+            eventResize={handleEventResize}
+            nowIndicator={true}
+            allDaySlot={false}
+          />
+        </div>
       </Grid>
       <Grid item xs={1} />
       <ReservationFormModal
