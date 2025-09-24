@@ -3,10 +3,8 @@ import { Card, CardMedia, CardContent, CardActions, IconButton, Typography, Butt
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import { calculateAge } from '../../Helpers/util';
-import { useNavigate } from 'react-router-dom';
 
-function ChildCard({ child, onNameClick }) {
-  const navigate = useNavigate();
+function ChildCard({ child, onNameClick, onEditChildFxn }) {
 
   const getAvatarImgName = () => {
     switch (child.Gender) {
@@ -23,8 +21,7 @@ function ChildCard({ child, onNameClick }) {
   const imageSource = child.PhotoURL || (process.env.PUBLIC_URL + getAvatarImgName());
 
   const handleEditClick = () => {
-    // Navigate to the child registration page with the child object in the location state
-    navigate(`/addChild/${child.id}`, { state: { child: child } });
+    onEditChildFxn(child);
   }
 
 
@@ -56,7 +53,7 @@ function ChildCard({ child, onNameClick }) {
           </Typography>
         </CardContent>
         <CardActions>
-          <Button size="small" startIcon={<AddIcon />} onClick={() => navigate(`/schedule/`)}>
+          <Button size="small" startIcon={<AddIcon />} onClick={() => window.location.href = '/schedule/'}>
             Schedule
           </Button>
         </CardActions>
