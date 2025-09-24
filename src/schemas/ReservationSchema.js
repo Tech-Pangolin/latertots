@@ -2,6 +2,7 @@ import Joi from 'joi';
 import { RESERVATION_STATUS } from '../Helpers/constants';
 import { DocumentReference, Timestamp } from 'firebase/firestore';
 
+
 const ReservationSchema = Joi.object({
   // Administrative fields
   archived: Joi.boolean().default(false).required(),

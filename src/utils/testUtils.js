@@ -2,7 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { generateChildSchema } from '../../schemas/ChildSchema';
+import { generateChildSchema } from '../schemas/ChildSchema';
 
 // Custom render function that includes providers
 export const renderWithProviders = (ui, options = {}) => {
@@ -171,7 +171,7 @@ export const ChildRegistrationWrapper = ({ setOpenStateFxn, addAlertFxn, editing
     if (editingChild) {
       const formData = {
         Name: editingChild.Name,
-        DOB: editingChild.DOB ? require('../../Helpers/datetime').firebaseTimestampToFormDateString(editingChild.DOB) : '',
+        DOB: editingChild.DOB ? require('../Helpers/datetime').firebaseTimestampToFormDateString(editingChild.DOB) : '',
         Gender: editingChild.Gender,
         Allergies: editingChild.Allergies || '',
         Medications: editingChild.Medications || '',
@@ -198,7 +198,7 @@ export const ChildRegistrationWrapper = ({ setOpenStateFxn, addAlertFxn, editing
 
           <label htmlFor="Gender" className="form-label">Gender:</label>
           <select id="Gender" {...register('Gender')} className="form-control">
-            {Object.values(require('../../Helpers/constants').GENDERS).map(option => {
+            {Object.values(require('../Helpers/constants').GENDERS).map(option => {
               return <option key={option} value={option}>{option}</option>;
             })}
           </select>
@@ -253,4 +253,60 @@ export const FIREBASE_ERRORS = {
   WEAK_PASSWORD: createMockFirebaseError('auth/weak-password', 'Password is too weak'),
   INVALID_EMAIL: createMockFirebaseError('auth/invalid-email', 'Invalid email'),
   PERMISSION_DENIED: createMockFirebaseError('permission-denied', 'Permission denied'),
+};
+
+// Wrapper component for UserForm that uses real useForm hook for testing
+export const UserFormWrapper = ({ addAlert, onSubmit }) => {
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    resolver: require('@hookform/resolvers/joi').joiResolver(require('../../schemas/UserProfileSchema').generateUserProfileSchema(true))
+  });
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <input {...register('Name')} placeholder="Name" />
+        <input {...register('Email')} type="email" placeholder="Email" />
+        <input {...register('CellNumber')} placeholder="Cell Number" />
+        <input {...register('StreetAddress')} placeholder="Street Address" />
+        <input {...register('City')} placeholder="City" />
+        <input {...register('State')} placeholder="State" />
+        <input {...register('Zip')} placeholder="Zip" />
+        <input {...register('Image')} type="file" />
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+  );
+};
+
+// Wrapper component for LoginPage that uses real useForm hook for testing
+export const LoginPageWrapper = ({ onSubmit }) => {
+  const { register, handleSubmit, formState: { errors } } = useForm();
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <input {...register('email')} type="email" placeholder="Email" />
+        <input {...register('password')} type="password" placeholder="Password" />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  );
+};
+
+// Wrapper component for ChangePasswordForm that uses real useForm hook for testing
+export const ChangePasswordFormWrapper = ({ onSubmit }) => {
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    resolver: require('@hookform/resolvers/joi').joiResolver(require('../schemas/PasswordSchema').generatePasswordSchema())
+  });
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <input {...register('currentPassword')} type="password" placeholder="Current Password" />
+        <input {...register('newPassword')} type="password" placeholder="New Password" />
+        <input {...register('confirmPassword')} type="password" placeholder="Confirm Password" />
+        <button type="submit">Change Password</button>
+      </form>
+    </div>
+  );
 };

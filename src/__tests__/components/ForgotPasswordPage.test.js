@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import ForgotPasswordPage from '../../components/Pages/ForgotPasswordPage';
-import { renderWithProviders } from '../utils/testUtils';
+import { renderWithProviders } from '../../utils/testUtils';
 
 // Mock AuthProvider functions
 jest.mock('../../components/AuthProvider', () => ({

@@ -4,7 +4,7 @@ import ChildRegistration from '../../components/Pages/ChildRegistration';
 import { useAuth } from '../../components/AuthProvider';
 import { generateChildSchema } from '../../schemas/ChildSchema';
 import { withFirebaseRetry } from '../../Helpers/retryHelpers';
-import { renderWithProviders, createMockFile, ChildRegistrationWrapper } from '../utils/testUtils';
+import { renderWithProviders, createMockFile, ChildRegistrationWrapper } from '../../utils/testUtils';
 
 // Mock dependencies
 jest.mock('../../components/AuthProvider', () => ({
