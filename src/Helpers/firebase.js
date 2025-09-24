@@ -43,7 +43,7 @@ export class FirebaseDbService {
     try {
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-      console.error("Error mapping snapshot to data:", error);
+      logger.error("Error mapping snapshot to data:", error);
     }
   }
 
@@ -84,7 +84,7 @@ export class FirebaseDbService {
       try {
         callback(this.#mapSnapshotToData(snapshot));
       } catch (error) {
-        console.error("Error subscribing to documents:", error);
+        logger.error("Error subscribing to documents:", error);
       }
     });
   }
@@ -105,7 +105,7 @@ export class FirebaseDbService {
       await updateDoc(userRef, { Children: arrayUnion(docRef) });
       return docRef.id;
     } catch (error) {
-      console.error("Error creating child document:", error);
+      logger.error("Error creating child document:", error);
       throw error;
     }
   };
@@ -127,7 +127,7 @@ export class FirebaseDbService {
       await updateDoc(userRef, { Contacts: arrayUnion(docRef) });
       return docRef.id;
     } catch (error) {
-      console.error("Error creating contact document:", error);
+      logger.error("Error creating contact document:", error);
       throw error;
     }
   };
@@ -171,7 +171,7 @@ export class FirebaseDbService {
         throw new Error("No record found with email: " + this.userContext.email);
       }
     } catch (error) {
-      console.error("Error querying children:", error);
+      logger.error("Error querying children:", error);
       throw error;
     }
   };
@@ -204,7 +204,7 @@ export class FirebaseDbService {
         throw new Error("No record found with email: " + email);
       }
     } catch (error) {
-      console.error("Error querying contacts:", error);
+      logger.error("Error querying contacts:", error);
       return []
     }
   }
@@ -237,15 +237,22 @@ export class FirebaseDbService {
       // Create a storage reference with dynamic path based on entity type
       const storageRef = ref(storage, `${entityType}-photos/${entityId}`);
 
-      // Upload the file to Firebase Storage
-      const snapshot = await uploadBytes(storageRef, file);
+      // Upload the file with custom metadata for security
+      const metadata = {
+        customMetadata: {
+          owner: this.userContext.uid,
+          entityType: entityType,
+          entityId: entityId
+        }
+      };
+      const snapshot = await uploadBytes(storageRef, file, metadata);
 
       // Get the download URL of the uploaded photo
       const downloadURL = await getDownloadURL(snapshot.ref);
 
       return downloadURL;
     } catch (error) {
-      console.error("Error uploading photo:", error);
+      logger.error("Error uploading photo:", error);
       // Re-throw the error so it can be handled by the calling code
       throw error;
     }
@@ -299,7 +306,7 @@ export class FirebaseDbService {
       const reservations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       return reservations;
     } catch (error) {
-      console.error("Error fetching reservations:", error);
+      logger.error("Error fetching reservations:", error);
       throw error;
     }
   };
@@ -340,7 +347,7 @@ export class FirebaseDbService {
       const reservations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       return reservations;
     } catch (error) {
-      console.error("Error fetching reservations:", error);
+      logger.error("Error fetching reservations:", error);
       throw error;
     }
   };
@@ -431,7 +438,7 @@ export class FirebaseDbService {
       const docRef = await addDoc(collection(db, "Reservations"), validatedData);
       return docRef.id;
     } catch (error) {
-      console.error("Error creating reservation document:", error);
+      logger.error("Error creating reservation document:", error);
       throw error;
     }
   };
@@ -456,7 +463,7 @@ export class FirebaseDbService {
       const reservationRef = doc(collection(db, "Reservations"), id);
       await updateDoc(reservationRef, { ...dataWithoutId });
     } catch (error) {
-      console.error("Error updating reservation document:", error);
+      logger.error("Error updating reservation document:", error);
       throw error;
     }
   };
@@ -475,7 +482,7 @@ export class FirebaseDbService {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       await updateDoc(reservationRef, { extendedProps: { status: newStatus } });
     } catch (error) {
-      console.error(`Could not change reservation ${reservationId} status to ${newStatus}:`, error);
+      logger.error(`Could not change reservation ${reservationId} status to ${newStatus}:`, error);
       throw error;
     }
   }
@@ -490,7 +497,7 @@ export class FirebaseDbService {
         end: Timestamp.fromDate(new Date(newEnd))
       });
     } catch (error) {
-      console.error(`Could not change reservation ${reservationId} time:`, error);
+      logger.error(`Could not change reservation ${reservationId} time:`, error);
       throw error;
     }
   }
@@ -519,7 +526,7 @@ export class FirebaseDbService {
         throw new Error("Cannot delete reservation with status: " + status);
       }
     } catch (error) {
-      console.error("Error deleting reservation document:", error);
+      logger.error("Error deleting reservation document:", error);
       throw error;
     }
   };
@@ -549,7 +556,7 @@ export class FirebaseDbService {
         throw new Error("Cannot archive reservation with status: " + status);
       }
     } catch (error) {
-      console.error("Error archiving reservation document:", error);
+      logger.error("Error archiving reservation document:", error);
       throw error;
     }
   };
