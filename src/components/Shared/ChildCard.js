@@ -2,10 +2,10 @@ import React from 'react';
 import { Card, CardMedia, CardContent, CardActions, IconButton, Typography, Button, Rating } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
-import { calculateAge } from '../../Helpers/util';
 import { useNavigate } from 'react-router-dom';
+import { calculateAge } from '../../Helpers/util';
 
-function ChildCard({ child, onNameClick }) {
+function ChildCard({ child, onNameClick, onEditChildFxn }) {
   const navigate = useNavigate();
 
   const getAvatarImgName = () => {
@@ -23,8 +23,7 @@ function ChildCard({ child, onNameClick }) {
   const imageSource = child.PhotoURL || (process.env.PUBLIC_URL + getAvatarImgName());
 
   const handleEditClick = () => {
-    // Navigate to the child registration page with the child object in the location state
-    navigate(`/addChild/${child.id}`, { state: { child: child } });
+    onEditChildFxn(child);
   }
 
 

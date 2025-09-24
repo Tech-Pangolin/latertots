@@ -23,6 +23,7 @@ const UserProfile = () => {
   const [openChildModal, setOpenChildModal] = useState(false);
   const [openContactsModal, setOpenContactsModal] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
+  const [editingChild, setEditingChild] = useState(null);
 
   // Handle tab switching from navigation state
   useEffect(() => {
@@ -40,6 +41,16 @@ const UserProfile = () => {
     setOpen(true);
   };
   const handleClose = () => setOpen(false);
+
+  const handleEditChildFxn = (child) => {
+    setEditingChild(child);
+    setOpenChildModal(true);
+  };
+
+  const handleCloseModalFxn = () => {
+    setOpenChildModal(false);
+    setEditingChild(null);
+  };
 
   function canSchedule(){
     const {StreetAddress, City, State, Zip, CellNumber} = currentUser || {};
@@ -170,9 +181,9 @@ const UserProfile = () => {
                     <div className="modal-content">
                       <div className="modal-body">
                         <div className="d-flex justify-content-end">
-                          <button type="button" className="btn-close" onClick={() => setOpenChildModal(false)} aria-label="Close"></button>
+                          <button type="button" className="btn-close" onClick={handleCloseModalFxn} aria-label="Close"></button>
                         </div>
-                        <ChildRegistration setOpenState={setOpenChildModal} addAlert={addAlert} />
+                        <ChildRegistration setOpenStateFxn={handleCloseModalFxn} addAlertFxn={addAlert} editingChild={editingChild} />
                       </div>
                     </div>
                   </div>
@@ -182,7 +193,7 @@ const UserProfile = () => {
                 <div className="mt-3 experience">
                   <div className="row">
                   {children.length > 0 &&
-                    children.map((child) => (<ChildCard key={child.id} child={child} onNameClick={handleNameClick} />))
+                    children.map((child) => (<ChildCard key={child.id} child={child} onNameClick={handleNameClick} onEditChildFxn={handleEditChildFxn} />))
                   }
                   </div>
                   {children.length === 0 && <p className='mt-5'>No children added yet.</p>}

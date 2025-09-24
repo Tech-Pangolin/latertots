@@ -8,10 +8,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logger } from '../../Helpers/logger';
 import { joiResolver } from '@hookform/resolvers/joi';
 import { generateChildSchema } from '../../schemas/ChildSchema';
-import { GENDERS, ALERT_TYPES } from '../../Helpers/constants';
+import { GENDERS, ALERT_TYPES, ERROR_MESSAGES } from '../../Helpers/constants';
 import { withFirebaseRetry } from '../../Helpers/retryHelpers';
+import { firebaseTimestampToFormDateString } from '../../Helpers/datetime';
 
-const ChildRegistration = ({ setOpenState, addAlert }) => {
+const ChildRegistration = ({ setOpenStateFxn, addAlertFxn, editingChild }) => {
   const [isUpdatingChild, setIsUpdatingChild] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   
@@ -21,15 +22,28 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
   const { currentUser, dbService } = useAuth();
   const queryClient = useQueryClient();
 
-  // Get the child from the location state
-  // This is passed from the ChildCard component when editing
+  // Get the child from props (for modal editing) or location state (for navigation editing)
   const location = useLocation();
-  const child = location.state?.child || null;
+  const child = editingChild || location.state?.child || null;
 
   // Pre-populate the form with the child data if editing
   useEffect(() => {
     if (child) {
-      reset(child);
+      // Only include fields that are allowed by the form validation schema
+      const formData = {
+        Name: child.Name,
+        DOB: child.DOB ? firebaseTimestampToFormDateString(child.DOB) : '',
+        Gender: child.Gender,
+        Allergies: child.Allergies || '',
+        Medications: child.Medications || '',
+        Notes: child.Notes || ''
+      };
+      
+      // Only include PhotoURL if it exists
+      if (child.PhotoURL) {
+        formData.PhotoURL = child.PhotoURL;
+      }
+      reset(formData);
     }
   }, [child, reset]);
 
@@ -45,11 +59,11 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
     onSuccess: () => {
       queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
       reset();
-      setOpenState(false);
+      setOpenStateFxn();
     },
     onError: (error) => {
       logger.error('Error updating child document:', error);
-      addAlert(ALERT_TYPES.ERROR, `Update failed: ${error.message}`);
+      addAlertFxn(ALERT_TYPES.ERROR, `Update failed: ${error.message}`);
     }
   });
 
@@ -76,6 +90,7 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
   });
 
   const onSubmit = async (data) => {
+    
     // STAGE 1: Extract image before processing (following UserForm pattern)
     const childImage = data.Image?.[0];
     
@@ -108,17 +123,17 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
                 image: childImage 
               });
               setIsUploadingPhoto(false);
-              addAlert(ALERT_TYPES.SUCCESS, 'Child updated successfully with photo!');
+              addAlertFxn(ALERT_TYPES.SUCCESS, 'Child updated successfully with photo!');
             } catch (photoError) {
               setIsUploadingPhoto(false);
-              addAlert(ALERT_TYPES.WARNING, 'Child updated successfully, but photo upload failed. You can try uploading again by editing the child\'s profile.');
+              addAlertFxn(ALERT_TYPES.WARNING, 'Child updated successfully, but photo upload failed. You can try uploading again by editing the child\'s profile.');
             }
           } else {
-            addAlert(ALERT_TYPES.SUCCESS, 'Child updated successfully!');
+            addAlertFxn(ALERT_TYPES.SUCCESS, 'Child updated successfully!');
           }
         } catch (childError) {
           setIsUpdatingChild(false);
-          addAlert(ALERT_TYPES.ERROR, `Update failed: ${childError.message}`);
+          addAlertFxn(ALERT_TYPES.ERROR, `Update failed: ${childError.message}`);
         }
       } else {
         // Create new child - need to create document first to get ID for photo upload
@@ -136,33 +151,33 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
             );
             
             await updateDoc(docRef, { PhotoURL });
-            addAlert(ALERT_TYPES.SUCCESS, 'Child registered successfully with photo!');
+            addAlertFxn(ALERT_TYPES.SUCCESS, 'Child registered successfully with photo!');
           } catch (uploadError) {
-            addAlert(ALERT_TYPES.WARNING, 'Child registered successfully, but photo upload failed. You can add a photo later by editing the child\'s profile.');
+            addAlertFxn(ALERT_TYPES.WARNING, 'Child registered successfully, but photo upload failed. You can add a photo later by editing the child\'s profile.');
           }
         } else {
-          addAlert(ALERT_TYPES.SUCCESS, 'Child registered successfully!');
+          addAlertFxn(ALERT_TYPES.SUCCESS, 'Child registered successfully!');
         }
         
         queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
         reset();
-        setOpenState(false);
+        setOpenStateFxn();
       }
     } catch (error) {
       if (error.isJoi) {
         logger.error('Child registration failed validation:', error.details);
-        addAlert(ALERT_TYPES.ERROR, 'Please check your input and try again.');
+        addAlertFxn(ALERT_TYPES.ERROR, ERROR_MESSAGES.SYSTEM_VALIDATION_FAILURE);
       } else {
         logger.error('Error adding document: ', error);
-        addAlert(ALERT_TYPES.ERROR, `Registration failed: ${error.message}`);
+        addAlertFxn(ALERT_TYPES.ERROR, `Registration failed: ${error.message}`);
       }
     }
   };
 
   return (
     <div className='container bg-white'>
-      <h1 className="text-center pt-5">Child Registration</h1>
-      <p className="text-center">Add your child here!</p>
+      <h1 className="text-center pt-5">{child ? 'Edit Child' : 'Child Registration'}</h1>
+      <p className="text-center">{child ? 'Update your child\'s information' : 'Add your child here!'}</p>
       <div className="row d-flex justify-content-center">
         <form onSubmit={handleSubmit(onSubmit)} className='col-md-12'>
           <label htmlFor="Name" className="form-label">Name:</label>
@@ -210,7 +225,7 @@ const ChildRegistration = ({ setOpenState, addAlert }) => {
           >
             {isUpdatingChild ? 'Updating Child...' : 
              isUploadingPhoto ? 'Uploading Photo...' : 
-             'Submit'}
+             child ? 'Update Child' : 'Add Child'}
           </button>
         </form>
       </div>

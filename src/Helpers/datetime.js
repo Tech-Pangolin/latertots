@@ -42,6 +42,17 @@ export const luxonDateTimeFromISOString = (() => {
 export const firebaseTimestampFromLuxonDateTime = (dt) => Timestamp.fromMillis(dt.toMillis());
 
 /**
+ * Converts a Firebase Timestamp to a date string format suitable for HTML date inputs
+ * @param {Object} timestamp - Firebase Timestamp object
+ * @returns {string} - Date string in YYYY-MM-DD format
+ */
+export const firebaseTimestampToFormDateString = (timestamp) => {
+  if (!timestamp || !timestamp.toDate) return '';
+  const luxonDateTime = luxonDateTimeFromFirebaseTimestamp(timestamp);
+  return luxonDateTime.toISODate(); // Returns YYYY-MM-DD format
+};
+
+/**
  * Checks if an event date falls within a specific calendar day
  * @param {string|Date} eventDate - The event date (ISO string or Date object)
  * @param {Date} calendarDay - The calendar day to check against

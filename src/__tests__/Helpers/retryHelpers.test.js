@@ -1,17 +1,18 @@
 import { withBackoffRetry, withFirebaseRetry } from '../../Helpers/retryHelpers';
 
-// Mock setTimeout to avoid actual delays in tests
-jest.useFakeTimers();
-
 describe('retryHelpers', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.clearAllTimers();
+    jest.useFakeTimers();
+    console.log('DEBUG: Fake timers enabled');
   });
 
   afterEach(() => {
+    console.log('DEBUG: Running afterEach cleanup');
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
+    console.log('DEBUG: Real timers restored');
   });
 
   describe('withBackoffRetry', () => {
@@ -25,21 +26,45 @@ describe('retryHelpers', () => {
     });
 
     it('should retry on failure and eventually succeed', async () => {
+      console.log('DEBUG: Starting retry test');
+      console.log('DEBUG: Current timer state - fake timers enabled:', jest.isMockFunction(setTimeout));
+      
       const mockOperation = jest.fn()
         .mockRejectedValueOnce(new Error('First failure'))
         .mockRejectedValueOnce(new Error('Second failure'))
         .mockResolvedValue('success');
       
+      console.log('DEBUG: About to call withBackoffRetry');
       const resultPromise = withBackoffRetry(mockOperation, { 
         maxRetries: 2,
         baseDelay: 10 // Use very small delay for testing
       });
       
-      // Fast-forward through delays
-      jest.runAllTimers();
+      console.log('DEBUG: Result promise created immediately');
+      console.log('DEBUG: Pending timers immediately after promise creation:', jest.getTimerCount());
       
+      // Test what happens with a simple setTimeout in fake timer mode
+      console.log('DEBUG: Testing simple setTimeout with fake timers');
+      const simplePromise = new Promise(resolve => {
+        console.log('DEBUG: Inside setTimeout callback');
+        setTimeout(() => {
+          console.log('DEBUG: setTimeout callback executed');
+          resolve('simple success');
+        }, 100);
+      });
+      
+      console.log('DEBUG: Simple promise created, pending timers:', jest.getTimerCount());
+      console.log('DEBUG: About to run all timers for simple test');
+      jest.runAllTimers();
+      console.log('DEBUG: After runAllTimers for simple test, pending timers:', jest.getTimerCount());
+      
+      const simpleResult = await simplePromise;
+      console.log('DEBUG: Simple result:', simpleResult);
+      
+      console.log('DEBUG: About to await resultPromise');
       const result = await resultPromise;
       
+      console.log('DEBUG: Result received:', result);
       expect(result).toBe('success');
       expect(mockOperation).toHaveBeenCalledTimes(3);
     });

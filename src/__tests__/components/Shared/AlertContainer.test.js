@@ -1,10 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import AlertContainer from '../../../components/Shared/AlertContainer';
-import { useAlerts } from '../../../Hooks/useAlerts';
-
-// Mock the useAlerts hook
-jest.mock('../../../Hooks/useAlerts');
 
 // Mock the Alert component
 jest.mock('../../../components/Shared/Alert', () => {
@@ -19,15 +15,14 @@ jest.mock('../../../components/Shared/Alert', () => {
 });
 
 describe('AlertContainer Component', () => {
-  const mockUseAlerts = useAlerts;
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('renders no alerts when alerts array is empty', () => {
-    mockUseAlerts.mockReturnValue({ alerts: [], removeAlert: jest.fn() });
-    const { container } = render(<AlertContainer />);
+    const { container } = render(
+      <AlertContainer alerts={[]} removeAlert={jest.fn()} />
+    );
     expect(container.firstChild).toBeNull();
   });
 
@@ -38,12 +33,9 @@ describe('AlertContainer Component', () => {
       { id: '2', type: 'info', message: 'Info message' },
     ];
 
-    mockUseAlerts.mockReturnValue({
-      alerts: mockAlerts,
-      removeAlert: mockRemoveAlert,
-    });
-
-    render(<AlertContainer />);
+    render(
+      <AlertContainer alerts={mockAlerts} removeAlert={mockRemoveAlert} />
+    );
 
     expect(screen.getByText('Warning message')).toBeInTheDocument();
     expect(screen.getByText('Info message')).toBeInTheDocument();

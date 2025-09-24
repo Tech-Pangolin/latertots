@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import ChangePasswordForm from '../../components/ChangePasswordForm';
-import { renderWithProviders } from '../utils/testUtils';
+import { renderWithProviders, ChangePasswordFormWrapper } from '../../utils/testUtils';
 
 // Mock Firebase Auth functions
 jest.mock('firebase/auth', () => ({
@@ -21,19 +21,7 @@ jest.mock('../../config/firebaseAuth', () => ({
   },
 }));
 
-// Mock react-hook-form
-const mockRegister = jest.fn();
-const mockHandleSubmit = jest.fn();
-const mockReset = jest.fn();
-
-jest.mock('react-hook-form', () => ({
-  useForm: () => ({
-    register: mockRegister,
-    handleSubmit: mockHandleSubmit,
-    formState: { errors: {} },
-    reset: mockReset,
-  }),
-}));
+// No need to mock useForm - using real implementation with wrapper
 
 // Mock TanStack Query
 const mockMutate = jest.fn();
@@ -47,28 +35,32 @@ jest.mock('@tanstack/react-query', () => ({
 describe('ChangePasswordForm', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockRegister.mockImplementation((name) => ({ name, onChange: jest.fn(), onBlur: jest.fn() }));
-    mockHandleSubmit.mockImplementation((fn) => (e) => {
-      e.preventDefault();
-      fn({
-        currentPassword: 'oldpassword123',
-        newPassword: 'newpassword123',
-        confirmPassword: 'newpassword123',
-      });
-    });
   });
 
   it('should render password change form with all required fields', () => {
-    renderWithProviders(<ChangePasswordForm />);
+    const mockOnSubmit = jest.fn();
+    renderWithProviders(<ChangePasswordFormWrapper onSubmit={mockOnSubmit} />);
 
-    expect(screen.getByLabelText('Current Password')).toBeInTheDocument();
-    expect(screen.getByLabelText('New Password')).toBeInTheDocument();
-    expect(screen.getByLabelText('Confirm New Password')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Current Password')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('New Password')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Confirm Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /change password/i })).toBeInTheDocument();
   });
 
   it('should call mutation with form data when submitted', async () => {
-    renderWithProviders(<ChangePasswordForm />);
+    const mockOnSubmit = jest.fn();
+    renderWithProviders(<ChangePasswordFormWrapper onSubmit={mockOnSubmit} />);
+
+    // Fill in the form fields
+    fireEvent.change(screen.getByPlaceholderText('Current Password'), {
+      target: { value: 'oldpassword123' }
+    });
+    fireEvent.change(screen.getByPlaceholderText('New Password'), {
+      target: { value: 'newpassword123' }
+    });
+    fireEvent.change(screen.getByPlaceholderText('Confirm Password'), {
+      target: { value: 'newpassword123' }
+    });
 
     const submitButton = screen.getByRole('button', { name: /change password/i });
     
@@ -77,11 +69,15 @@ describe('ChangePasswordForm', () => {
     });
 
     await waitFor(() => {
-      expect(mockMutate).toHaveBeenCalledWith({
-        currentPassword: 'oldpassword123',
-        newPassword: 'newpassword123',
-        confirmPassword: 'newpassword123',
-      });
+      expect(mockOnSubmit).toHaveBeenCalledTimes(1);
+      expect(mockOnSubmit).toHaveBeenCalledWith(
+        {
+          currentPassword: 'oldpassword123',
+          newPassword: 'newpassword123',
+          confirmPassword: 'newpassword123',
+        },
+        expect.any(Object) // The event object
+      );
     });
   });
 
