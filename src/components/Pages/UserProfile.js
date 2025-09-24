@@ -47,7 +47,6 @@ const UserProfile = () => {
     if(children.length === 0) return false;
     return true;
   }
-console.log("canSchedule", canSchedule());
 
   return (
     <div className="container-fluid bg-blue">
