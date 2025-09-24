@@ -159,7 +159,6 @@ const ScheduleChildSitterPage = () => {
     onError: (err) => console.error("Error archiving reservation: ", err)
   })
   const handleEventClick = useCallback(({ event }) => {
-    console.log(event, children);
     // Only allow deletion of children reservations that belong to the current user
     const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
 
