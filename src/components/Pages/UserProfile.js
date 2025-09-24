@@ -62,7 +62,7 @@ const UserProfile = () => {
             <div className="col-12 d-flex justify-content-center">
               <img className="rounded-circle" width="250px" height="250px" src={currentUser.PhotoURL ? currentUser.PhotoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
             </div>  
-             {!canSchedule() && <span className="text-danger me-2">Complete your profile to book with us!</span>}
+             {!canSchedule() && <span className="text-danger me-2 text-center">Complete your profile to book with us!</span>}
             <div className='col-12 d-flex justify-content-center mt-5'>
               <button onClick={() => window.location.href="/schedule"} disabled={!canSchedule()} className="border px-5 py-3 p-1 pink-text blink-text">Book Now</button>
             </div>
