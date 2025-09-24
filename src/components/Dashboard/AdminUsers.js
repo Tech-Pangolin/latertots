@@ -1,50 +1,19 @@
-import React, { useEffect } from "react";
-import { useAuth } from "../../components/AuthProvider";
-import { use } from "react";
+import React, { useMemo } from "react";
+import { useAllUsersRQ } from "../../Hooks/query-related/useAllUsersRQ";
 
 const AdminUsers = () => {
-  const [allUsers, setAllUsers] = React.useState([]);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isError, setIsError] = React.useState(false);
-  const { dbService } = useAuth();
+  const { data: allUsers = [], isLoading, isError } = useAllUsersRQ();
   const [searchTerm, setSearchTerm] = React.useState("");
 
-  useEffect(() => {
-    if (!dbService) return;
-    setIsLoading(true);
-    dbService.fetchAllCurrentUsers().then((resp) => {
-      setAllUsers(resp)
-      setIsLoading(false);
-    }).catch((error) => {
-      console.error('Error fetching children:', error);
-      setAllUsers([]);
-      setIsLoading(false);
-      setIsError(true);
-    }).finally(() => {
-      setIsLoading(false);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (searchTerm !== "" && allUsers.length > 0) {
-      console.log('Searching for:', searchTerm);
-      console.log(allUsers)
-      const filteredUsers = allUsers.filter(user =>
-        user?.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user?.Email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user?.CellNumber?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setAllUsers(filteredUsers);
-    } else {
-      // If search term is empty, refetch all users
-      dbService.fetchAllCurrentUsers().then((resp) => {
-        setAllUsers(resp);
-      }).catch((error) => {
-        console.error('Error fetching children:', error);
-        setAllUsers([]);
-      });
-    }
-  }, [searchTerm]);
+  // Filter users based on search term
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return allUsers;
+    return allUsers.filter(user =>
+      user?.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user?.Email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user?.CellNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [allUsers, searchTerm]);
 
 
   const formatTableRow = (user) => {
@@ -80,7 +49,7 @@ const AdminUsers = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {allUsers && allUsers.map((user) => formatTableRow(user))}
+                      {filteredUsers && filteredUsers.map((user) => formatTableRow(user))}
                     </tbody>
                   </table>
                 )}
