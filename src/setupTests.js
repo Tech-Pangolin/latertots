@@ -98,16 +98,7 @@ jest.mock('@tanstack/react-query', () => ({
   })),
 }));
 
-// Mock react-hook-form
-jest.mock('react-hook-form', () => ({
-  useForm: jest.fn(() => ({
-    register: jest.fn(),
-    handleSubmit: jest.fn((fn) => fn),
-    formState: { errors: {} },
-    reset: jest.fn(),
-    watch: jest.fn(),
-  })),
-}));
+// Don't mock react-hook-form globally - use real implementation in tests
 
 // Mock joi resolver
 jest.mock('@hookform/resolvers/joi', () => ({

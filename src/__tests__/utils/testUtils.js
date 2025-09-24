@@ -1,6 +1,8 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { generateChildSchema } from '../../schemas/ChildSchema';
 
 // Custom render function that includes providers
 export const renderWithProviders = (ui, options = {}) => {
@@ -157,6 +159,84 @@ export const mockGoogleProvider = {
   addScope: jest.fn(),
   setCustomParameters: jest.fn(),
 };
+
+// Wrapper component that uses real useForm hook for testing
+export const ChildRegistrationWrapper = ({ setOpenStateFxn, addAlertFxn, editingChild, onSubmit }) => {
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    resolver: require('@hookform/resolvers/joi').joiResolver(generateChildSchema(true))
+  });
+
+  // Pre-populate form if editingChild is provided
+  React.useEffect(() => {
+    if (editingChild) {
+      const formData = {
+        Name: editingChild.Name,
+        DOB: editingChild.DOB ? require('../../Helpers/datetime').firebaseTimestampToFormDateString(editingChild.DOB) : '',
+        Gender: editingChild.Gender,
+        Allergies: editingChild.Allergies || '',
+        Medications: editingChild.Medications || '',
+        Notes: editingChild.Notes || '',
+        PhotoURL: editingChild.PhotoURL || ''
+      };
+      reset(formData);
+    }
+  }, [editingChild, reset]);
+
+  return (
+    <div className='container bg-white'>
+      <h1 className="text-center pt-5">{editingChild ? 'Edit Child' : 'Child Registration'}</h1>
+      <p className="text-center">{editingChild ? 'Update your child\'s information' : 'Add your child here!'}</p>
+      <div className="row d-flex justify-content-center">
+        <form onSubmit={handleSubmit(onSubmit)} className='col-md-12'>
+          <label htmlFor="Name" className="form-label">Name:</label>
+          <input type="text" disabled={editingChild?.Name} id="NameChild" {...register('Name')} className="form-control" />
+          {errors.Name?.message && <p>{errors.Name.message}</p>}
+
+          <label htmlFor="DOB" className="form-label">DOB:</label>
+          <input type="date" id="DOB" {...register('DOB')} className="form-control" />
+          {errors.DOB?.message && <p>{errors.DOB.message}</p>}
+
+          <label htmlFor="Gender" className="form-label">Gender:</label>
+          <select id="Gender" {...register('Gender')} className="form-control">
+            {Object.values(require('../../Helpers/constants').GENDERS).map(option => {
+              return <option key={option} value={option}>{option}</option>;
+            })}
+          </select>
+          {errors.Gender?.message && <p>{errors.Gender.message}</p>}
+
+          <label htmlFor="Allergies" className="form-label">Allergies:</label>
+          <input type="text" id="Allergies" {...register('Allergies')} className="form-control" />
+
+          <label htmlFor="Medications" className="form-label">Medications:</label>
+          <input type="text" id="Medications" {...register('Medications')} className="form-control" />
+
+          <label htmlFor="Notes" className="form-label">Notes:</label>
+          <input type="text" id="Notes" {...register('Notes')} className="form-control" />
+
+          <div className="mb-3">
+            <label htmlFor="Image" className="form-label">Photo</label>
+            <input
+              type="file"
+              id="Image"
+              {...register("Image")}
+              className="form-control"
+              accept="image/*"
+            />
+            {errors.Image?.message && <p className="text-danger">{errors.Image.message}</p>}
+          </div>
+
+          <button 
+            type="submit" 
+            className="my-5 btn btn-primary login-btn w-100"
+          >
+            {editingChild ? 'Update Child' : 'Add Child'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 
 // Mock Firebase error
 export const createMockFirebaseError = (code, message) => ({
