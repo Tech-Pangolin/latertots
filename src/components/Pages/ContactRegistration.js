@@ -7,10 +7,10 @@ import { db } from '../../config/firestore';
 import { doc, updateDoc } from 'firebase/firestore';
 import { joiResolver } from '@hookform/resolvers/joi';
 import { generateContactSchema } from '../../schemas/ContactSchema';
-import { CONTACT_RELATIONS } from '../../Helpers/constants';
+import { CONTACT_RELATIONS, ALERT_TYPES, ERROR_MESSAGES } from '../../Helpers/constants';
 
 
-function ContactRegistration({ setOpenState }) {
+function ContactRegistration({ setOpenState, addAlertFxn }) {
   const { register, handleSubmit, formState: {errors}, reset } = useForm({
     resolver: joiResolver(generateContactSchema(true))
   });
@@ -65,6 +65,9 @@ function ContactRegistration({ setOpenState }) {
     } catch (error) {
       if (error.isJoi) {
         logger.error('Contact validation error:', error.details);
+        if (addAlertFxn) {
+          addAlertFxn(ALERT_TYPES.ERROR, ERROR_MESSAGES.SYSTEM_VALIDATION_FAILURE);
+        }
         return;
       }
       logger.error('Error creating new contact:', error);

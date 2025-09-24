@@ -73,4 +73,10 @@ export const IMAGE_UPLOAD = Object.freeze({
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
   MAX_IMAGE_SIZE_BYTES: 5 * 1024 * 1024, // 5MB
   MAX_FILES_PER_UPLOAD: 1,
+})
+
+export const ERROR_MESSAGES = Object.freeze({
+  SYSTEM_VALIDATION_FAILURE: 'A problem was detected with your submission.',
+  SYSTEM_PROCESSING_ERROR: 'Something went wrong processing your request.',
+  SYSTEM_SUBMISSION_ERROR: 'An error occurred while processing your submission.',
 }) 

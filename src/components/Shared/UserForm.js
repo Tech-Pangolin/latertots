@@ -12,7 +12,7 @@ import { generateUserProfileSchema } from "../../schemas/UserProfileSchema";
 import { useNavigate } from "react-router-dom";
 import ChangePasswordForm from "../ChangePasswordForm";
 import GoogleIcon from "./GoogleIcon";
-import { ALERT_TYPES } from "../../Helpers/constants";
+import { ALERT_TYPES, ERROR_MESSAGES } from "../../Helpers/constants";
 
 const UserForm = ({ addAlert }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
@@ -142,6 +142,11 @@ const UserForm = ({ addAlert }) => {
     } catch (e) {
       logger.error('Error adding/updating document: ', e.message);
       logger.error('Stack Trace:', e.stack);
+      if (e.isJoi) {
+        addAlert(ALERT_TYPES.ERROR, ERROR_MESSAGES.SYSTEM_VALIDATION_FAILURE);
+      } else {
+        addAlert(ALERT_TYPES.ERROR, `Update failed: ${e.message}`);
+      }
     }
 
   };
