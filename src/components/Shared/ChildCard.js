@@ -30,37 +30,38 @@ function ChildCard({ child, onNameClick }) {
 
   return (
     <>
-      
-      <Card sx={{ maxWidth: 275, mx: '20px' }}>
-        <div style={{ position: 'relative' }}>
-        <CardMedia
-          component="img"
-          height="140"
-          image={imageSource}
-          alt={`${child.Name} photo`}
-          sx={{ objectFit: 'cover' }}
-        />
-          <div style={{ position: 'absolute', top: 0, right: 0 }}>
-            <IconButton aria-label="favorite" onClick={handleEditClick}>
-              <EditIcon />
-            </IconButton>
+      <div className='col-12 col-lg-3'>
+        <Card className='w-100 mb-4'>
+          <div style={{ position: 'relative' }}>
+            <CardMedia
+              component="img"
+              height="140"
+              image={imageSource}
+              alt={`${child.Name} photo`}
+              sx={{ objectFit: 'cover' }}
+            />
+            <div style={{ position: 'absolute', top: 0, right: 0 }}>
+              <IconButton aria-label="favorite" onClick={handleEditClick}>
+                <EditIcon />
+              </IconButton>
+            </div>
           </div>
-        </div>
-        <CardContent>
-          <Typography gutterBottom variant="h5" component="div" onClick={() => onNameClick(child)}>
-            {child.Name}
-          </Typography>
-          {/* <Rating name="read-only" value={3} readOnly /> */}
-          <Typography variant="body2" color="text.secondary">
-            Age: {calculateAge(child.DOB)} years
-          </Typography>
-        </CardContent>
-        <CardActions>
-          <Button size="small" startIcon={<AddIcon />} onClick={() => navigate(`/schedule/`)}>
-            Schedule
-          </Button>
-        </CardActions>
-      </Card>
+          <CardContent>
+            <Typography gutterBottom variant="h5" component="div" onClick={() => onNameClick(child)}>
+              {child.Name}
+            </Typography>
+            {/* <Rating name="read-only" value={3} readOnly /> */}
+            <Typography variant="body2" color="text.secondary">
+              Age: {calculateAge(child.DOB)} years
+            </Typography>
+          </CardContent>
+          <CardActions>
+            <Button size="small" startIcon={<AddIcon />} onClick={() => navigate(`/schedule/`)}>
+              Schedule
+            </Button>
+          </CardActions>
+        </Card>
+      </div>
     </>
   );
 }

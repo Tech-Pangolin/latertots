@@ -17,7 +17,7 @@ const AdminUsers = () => {
       </tr>
     )
   }
-
+  
   return (
     <>
       <div className="row">
