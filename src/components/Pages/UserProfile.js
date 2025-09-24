@@ -64,8 +64,7 @@ const UserProfile = () => {
             </div>  
              {!canSchedule() && <span className="text-danger me-2">Complete your profile to book with us!</span>}
             <div className='col-12 d-flex justify-content-center mt-5'>
-           
-              <a href="/schedule"  disabled={!canSchedule()} className="border px-5 py-3 p-1 pink-text blink-text">Book Now</a>
+              <button onClick={() => window.location.href="/schedule"} disabled={!canSchedule()} className="border px-5 py-3 p-1 pink-text blink-text">Book Now</button>
             </div>
           </div>
         </div>
