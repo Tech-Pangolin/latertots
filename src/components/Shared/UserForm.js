@@ -10,7 +10,7 @@ import { FirebaseDbService } from "../../Helpers/firebase";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { generateUserProfileSchema } from "../../schemas/UserProfileSchema";
 import { useNavigate } from "react-router-dom";
-import ChangePasswordForm from "../ChangePasswordForm";
+
 import GoogleIcon from "./GoogleIcon";
 import { ALERT_TYPES, ERROR_MESSAGES } from "../../Helpers/constants";
 
@@ -153,13 +153,14 @@ const UserForm = ({ addAlert }) => {
 
   return (
     <div className="container" style={{}}>
-      <div className="row justify-content-center">
-        <div className="col register-form">
+      <div className="row">
+        {/* <div className="col register-form"> */}
 
           {/* Create User Form */}
           {(mode === "create") &&
-            <form onSubmit={createUserOnSubmit} className="row">
-              <div className="mb-3 col-12 col-md-6">
+          <div className="d-flex justify-content-center">
+            <form onSubmit={createUserOnSubmit} >
+              <div className="mb-3 col-12">
                 <label htmlFor="email" className="form-label">Email:</label>
                 <input className="form-control"
                   type="email"
@@ -169,7 +170,7 @@ const UserForm = ({ addAlert }) => {
                   required
                 />
               </div>
-              <div className="mb-3 col-12 col-md-6">
+              <div className="mb-3 col-12">
                 <label htmlFor="password" className="form-label">Password:</label>
                 <input className="form-control"
                   type="password"
@@ -179,7 +180,7 @@ const UserForm = ({ addAlert }) => {
                   required
                 />
               </div>
-              <div>
+              <div className="mb-3 col-12">
                 <label htmlFor="confirm" className="form-label">Confirm Password:</label>
                 <input className="form-control"
                   type="password"
@@ -192,7 +193,7 @@ const UserForm = ({ addAlert }) => {
               {passwordMismatch && <p>Passwords do not match</p>}
               {error && <p className="mt-3">{error}</p>}
               <div className="row ">
-                <div className="col-12 col-md-6 mt-3"> 
+                <div className="col-12 my-3"> 
                   <button 
                     type="submit" 
                     className="register-btn w-100"
@@ -201,7 +202,8 @@ const UserForm = ({ addAlert }) => {
                     {createUserMutation.isLoading ? 'Creating...' : 'Sign Up'}
                   </button>
                 </div>
-                <div className="col-12 col-md-6 mt-3"> 
+                <div className="text-center my-3 or">or</div>
+                <div className="col-12 my-3"> 
                   <button 
                     onClick={signInWithGoogle} 
                     className="google-btn w-100" 
@@ -213,22 +215,23 @@ const UserForm = ({ addAlert }) => {
                   </button>
                 </div>
               </div>
-              <div className="d-flex justify-content-center">
+              {/* <div className="d-flex justify-content-center">
 
 
-              </div>
+              </div> */}
             </form>
+            </div>
           }
 
           {/* Update User Form */}
           {(mode === "update") && (
             <form onSubmit={handleSubmit(updateUserOnSubmit)} className="row">
-              <div className="mb-3">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="Name" className="form-label">Name *</label>
                 <input type="text" className="form-control" {...register("Name")} />
                 {errors.Name?.message && <div className="">{errors.Name.message}</div>}
               </div>
-              <div className="mb-3">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="Email" className="form-label">Email</label>
                 <input
                   className="form-control"
@@ -238,16 +241,7 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.Email?.message && <p>{errors.Email.message}</p>}
               </div>
-              <div className="col-10 mb-3">
-                <label htmlFor="Image" className="form-label">Photo</label>
-                <input
-                  type="file"
-                  {...register("Image")}
-                  className="form-control"
-                />
-                {errors.Image?.message && <p>{errors.Image.message}</p>}
-              </div>
-              <div className="mb-3  col-4">
+                <div className="mb-3  col-4">
                 <label htmlFor="CellNumber" className="form-label">Cell #</label>
                 <input
                   className="form-control"
@@ -256,8 +250,7 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.CellNumber?.message && <p>{errors.CellNumber.message}</p>}
               </div>
-
-              <div className="mb-3 col-6">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="StreetAddress" className="form-label">Street Address</label>
                 <input
                   className="form-control"
@@ -266,7 +259,7 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.StreetAddress?.message && <p>{errors.StreetAddress.message}</p>}
               </div>
-              <div className="mb-3 col-4">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="City" className="form-label">City</label>
                 <input
                   className="form-control"
@@ -275,7 +268,7 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.City?.message && <p>{errors.City.message}</p>}
               </div>
-              <div className="mb-3 col-4">
+              <div className="mb-3 col-12 col-lg-2">
                 <label htmlFor="State" className="form-label">State</label>
                 <input
                   className="form-control"
@@ -284,7 +277,7 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.State?.message && <p>{errors.State.message}</p>}
               </div>
-              <div className="mb-3 col-2">
+              <div className="mb-3 col-12 col-lg-2">
                 <label htmlFor="Zip" className="form-label">Zip</label>
                 <input
                   className="form-control"
@@ -293,6 +286,18 @@ const UserForm = ({ addAlert }) => {
                 />
                 {errors.Zip?.message && <p>{errors.Zip.message}</p>}
               </div>
+              <div className="col-12 mb-3">
+                <label htmlFor="Image" className="form-label">Photo</label>
+                <input
+                  type="file"
+                  {...register("Image")}
+                  className="form-control"
+                />
+                {errors.Image?.message && <p>{errors.Image.message}</p>}
+              </div>
+            
+
+              
               <div className="col-12">
                 <button 
                   type="submit" 
@@ -303,14 +308,14 @@ const UserForm = ({ addAlert }) => {
                 </button>
               </div>
             </form>)}
-        </div>
+        {/* </div> */}
       </div>
-      {mode === 'update' && (
-        <div className="row">
-          <h5 className="mt-5">Change Password</h5>
-          <ChangePasswordForm />
-        </div>
-      )}
+      {/* {mode === 'update' && ( */}
+        {/* // <div className="row">
+        //   <h5 className="mt-5">Change Password</h5>
+        //   <ChangePasswordForm />
+        // </div> */}
+      {/* )} */}
     </div>
   );
 };

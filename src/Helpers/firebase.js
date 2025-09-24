@@ -13,7 +13,7 @@ export class FirebaseDbService {
     this.userContext = userContext;
   }
 
-  
+
   /**
    * Fetches the avatar photo URL of a user based on the provided user ID.
    * 
@@ -153,7 +153,7 @@ export class FirebaseDbService {
           return [];
         } else if (!Array.isArray(childrenRefs)) {
           // This happens when there's only one child and the data is not an array
-          childrenRefs = [childrenRefs]; 
+          childrenRefs = [childrenRefs];
         }
         const childrenPromises = childrenRefs.map(async (childRef) => {
           try {
@@ -172,6 +172,27 @@ export class FirebaseDbService {
       }
     } catch (error) {
       logger.error("Error querying children:", error);
+      throw error;
+    }
+  };
+  /**
+   * Queries all the children associated with the current user.
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects.
+   * @throws {Error} - If there is an error querying the users.
+   */
+  fetchAllCurrentUsers = async () => {
+    this.validateAuth();
+    try {
+      const q = query(collection(db, "Users"), where("archived", "==", false));
+      const querySnapshot = await getDocs(q);
+      const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (users) {
+        return users;
+      } else {
+        throw new Error("No Users found");
+      }
+    } catch (error) {
+      logger.error("Error querying users:", error);
       throw error;
     }
   };
@@ -368,25 +389,25 @@ export class FirebaseDbService {
    */
   checkReservationOverlapLimit(newReservation, unsavedEvents = []) {
     this.validateAuth();
-    
+
     let eventsOverlappingNewReservation = unsavedEvents.filter(event => {
       if (newReservation.id && event.id === newReservation.id) return false;
       return (
         new Date(event.end) > new Date(newReservation.start) &&
         new Date(event.start) < new Date(newReservation.end)
-      ); 
+      );
     });
-    
+
     const overlapMarkers = [];
     eventsOverlappingNewReservation.forEach(evt => {
       overlapMarkers.push({ ts: new Date(evt.start), delta: +1 });
-      overlapMarkers.push({ ts: new Date(evt.end),   delta: -1 });
+      overlapMarkers.push({ ts: new Date(evt.end), delta: -1 });
     });
 
     // compare timestamps first, but if those are equal,
     // compare deltas to ensure -1 comes before +1
-    overlapMarkers.sort((a,b) => a.ts - b.ts || (a.delta - b.delta) );
-    
+    overlapMarkers.sort((a, b) => a.ts - b.ts || (a.delta - b.delta));
+
     let maxOverlap = 0;
     let currentOverlap = 0;
     overlapMarkers.forEach(marker => {
@@ -580,7 +601,7 @@ export class FirebaseDbService {
           CellNumber: "",
           City: "",
           Email: userCredential.user.email,
-          Name:   userCredential.user.displayName || "",
+          Name: userCredential.user.displayName || "",
           Role: doc(db, 'Roles', 'parent-user'),
           State: "",
           StreetAddress: "",
@@ -589,7 +610,7 @@ export class FirebaseDbService {
           paymentHold: false,
           Children: [],
           Contacts: []
-      });
+        });
         logger.info("User document initialized with template data.");
       } catch (error) {
         logger.error("createUserAndAuthenticate: Could not initialize /Users document with template data: ", error);
@@ -620,7 +641,7 @@ export class FirebaseDbService {
         Email: authUser.email,
         Name: authUser.displayName || "",
         PhotoURL: authUser.PhotoURL || authUser.photoURL || undefined,
-        
+
         // Hard-coded defaults (same as email/password flow)
         CellNumber: "",
         City: "",
@@ -633,7 +654,7 @@ export class FirebaseDbService {
         Children: [],
         Contacts: []
       });
-      
+
       logger.info("Google user profile created successfully:", authUser.uid);
     } catch (error) {
       logger.error("Error creating Google user profile:", error);
