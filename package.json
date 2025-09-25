@@ -41,6 +41,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:emulator": "concurrently --prefix-colors \"bgBlue.bold,bgGreen.bold\" --names \"EMULATOR,REACT\" \"firebase emulators:start --config emulator/firebase.json --project latertots-a6694\" \"REACT_APP_USE_EMULATOR=true react-scripts start\"",
+    "start:emulator:seed": "npm run emulator:seed && npm run start:emulator",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:auth": "react-scripts test --testPathPattern=auth",
@@ -49,7 +51,8 @@
     "eject": "react-scripts eject",
     "todo-check": "eslint --no-eslintrc -c .eslintrc-todo.json \"src/**/*.{js,jsx}\"",
     "emulator:start": "firebase emulators:start --config emulator/firebase.json --project latertots-a6694",
-    "emulator:seed": "node emulator/firestore/seed.js",
+    "emulator:stop": "pkill -f 'firebase emulators' && pkill -f 'java.*firestore' && pkill -f 'java.*pubsub' || true",
+    "emulator:seed": "node emulator/firestore/seed.mjs",
     "emulator:export-seed": "ts=$(date +%Y%m%d%H%M%S) && mkdir -p \"./emulator/firestore/exports/$ts\" && npm run emulator:seed && firebase emulators:export \"./emulator/firestore/exports/$ts\" --only firestore"
   },
   "eslintConfig": {
@@ -69,5 +72,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
