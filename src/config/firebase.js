@@ -24,7 +24,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize services
-const analytics = getAnalytics(app);
+const analytics = useEmulator ? null : getAnalytics(app);
 const storage = getStorage(app);
 
 // Connect to emulators if in emulator mode
