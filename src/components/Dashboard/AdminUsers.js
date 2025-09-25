@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useAuth } from "../../components/AuthProvider";
-import { use } from "react";
+import { formatAllUsersData } from "./dataformatterutil";
 
 const AdminUsers = () => {
   const [allUsers, setAllUsers] = React.useState([]);
@@ -12,8 +12,10 @@ const AdminUsers = () => {
   useEffect(() => {
     if (!dbService) return;
     setIsLoading(true);
-    dbService.fetchAllCurrentUsers().then((resp) => {
-      setAllUsers(resp)
+
+    dbService.getUsersWithChildren().then((resp) => {
+      const formattedData = formatAllUsersData(resp);
+      setAllUsers(formattedData);
       setIsLoading(false);
     }).catch((error) => {
       console.error('Error fetching children:', error);
@@ -27,8 +29,6 @@ const AdminUsers = () => {
 
   useEffect(() => {
     if (searchTerm !== "" && allUsers.length > 0) {
-      console.log('Searching for:', searchTerm);
-      console.log(allUsers)
       const filteredUsers = allUsers.filter(user =>
         user?.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user?.Email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -37,7 +37,7 @@ const AdminUsers = () => {
       setAllUsers(filteredUsers);
     } else {
       // If search term is empty, refetch all users
-      dbService.fetchAllCurrentUsers().then((resp) => {
+      dbService.getUsersWithChildren().then((resp) => {
         setAllUsers(resp);
       }).catch((error) => {
         console.error('Error fetching children:', error);
@@ -48,11 +48,13 @@ const AdminUsers = () => {
 
 
   const formatTableRow = (user) => {
+    const childrenNames = user.children && user.children.length > 0 ? user.children.map(child => child.Name).join(', ') : 'No Children Listed';
     return (
       <tr key={user.id}>
         <th scope="row">{user.Name || '--'}</th>
-        <td>{user.Email || '--'}</td>
-        <td>{user.CellNumber || '--'}</td>
+        <td>{user?.Email || '--'}</td>
+        <td>{user?.CellNumber || '--'}</td>
+        <td>{childrenNames}</td>
       </tr>
     )
   }
@@ -66,7 +68,7 @@ const AdminUsers = () => {
             <div className="card-body">
               <div className="mb-3">
                 <label htmlFor="search" className="form-label">Search</label>
-                <input type="text" className="form-control" id="search" aria-describedby="search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                <input type="text" placeholder="Search by name, email or phone number" className="form-control" id="search" aria-describedby="search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               </div>
               <div className="table-responsive">
                 {isLoading && <p>Loading...</p>}
@@ -77,6 +79,7 @@ const AdminUsers = () => {
                         <th scope="col">Name</th>
                         <th scope="col">Email</th>
                         <th scope="col">Phone</th>
+                        <th scope="col">Children</th>
                       </tr>
                     </thead>
                     <tbody>
