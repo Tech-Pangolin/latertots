@@ -22,6 +22,23 @@ npm run start:emulator:seed
 ```
 Starts emulators with pre-seeded test data.
 
+### Seeding Options
+```bash
+# Seed both authentication users and Firestore data (recommended)
+npm run emulator:seed
+
+# Seed only authentication users
+npm run emulator:seed:auth
+
+# Seed only Firestore data
+npm run emulator:seed:firestore
+```
+
+**Default Test Accounts:**
+- **Admin**: `admin@latertots.com` / `admin123` (admin role)
+- **Parent**: `parent@latertots.com` / `parent123` (parent role)  
+- **Test**: `test@latertots.com` / `test123` (parent role)
+
 ## Available Commands
 
 | Command | Description |
@@ -31,7 +48,9 @@ Starts emulators with pre-seeded test data.
 | `npm run start:emulator:seed` | Start with emulators + seeded data |
 | `npm run emulator:start` | Start only Firebase emulators |
 | `npm run emulator:stop` | Stop Firebase emulators |
-| `npm run emulator:seed` | Seed emulator with test data |
+| `npm run emulator:seed` | Seed emulator with auth users + Firestore data (runs both scripts) |
+| `npm run emulator:seed:auth` | Seed authentication users only |
+| `npm run emulator:seed:firestore` | Seed Firestore data only |
 
 ## Emulator Services
 
@@ -170,12 +189,29 @@ The emulator configuration is implemented through:
 4. **Service Configs**: Individual emulator connections for Firestore, Auth, Storage
 5. **Silent Operation**: No debug logging - clean, production-ready implementation
 
+### Folder Structure
+```
+emulator/
+├── auth/
+│   └── auth-seed.mjs          # Authentication user seeding
+├── firestore/
+│   ├── seed.mjs              # Firestore data seeding
+│   ├── firestore.rules       # Firestore security rules
+│   └── storage.rules         # Storage security rules
+├── functions/                # Cloud Functions
+├── firebase.json            # Emulator configuration
+└── EMULATOR_SETUP.md        # This documentation
+```
+
 ### Key Files:
 - `src/config/firebase.js` - Main Firebase app initialization and Storage emulator
 - `src/config/firestore.js` - Firestore database with emulator connection
 - `src/config/firebaseAuth.js` - Authentication with emulator connection
 - `emulator/firebase.json` - Emulator configuration and rules
+- `emulator/auth/auth-seed.mjs` - Authentication user seeding (uses env vars)
+- `emulator/firestore/seed.mjs` - Firestore data seeding (uses env vars)
 - `package.json` - Orchestration scripts
+- `.env` - Environment variables for Firebase configuration
 
 This setup provides a seamless development experience while maintaining clear separation between production and development environments.
 
@@ -187,6 +223,13 @@ The current implementation is **production-ready** with:
 - **Silent emulator connections** that work seamlessly
 - **Error handling** for connection conflicts
 - **Environment-based switching** without manual configuration
+- **Environment variable usage** in all emulator scripts for security
+
+### Security Best Practices
+- **✅ Environment Variables**: All Firebase configs use `process.env` variables
+- **✅ No Hardcoded Secrets**: No API keys or project IDs in source code
+- **✅ Consistent Configuration**: Same env vars used across app and emulator scripts
+- **✅ Secure Development**: Emulator scripts inherit production security practices
 
 ### What Was Removed
 During development, extensive debugging was added and then removed:

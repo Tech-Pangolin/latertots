@@ -52,7 +52,9 @@
     "todo-check": "eslint --no-eslintrc -c .eslintrc-todo.json \"src/**/*.{js,jsx}\"",
     "emulator:start": "firebase emulators:start --config emulator/firebase.json --project latertots-a6694",
     "emulator:stop": "pkill -f 'firebase emulators' && pkill -f 'java.*firestore' && pkill -f 'java.*pubsub' || true",
-    "emulator:seed": "node emulator/firestore/seed.mjs",
+    "emulator:seed": "npm run emulator:seed:auth && npm run emulator:seed:firestore",
+    "emulator:seed:auth": "node emulator/auth/auth-seed.mjs",
+    "emulator:seed:firestore": "node emulator/firestore/seed.mjs",
     "emulator:export-seed": "ts=$(date +%Y%m%d%H%M%S) && mkdir -p \"./emulator/firestore/exports/$ts\" && npm run emulator:seed && firebase emulators:export \"./emulator/firestore/exports/$ts\" --only firestore"
   },
   "eslintConfig": {
