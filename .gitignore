@@ -23,4 +23,7 @@ firebase-debug.log*
 firestore-debug.log*
 pubsub-debug.log*
 
+# Emulator logs
+emulator/logs/
+
 system-instructions.md
