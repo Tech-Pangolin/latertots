@@ -4,6 +4,9 @@ import { faker } from '@faker-js/faker';
 import _ from 'lodash';
 import { DateTime, Duration } from 'luxon';
 import { config } from 'dotenv';
+import ReservationSchema from '../../src/schemas/ReservationSchema.mjs';
+import { Timestamp, DocumentReference } from 'firebase/firestore';
+import { RESERVATION_STATUS } from '../../src/Helpers/constants.mjs';
 
 // Load environment variables from .env file
 config();
@@ -12,6 +15,16 @@ config();
 
 // not quite 50/50
 const flipCoin = () => _.random(10) < 6
+
+// Validation helper for reservations
+const validateReservationData = (data) => {
+  const { error, value } = ReservationSchema.validate(data, { abortEarly: false });
+  if (error) {
+    console.error('Reservation validation failed:', error.details);
+    throw new Error(`Invalid reservation data: ${error.message}`);
+  }
+  return value;
+};
 
 // Format helper: “April 8, 2025” style in America/Denver
 function formatDate(dt) {
@@ -147,23 +160,32 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     const childData = ( await childRef.get()).data()
     const { start, end } = startEnd(_.sample([true, false]))
 
+
     const reservRef = db.collection('Reservations').doc()
-    await reservRef.set({
+    const reservationData = {
       "User": parent.ref,
       "Child": childRef,
       "allDay": false,
       "archived": false,
-      "locked": flipCoin(),
+      "status": _.sample(Object.values(RESERVATION_STATUS)),
+      "invoice": null,
       "title": childData.Name,
       "userId": parent.id,
-      "start": start,
-      "end": end,
+      "start": Timestamp.fromDate(start),
+      "end": Timestamp.fromDate(end),
       "extendedProps": {
         "childId": childRef.id,
-        "status": _.sample(["pending", "unpaid", "paid", "confirmed", "cancelled", "late"]),
-        "fromForm": flipCoin()
+        "status": _.sample(Object.values(RESERVATION_STATUS))
       }
-    })
+    };
+
+    try {
+      const validatedData = validateReservationData(reservationData);
+      await reservRef.set(validatedData);
+      console.log(`Created valid reservation: ${reservRef.id}`);
+    } catch (error) {
+      console.error(`Failed to create reservation ${x}:`, error.message);
+    }
   }
 
 });

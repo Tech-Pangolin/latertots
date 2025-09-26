@@ -62,6 +62,50 @@ export const NOTIFICATION_TYPES = Object.freeze({
   ADMIN: 'admin',
 })
 
+export const INVOICE_STATUS = Object.freeze({
+  UNPAID: 'unpaid',
+  PAID: 'paid',
+  LATE: 'late',
+  REFUNDED: 'refunded'
+})
+
+export const LINE_ITEM_TAGS = Object.freeze({
+  BASE: 'BASE',
+  LATE_PICKUP: 'LATE_PICKUP',
+  LATE_FEE: 'LATE_FEE'
+})
+
+export const BILLING_ADJUSTMENT_TYPES = Object.freeze({
+  OVERRIDE: 'override',
+  REFUND: 'refund',
+  DISCOUNT: 'discount',
+  CREDIT: 'credit'
+})
+
+export const BILLING_ADJUSTMENT_STATUS = Object.freeze({
+  ACTIVE: 'active',
+  REVERSED: 'reversed'
+})
+
+export const DISCOUNT_TYPES = Object.freeze({
+  PERCENTAGE: 'percentage',
+  FIXED: 'fixed'
+})
+
+export const REFUND_CATEGORIES = Object.freeze({
+  CUSTOMER_REQUEST: 'customer_request',
+  SERVICE_ISSUE: 'service_issue',
+  DUPLICATE_PAYMENT: 'duplicate_payment',
+  ADMINISTRATIVE: 'administrative'
+})
+
+export const CREDIT_SOURCES = Object.freeze({
+  GOODWILL: 'goodwill',
+  SERVICE_CREDIT: 'service_credit',
+  PROMOTIONAL: 'promotional',
+  ADMINISTRATIVE: 'administrative'
+})
+
 export const ALERT_TYPES = Object.freeze({
   SUCCESS: 'success',
   INFO: 'info',
