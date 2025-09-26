@@ -15,7 +15,7 @@ Adapting the existing billingMachine scaffold to integrate with the current Late
 ## Integration Points to Address
 
 ### Data Model Adaptations
-- [ ] Collection naming: `reservations` vs `Reservations`
+- [ ] Collection naming: Use `Reservations` (capital R) consistently
 - [ ] Status field location: `extendedProps.status` vs top-level `status`
 - [ ] User data mapping for invoice generation
 - [ ] Reservation data structure alignment
@@ -231,7 +231,7 @@ actors: {
 
 ### Data Model Alignment
 - **Decision**: Update billing machine to match current database state
-- **Approach**: Adapt billing machine queries to use `reservations` collection and `extendedProps.status`
+- **Approach**: Adapt billing machine queries to use `Reservations` collection and `extendedProps.status`
 
 ### Testing Strategy
 - **Decision**: Manual testing for initial implementation
