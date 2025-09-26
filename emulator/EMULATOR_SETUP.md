@@ -35,9 +35,9 @@ npm run emulator:seed:firestore
 ```
 
 **Default Test Accounts:**
-- **Admin**: `admin@latertots.com` / `admin123` (admin role)
-- **Parent**: `parent@latertots.com` / `parent123` (parent role)  
-- **Test**: `test@latertots.com` / `test123` (parent role)
+- **Admin**: `admin@ad.min` / `adminadmin` (parent role, because custom auth qualities don't translate to user doc creation)
+- **Parent**: `user@us.er` / `useruser` (parent role)  
+- **Test**: `test@te.st` / `testest` (parent role)
 
 ## Available Commands
 
