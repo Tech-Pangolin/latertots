@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import DashHome from '../Dashboard/DashHome';
 import DashNav from '../Dashboard/DashNav';
 import AdminUsers from '../Dashboard/AdminUsers';
@@ -8,8 +8,10 @@ import AdminReservations from '../Dashboard/AdminReservations';
 
 const AdminDashboard = () => {
   const [currentView, setCurrentView] = useState('dashboard');
+  
 
-  const renderView = () => {
+  // Memoize renderView to prevent child components from unmounting/remounting
+  const renderView = useCallback(() => {
     switch (currentView) {
       case 'users':
         return <AdminUsers />;
@@ -23,7 +25,7 @@ const AdminDashboard = () => {
       default:
         return <DashHome />;
     }
-  };
+  }, [currentView]);
 
   return (
     <>

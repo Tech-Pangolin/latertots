@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for Emulator
+// These are basic rules for development/testing purposes
+// In production, you should implement proper security rules
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow read/write access to all files for emulator development
+    // WARNING: These rules are permissive and should NOT be used in production
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}

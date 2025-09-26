@@ -1,0 +1,39 @@
+{
+  "emulators": {
+    "functions": { 
+      "port": 5001,
+      "logFile": "./logs/functions-debug.log"
+    },
+    "firestore": { 
+      "port": 8080,
+      "logFile": "./logs/firestore-debug.log"
+    },
+    "pubsub": { 
+      "port": 8085,
+      "logFile": "./logs/pubsub-debug.log"
+    },
+    "auth": { 
+      "port": 9099,
+      "logFile": "./logs/auth-debug.log"
+    },
+    "storage": { 
+      "port": 9199,
+      "logFile": "./logs/storage-debug.log"
+    },
+    "ui": { 
+      "enabled": true, 
+      "port": 4000,
+      "logFile": "./logs/ui-debug.log"
+    }
+  },
+  "functions": {
+    "source": "../functions"
+  },
+  "firestore": {
+    "rules": "./firestore/firestore.rules",
+    "indexes": "./firestore/firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "./firestore/storage.rules"
+  }
+}

@@ -5,6 +5,8 @@
   "dependencies": {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
+    "@faker-js/faker": "^9.7.0",
+    "@firebase/rules-unit-testing": "^3.0.4",
     "@fullcalendar/core": "^6.1.17",
     "@fullcalendar/daygrid": "^6.1.11",
     "@fullcalendar/interaction": "^6.1.11",
@@ -21,9 +23,10 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@welldone-software/why-did-you-render": "^8",
-    "firebase": "^10.10.0",
+    "firebase": "^10.14.1",
     "firebaseui": "^6.1.0",
     "joi": "^17.13.3",
+    "lodash": "^4.17.21",
     "luxon": "^3.7.1",
     "polished": "^4.3.1",
     "react": "^18.2.0",
@@ -38,13 +41,21 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:emulator": "concurrently --prefix-colors \"bgBlue.bold,bgGreen.bold\" --names \"EMULATOR,REACT\" \"firebase emulators:start --config emulator/firebase.json --project latertots-a6694\" \"REACT_APP_USE_EMULATOR=true react-scripts start\"",
+    "start:emulator:seed": "npm run emulator:seed && npm run start:emulator",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:auth": "react-scripts test --testPathPattern=auth",
     "test:coverage": "react-scripts test --coverage",
     "test:watch": "react-scripts test --watchAll",
     "eject": "react-scripts eject",
-    "todo-check": "eslint --no-eslintrc -c .eslintrc-todo.json \"src/**/*.{js,jsx}\""
+    "todo-check": "eslint --no-eslintrc -c .eslintrc-todo.json \"src/**/*.{js,jsx}\"",
+    "emulator:start": "firebase emulators:start --config emulator/firebase.json --project latertots-a6694",
+    "emulator:stop": "kill-port 4000 5001 8080 8085 9099 9199",
+    "emulator:seed": "npm run emulator:seed:auth && npm run emulator:seed:firestore",
+    "emulator:seed:auth": "node emulator/auth/auth-seed.mjs",
+    "emulator:seed:firestore": "node emulator/firestore/seed.mjs",
+    "emulator:export-seed": "ts=$(date +%Y%m%d%H%M%S) && mkdir -p \"./emulator/firestore/exports/$ts\" && npm run emulator:seed && firebase emulators:export \"./emulator/firestore/exports/$ts\" --only firestore"
   },
   "eslintConfig": {
     "extends": [
@@ -63,5 +74,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "kill-port": "^2.0.1"
   }
 }
