@@ -1,8 +1,12 @@
-// emulator/firestore/seed.js
+// emulator/firestore/seed.mjs
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
 import { faker } from '@faker-js/faker';
-import _ from 'lodash'
-import { DateTime, Duration } from 'luxon'
+import _ from 'lodash';
+import { DateTime, Duration } from 'luxon';
+import { config } from 'dotenv';
+
+// Load environment variables from .env file
+config();
 
 // Helpers
 
