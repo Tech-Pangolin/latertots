@@ -352,22 +352,33 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
       url: req.url
     });
     
-    // Execute billing machine
-    const { billingMachine } = require('./xstate');
-    const { interpret } = require('xstate');
+    // Execute billing machine v5
+    const { billingMachineV5 } = require('./xstate/indexV5');
+    const { createActor } = require('xstate');
     
-    const service = interpret(billingMachine);
-    const result = await service.start().done;
+    // Create and start the v5 actor
+    const actor = createActor(billingMachineV5, {
+      input: { dryRun }
+    }).start();
+
+    // Wait for completion
+    await new Promise((resolve, reject) => {
+      actor.subscribe((snapshot) => {
+        if (snapshot.matches('done')) {
+          resolve();
+        } else if (snapshot.matches('fatalError')) {
+          reject(new Error('Billing job failed'));
+        }
+      });
+    });
     
     logger.info('Daily billing job completed successfully', { 
-      result,
       dryRun,
       timestamp: new Date().toISOString()
     });
     
     res.status(200).json({ 
       success: true, 
-      result,
       dryRun,
       timestamp: new Date().toISOString()
     });
