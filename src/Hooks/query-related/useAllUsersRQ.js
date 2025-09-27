@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../components/AuthProvider";
-import { useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo } from "react";
 import { collection, query, where } from "firebase/firestore";
 import { db } from "../../config/firestore";
 import { COLLECTIONS } from "../../Helpers/constants";
@@ -26,13 +26,8 @@ export function useAllUsersRQ() {
   const queryResult = useQuery({
     queryKey,
       queryFn: async () => {
-        try {
-          const result = await dbService.fetchDocs(allUsersQuery, false);
-          return result;
-        } catch (error) {
-          console.error('❌ HOOK: Error fetching users data', error);
-          throw error;
-        }
+        const result = await dbService.fetchDocs(allUsersQuery, false);
+        return result;
       },
     onError: (error) => {
       console.error("❌ HOOK: Error fetching users data", error);
@@ -51,17 +46,13 @@ export function useAllUsersRQ() {
     const unsubscribe = dbService.subscribeDocs(allUsersQuery, fresh => {
       if (!isSubscribed) return; // Prevent updates after cleanup
       
-      
       // Get current data to compare
       const currentData = queryClient.getQueryData(queryKey);
-      
-      // Compare data content to prevent unnecessary updates
       
       // Only update if data has actually changed
       if (JSON.stringify(currentData) !== JSON.stringify(fresh)) {
         queryClient.setQueryData(queryKey, fresh);
-      } else {
-      }
+      } 
     }, false); // Use same auth level as query function
     
     return () => {
@@ -70,26 +61,5 @@ export function useAllUsersRQ() {
     };
   }, [dbService, queryClient]); // Removed queryKey from dependencies to prevent re-subscription
 
-  // Memoize the result to prevent unnecessary re-renders
-  const stableResult = useMemo(() => {
-    return {
-      data: queryResult.data,
-      isLoading: queryResult.isLoading,
-      isError: queryResult.isError,
-      error: queryResult.error,
-      isFetching: queryResult.isFetching,
-      isSuccess: queryResult.isSuccess,
-      isFetched: queryResult.isFetched,
-      refetch: queryResult.refetch
-    };
-  }, [
-    queryResult.data?.length, // Only depend on data length, not the data reference
-    queryResult.isLoading,
-    queryResult.isError,
-    queryResult.isFetching,
-    queryResult.isSuccess,
-    queryResult.isFetched
-  ]);
-
-  return stableResult;
+  return queryResult;
 }
