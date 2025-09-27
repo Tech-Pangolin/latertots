@@ -6,6 +6,8 @@ export const COLLECTIONS = Object.freeze({
   RESERVATIONS: 'Reservations',
   ROLES: 'Roles',
   NOTIFICATIONS: 'Notifications',
+  INVOICES: 'Invoices',
+  BILLING_ADJUSTMENTS: 'BillingAdjustments',
 })
 
 export const MIN_RESERVATION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
@@ -53,6 +55,13 @@ export const CONTACT_RELATIONS = Object.freeze({
   DOCTOR: 'Doctor',
   PROFESSIONAL_CAREGIVER: 'Professional Caregiver',
   OTHER: 'Other',
+})
+
+export const CONTACT_PERMISSIONS = Object.freeze({
+  MAKE_CONTACT_TO_CHILD: 'Make_Contact_To_Child',
+  MEDICAL_AID: 'Medical_Aid',
+  PICKUP: 'Pickup',
+  RECEIVE_CONTACT_FROM_CHILD: 'Receive_Contact_From_Child',
 })
 
 export const MIN_AGE_FOR_CHILD_YEARS = 2;

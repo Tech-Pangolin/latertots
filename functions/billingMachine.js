@@ -1,7 +1,8 @@
 // billingMachine.js
 import { createMachine, assign, interpret } from 'xstate';
 import * as admin from 'firebase-admin';
-import { billingConfig } from './billing-config.js';   
+import { billingConfig } from './billing-config.js';
+import { RESERVATION_STATUS, INVOICE_STATUS } from '../src/Helpers/constants.mjs';   
 
 // ────────── Firebase init (only once per bundle) ──────────
 admin.initializeApp();
@@ -100,12 +101,11 @@ export const billingMachine = createMachine(
           }
 
 
-          const baseSubtotal = snapData.overrideTotalCents ??    // use overrided value if exists on reservation
-            Math.round(billableHours * billingConfig.baseRateCentsPerHour);
+          const baseSubtotal = Math.round(billableHours * billingConfig.baseRateCentsPerHour);
 
           const lateAddon = billingConfig.latePickupThresholdHours < billableHours ? billingConfig.serviceAddOns.LATE_PICKUP_FEE : 0;
           const subtotal  = baseSubtotal + lateAddon;
-          const tax       = Math.round(subtotal * billingConfig.taxRatePct / 100);
+          const tax       = Math.round(subtotal * billingConfig.taxRateDecimal);
           const total     = subtotal + tax;
 
           return {
@@ -115,18 +115,26 @@ export const billingMachine = createMachine(
               date: admin.firestore.Timestamp.now(),
               dueDate: snapData.paymentDue ?? admin.firestore.Timestamp.now(),
 
-              user: { id: snapData.User.id, name: snapData.User.name, phone: snapData.User.phone, email: snapData.User.email },
+              user: { 
+                id: snapData.User.id, 
+                name: snapData.User.data().Name, 
+                phone: snapData.User.data().CellNumber, 
+                email: snapData.User.data().Email 
+              },
 
               lineItems: [
-                { tag: 'BASE', service: 'Child-Care', duration: billableHours,
-                  rate: billingConfig.baseRateCentsPerHour, subtotal: baseSubtotal },
+                { tag: 'BASE', service: 'Child-Care', durationHours: billableHours,
+                  rateCentsPerHour: billingConfig.baseRateCentsPerHour, subtotalCents: baseSubtotal },
                 ...(lateAddon
                   ? [{ tag: 'LATE_PICKUP', service: 'Late pickup fee',
-                       duration: 1, rate: lateAddon, subtotal: lateAddon }]
+                       durationHours: 1, rateCentsPerHour: lateAddon, subtotalCents: lateAddon }]
                   : [])
               ],
 
-              subtotal, tax, total, status: 'unpaid'
+              subtotalCents: subtotal, 
+              taxCents: tax, 
+              totalCents: total, 
+              status: INVOICE_STATUS.UNPAID
             }
           };
         }),
@@ -239,7 +247,9 @@ export const billingMachine = createMachine(
             ctx.currentInvoice,
             { merge: true }
           );
-          tx.update(ctx.reservations[ctx.resIdx].ref, { billingLocked: true });
+          tx.update(ctx.reservations[ctx.resIdx].ref, { 
+            invoice: db.collection('Invoices').doc(ctx.currentInvoice.invoiceId)
+          });
         });
       },
       
@@ -257,22 +267,22 @@ export const billingMachine = createMachine(
           const feeLI = {
             tag: 'LATE_FEE',
             service: billingConfig.lateFee.lineItemLabel,
-            duration: 1,
-            rate: billingConfig.lateFee.flatCents,
-            subtotal: billingConfig.lateFee.flatCents
+            durationHours: 1,
+            rateCentsPerHour: billingConfig.lateFee.flatCents,
+            subtotalCents: billingConfig.lateFee.flatCents
           };
 
-          const newSubtotal = data.subtotal + feeLI.subtotal;
-          const newTax      = Math.round(newSubtotal * billingConfig.taxRatePct / 100);
+          const newSubtotal = data.subtotalCents + feeLI.subtotalCents;
+          const newTax      = Math.round(newSubtotal * billingConfig.taxRateDecimal);
           await invSnap.ref.update({
-            status: 'late',
+            status: INVOICE_STATUS.LATE,
             lineItems: admin.firestore.FieldValue.arrayUnion(feeLI),
-            subtotal: newSubtotal,
-            tax: newTax,
-            total: newSubtotal + newTax
+            subtotalCents: newSubtotal,
+            taxCents: newTax,
+            totalCents: newSubtotal + newTax
           });
         } else {
-          await invSnap.ref.update({ status: 'late' });
+          await invSnap.ref.update({ status: INVOICE_STATUS.LATE });
         }
         return { userId: data.user.id };
       },
@@ -296,24 +306,24 @@ export const billingMachine = createMachine(
 );
 
 const fetchAllReservationsSnap = async () => {
-  return await db.collection('Reservations')              // will probably need tweaking
-    .where('billingLocked', '==', false)
-    .where('status',        '==', 'locked')
+  return await db.collection('Reservations')
+    .where('invoice', '==', null)                           // Not yet billed
+    .where('status', '==', RESERVATION_STATUS.PROCESSING)  // Ready for billing
     .get();
 }
 
 const fetchAllOverdueInvoicesSnap = async () => {
-  return await db.collection('Invoices')                      // will probably need tweaking
-  .where('status',  '==', 'unpaid')
-  .where('dueDate', '<', admin.firestore.Timestamp.now())
-  .get();
+  return await db.collection('Invoices')
+    .where('status', '==', INVOICE_STATUS.UNPAID)
+    .where('dueDate', '<', admin.firestore.Timestamp.now())
+    .get();
 }
 
 const fetchUnpaidInvoicesSnapByUser = async (uid) => {
-  return await db.collection('Invoices')                      // will probably need tweaking
-  .where('user.id', '==', uid)
-  .where('status', 'in', ['unpaid', 'late'])
-  .get();
+  return await db.collection('Invoices')
+    .where('user.id', '==', uid)
+    .where('status', 'in', [INVOICE_STATUS.UNPAID, INVOICE_STATUS.LATE])
+    .get();
 }
 
 /*──────────── Sample scheduler wrapper (optional) ───────────
