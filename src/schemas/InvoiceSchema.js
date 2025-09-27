@@ -1,7 +1,8 @@
 import Joi from 'joi';
-import { Timestamp, DocumentReference } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 import { INVOICE_STATUS, LINE_ITEM_TAGS } from '../Helpers/constants';
 import { BillingAdjustmentSchema } from './BillingAdjustmentSchema';
+import { DocumentReferenceOrCompatible } from '../Helpers/validationHelpers.mjs';
 
 const LineItemSchema = Joi.object({
   tag: Joi.string()
@@ -56,12 +57,7 @@ const InvoiceSchema = Joi.object({
     .messages({
       'string.empty': 'Invoice ID is required'
     }),
-  reservationId: Joi.object()
-    .instance(DocumentReference)
-    .required()
-    .messages({
-      'object.instance': 'Reservation ID must be a valid Firestore DocumentReference'
-    }),
+  reservationId: DocumentReferenceOrCompatible.required(),
   date: Joi.object()
     .instance(Timestamp)
     .required()

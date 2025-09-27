@@ -1,6 +1,7 @@
 import Joi from 'joi';
 import { RESERVATION_STATUS } from '../Helpers/constants.mjs';
-import { DocumentReference, Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
+import { DocumentReferenceOrCompatible } from '../Helpers/validationHelpers.mjs';
 
 
 const ReservationSchema = Joi.object({
@@ -9,22 +10,7 @@ const ReservationSchema = Joi.object({
   allDay: Joi.boolean().default(false).required(),                    // TODO: Remove all references to this field
 
   // Billing integration fields
-  invoice: Joi.object().custom((value, helpers) => {
-    // Allow null for unbilled reservations
-    if (value === null) {
-      return value;
-    }
-    // Check if it has DocumentReference-like properties
-    if (value && typeof value === 'object' && 
-        (value.id || value.path || value.firestore || value._delegate)) {
-      return value;
-    }
-    return helpers.error('custom.documentReference', {
-      message: 'Invoice must be a valid DocumentReference object or null'
-    });
-  }).optional().allow(null).messages({
-    'any.required': 'Invoice DocumentReference is required when provided'
-  }),
+  invoice: DocumentReferenceOrCompatible.optional().allow(null),
   status: Joi.string()
     .valid(...Object.values(RESERVATION_STATUS))
     .required()
@@ -49,30 +35,8 @@ const ReservationSchema = Joi.object({
     duration: Joi.number().min(0).optional(),                           // TODO: Does this field serve a purpose?
   }),
   userId: Joi.string().required(),
-  Child: Joi.object().custom((value, helpers) => {
-    // Check if it has DocumentReference-like properties
-    if (value && typeof value === 'object' && 
-        (value.id || value.path || value.firestore || value._delegate)) {
-      return value;
-    }
-    return helpers.error('custom.documentReference', {
-      message: 'Child must be a valid DocumentReference object'
-    });
-  }).required().messages({
-    'any.required': 'Child DocumentReference is required'
-  }),
-  User: Joi.object().custom((value, helpers) => {
-    // Check if it has DocumentReference-like properties
-    if (value && typeof value === 'object' && 
-        (value.id || value.path || value.firestore || value._delegate)) {
-      return value;
-    }
-    return helpers.error('custom.documentReference', {
-      message: 'User must be a valid DocumentReference object'
-    });
-  }).required().messages({
-    'any.required': 'User DocumentReference is required'
-  }),
+  Child: DocumentReferenceOrCompatible.required(),
+  User: DocumentReferenceOrCompatible.required(),
   groupActivity: Joi.boolean().default(false).optional(),
 })
   .prefs({ abortEarly: false });
