@@ -6,7 +6,7 @@ import { DateTime, Duration } from 'luxon';
 import { config } from 'dotenv';
 import ReservationSchema from '../../src/schemas/ReservationSchema.mjs';
 import { Timestamp, DocumentReference } from 'firebase/firestore';
-import { RESERVATION_STATUS } from '../../src/Helpers/constants.mjs';
+import { RESERVATION_STATUS, COLLECTIONS, ROLES, CONTACT_PERMISSIONS, CONTACT_RELATIONS, GENDERS } from '../../src/Helpers/constants.mjs';
 
 // Load environment variables from .env file
 config();
@@ -76,29 +76,28 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
   const db = ctx.firestore();
 
   // Create roles
-  for (const role of ['admin', 'parent-user']) {
-    await db.collection('Roles').doc(role).set({
+  for (const role of Object.values(ROLES)) {
+    await db.collection(COLLECTIONS.ROLES).doc(role).set({
       "name": role,
       "archived": false
     })
   }
 
   // Create contact permissions
-  for (const perm of ['Make_Contact_To_Child', 'Medical_Aid', 'Pickup', 'Receive_Contact_From_Child']) {
-    await db.collection('Parent_Authorized_Permissions').doc(perm).set({
+  for (const perm of Object.values(CONTACT_PERMISSIONS)) {
+    await db.collection(COLLECTIONS.PERMISSIONS).doc(perm).set({
       "Description": faker.lorem.sentence({ min: 8, max: 15 })
     })
   }
 
-
   // Create children objs
   let childRefs = []
   for (let x = 0; x < 6; x++ ){
-    const childRef = db.collection('Children').doc()
+    const childRef = db.collection(COLLECTIONS.CHILDREN).doc()
     await childRef.set({
       "Name": faker.person.firstName(),
       "DOB": faker.date.birthdate({max: 12, min: 2, mode: 'age'}),
-      "Gender": _.sample(['male', 'female', 'other']),
+      "Gender": _.sample(Object.values(GENDERS)),
       "archived": false
     })
     childRefs.push(childRef)
@@ -107,12 +106,12 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
   // Create Contacts
   let contactRefs = []
   for (let x = 0; x < 10; x++) {
-    const contactRef = db.collection('Contacts').doc()
+    const contactRef = db.collection(COLLECTIONS.CONTACTS).doc()
     await contactRef.set({
       "Name": flipCoin() ? faker.person.fullName() : faker.person.firstName(),
       "Email": flipCoin() ? null : faker.internet.email(),
       "Phone": faker.phone.number({ style: 'national'}),
-      "Relation": _.sample(["Family", "Friend", "Parent", "Doctor"]),
+      "Relation": _.sample(Object.values(CONTACT_RELATIONS)),
       "archived": false
     })
     contactRefs.push(contactRef)
@@ -121,7 +120,7 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
   // Create parent users
   const parentUserRefs = []
   for (let x = 0; x < 6; x++ ){
-    const userRef = db.collection('Users').doc()
+    const userRef = db.collection(COLLECTIONS.USERS).doc()
     const lastName = faker.person.lastName(); 
     await userRef.set({
       "Name": faker.person.fullName({ lastName: lastName }),
@@ -134,25 +133,25 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
       "State": flipCoin() ? faker.location.state() : null,
       "StreetAddress": flipCoin() ? faker.location.streetAddress() : null,
       "Zip": flipCoin() ? faker.location.zipCode() : null,
-      "Role": db.collection('Roles').doc('parent-user'),
+      "Role": db.collection(COLLECTIONS.ROLES).doc(ROLES.PARENT),
     })
     parentUserRefs.push(userRef)
   }
 
   // Create a simple admin user
-  const adminUserRef = db.collection('Users').doc('adminTest');
+  const adminUserRef = db.collection(COLLECTIONS.USERS).doc('adminTest');
   adminUserRef.set({
     "Name": "Admin User",
     "Email": faker.internet.email({ firstName: 'Admin', lastName: 'User' }),
     "CellNumber": faker.phone.number(),
     "archived": false,
-    "Role": db.collection('Roles').doc('admin'),
+    "Role": db.collection(COLLECTIONS.ROLES).doc(ROLES.ADMIN),
   })
 
   // ----------------------------------------------------------------------------
 
   // create reservations
-  const parentsWithKidsSnap = await (await db.collection('Users').where('Children', '!=', []).get()).docs
+  const parentsWithKidsSnap = await (await db.collection(COLLECTIONS.USERS).where('Children', '!=', []).get()).docs
 
   for ( let x = 0; x < 15; x++) {
     const parent = _.sample(parentsWithKidsSnap)
@@ -161,7 +160,7 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     const { start, end } = startEnd(_.sample([true, false]))
 
 
-    const reservRef = db.collection('Reservations').doc()
+    const reservRef = db.collection(COLLECTIONS.RESERVATIONS).doc()
     const reservationData = {
       "User": parent.ref,
       "Child": childRef,
