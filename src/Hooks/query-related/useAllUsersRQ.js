@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { collection, query, where } from "firebase/firestore";
 import { db } from "../../config/firestore";
 import { COLLECTIONS } from "../../Helpers/constants";
+import _ from "lodash";
 
 
 export function useAllUsersRQ() {
@@ -50,7 +51,7 @@ export function useAllUsersRQ() {
       const currentData = queryClient.getQueryData(queryKey);
       
       // Only update if data has actually changed
-      if (JSON.stringify(currentData) !== JSON.stringify(fresh)) {
+      if (!_.isEqual(currentData, fresh)) {
         queryClient.setQueryData(queryKey, fresh);
       } 
     }, false); // Use same auth level as query function
@@ -59,7 +60,7 @@ export function useAllUsersRQ() {
       isSubscribed = false; // Prevent further updates
       unsubscribe();
     };
-  }, [dbService, queryClient]); // Removed queryKey from dependencies to prevent re-subscription
+  }, [dbService, queryClient]); // Removed queryKey from dependencies to prevent re-subscription. These values are stable.
 
   return queryResult;
 }
