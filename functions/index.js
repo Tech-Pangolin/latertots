@@ -140,8 +140,8 @@ const createNotification = async (notificationData) => {
   try {
     const notification = {
       ...notificationData,
-      createdAt: admin.firestore.Timestamp.now(),
-      expiresAt: notificationData.expiresAt || admin.firestore.Timestamp.fromDate(
+      createdAt: admin.firestore().Timestamp.now(),
+      expiresAt: notificationData.expiresAt || admin.firestore().Timestamp.fromDate(
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
       )
     };
@@ -331,6 +331,62 @@ exports.cleanupExpiredNotifications = functions.pubsub
       logger.info(`Cleaned up ${expiredNotifications.size} expired notifications`);
     }
   });
+
+// Billing Machine HTTP Trigger
+const { onRequest } = require('firebase-functions/v2/https');
+
+exports.dailyBillingJob = onRequest(async (req, res) => {
+  const logger = require('firebase-functions/logger');
+  
+  try {
+    // Get parameters from query string or environment
+    const dryRun = req.query.dryRun === 'true' || process.env.DRY_RUN === 'true';
+    const logLevel = req.query.logLevel || process.env.LOG_LEVEL || 'INFO';
+    
+    logger.info('Daily billing job triggered via HTTP', {
+      timestamp: new Date().toISOString(),
+      dryRun,
+      logLevel,
+      userAgent: req.get('User-Agent'),
+      method: req.method,
+      url: req.url
+    });
+    
+    // Execute billing machine
+    const { billingMachine } = require('./billingMachine');
+    const { interpret } = require('xstate');
+    
+    const service = interpret(billingMachine);
+    const result = await service.start().done;
+    
+    logger.info('Daily billing job completed successfully', { 
+      result,
+      dryRun,
+      timestamp: new Date().toISOString()
+    });
+    
+    res.status(200).json({ 
+      success: true, 
+      result,
+      dryRun,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    logger.error('Daily billing job failed', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+      dryRun: req.query.dryRun === 'true' || process.env.DRY_RUN === 'true'
+    });
+    
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 // Deployment command: firebase deploy --only functions
 // Run from the root of the project directory

@@ -1,11 +1,10 @@
 // billingMachine.js
-import { createMachine, assign, interpret } from 'xstate';
-import * as admin from 'firebase-admin';
-import { billingConfig } from './billing-config.js';
-import { RESERVATION_STATUS, INVOICE_STATUS } from '../src/Helpers/constants.mjs';   
+const { createMachine, assign, interpret } = require('xstate');
+const admin = require('firebase-admin');
+const { billingConfig } = require('./billing-config');
+const { RESERVATION_STATUS, INVOICE_STATUS } = require('./constants');   
 
-// ────────── Firebase init (only once per bundle) ──────────
-admin.initializeApp();
+
 const db = admin.firestore();
 
 /*──────────────── helpers ────────────────*/
@@ -14,7 +13,7 @@ function convertToMinutes(date) {
 }
 
 /*──────────────── state machine ──────────*/
-export const billingMachine = createMachine(
+const billingMachine = createMachine(
   {
     id: 'dailyBillingJob',
     initial: 'initializeRun',
@@ -327,9 +326,11 @@ const fetchUnpaidInvoicesSnapByUser = async (uid) => {
 }
 
 /*──────────── Sample scheduler wrapper (optional) ───────────
-import { onSchedule } from 'firebase-functions/v2/scheduler';
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 
-export const dailyBilling = onSchedule('0 23 * * *', async () => {
+const dailyBilling = onSchedule('0 23 * * *', async () => {
   await interpret(billingMachine).start().done;
 });
 */
+
+module.exports = { billingMachine };

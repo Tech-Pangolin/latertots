@@ -5,7 +5,7 @@
  * Edit these values – no compile‑time changes needed elsewhere.
  * All monetary values are stored as CENTS to avoid rounding errors.
  */
-export const billingConfig = {
+const billingConfig = {
   /* ---------- pricing ---------- */
   baseRateCentsPerHour: 1500,   // $15 / h
   dailyCapReservationHours: 4,  // 4h maximum reservation
@@ -31,3 +31,5 @@ export const billingConfig = {
     lineItemLabel: 'Late fee',
   }
 };
+
+module.exports = { billingConfig };
