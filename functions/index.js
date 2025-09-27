@@ -353,7 +353,7 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
     });
     
     // Execute billing machine
-    const { billingMachine } = require('./billingMachine');
+    const { billingMachine } = require('./xstate');
     const { interpret } = require('xstate');
     
     const service = interpret(billingMachine);

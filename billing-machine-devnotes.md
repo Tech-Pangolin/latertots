@@ -15,13 +15,13 @@ Adapting the existing billingMachine scaffold to integrate with the current Late
 ## Integration Points to Address
 
 ### Data Model Adaptations
-- [ ] Collection naming: Use `Reservations` (capital R) consistently
-- [ ] Status field location: `extendedProps.status` vs top-level `status`
-- [ ] User data mapping for invoice generation
-- [ ] Reservation data structure alignment
+- [x] Collection naming: Use `Reservations` (capital R) consistently
+- [x] Status field location: Added top-level `status` alongside `extendedProps.status`
+- [x] User data mapping for invoice generation
+- [x] Reservation data structure alignment
 
 ### Missing Infrastructure
-- [ ] Invoice collection schema and security rules
+- [x] Invoice collection schema and security rules
 - [ ] BillingRuns collection for audit trail
 - [ ] Payment processing integration
 - [ ] Admin interfaces for billing management
@@ -299,11 +299,44 @@ actors: {
 - **Testing** - Can test state machine in isolation
 
 ## Implementation Progress
-- [ ] Data model alignment
-- [ ] Missing function implementations
-- [ ] Security rules for Invoice collection
+- [x] Data model alignment
+- [x] Invoice schema implementation
+- [x] BillingAdjustment schema implementation
+- [x] Reservation schema updates
+- [x] DocumentReference validation system
+- [x] Module system resolution
+- [x] Emulator integration and testing
+- [ ] BillingRun schema implementation
+- [ ] StripeAuditLog schema implementation
+- [ ] Billing machine query updates
+- [ ] dailyBillingJob function implementation
+- [ ] Security rules for new collections
 - [ ] Testing strategy
 - [ ] Deployment plan
+
+## ✅ **COMPLETED IMPLEMENTATIONS**
+
+### **Schema Files Created**
+- `src/schemas/InvoiceSchema.js` - Complete invoice validation with business rules
+- `src/schemas/BillingAdjustmentSchema.js` - Four adjustment types with chain management
+- `src/Helpers/validationHelpers.mjs` - Unified DocumentReference validation
+- `src/Helpers/constants.mjs` - Billing-related enums and constants
+
+### **Schema Files Updated**
+- `src/schemas/ReservationSchema.mjs` - Added invoice field, top-level status, removed billingLocked
+- `emulator/firestore/seed.mjs` - Added Joi validation for reservations
+
+### **Key Technical Decisions**
+- **DocumentReference Validation**: Single `DocumentReferenceOrCompatible` helper for all fields
+- **Module System**: ES modules (`.mjs`) for new schemas, resolved import conflicts
+- **Data Model**: Invoice subcollection approach for billing adjustments
+- **Collection Naming**: Consistent use of `Reservations` (capital R)
+
+### **Testing Status**
+- ✅ All schemas validated with emulator data
+- ✅ 15 reservations created successfully with validation
+- ✅ DocumentReference validation working with emulator objects
+- ✅ Module system conflicts resolved
 
 ---
 *This file will be updated as we work through the integration systematically.*

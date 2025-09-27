@@ -1,3 +1,11 @@
+// constants.mjs - ES module constants for React app
+// 
+// ⚠️  IMPORTANT: This file contains the full set of constants for the React app
+// ⚠️  When updating constants, check if changes need to be made in BOTH files:
+// ⚠️  - src/Helpers/constants.mjs (ES module for React app) ← THIS FILE
+// ⚠️  - functions/constants.js (CommonJS for Cloud Functions)
+// ⚠️  This duplication exists due to module system incompatibility between React (ESM) and Cloud Functions (CommonJS)
+
 export const COLLECTIONS = Object.freeze({
   CHILDREN: 'Children',
   USERS: 'Users',
