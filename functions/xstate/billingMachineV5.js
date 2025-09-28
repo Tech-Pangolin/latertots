@@ -3,6 +3,7 @@ const { setup, assign } = require('xstate');
 const { logger } = require('firebase-functions');
 const { RESERVATION_STATUS, INVOICE_STATUS } = require('../constants');
 const admin = require('firebase-admin');
+const _ = require('lodash');
 
 // Import actions, guards, and actors
 const actions = require('./actions');
@@ -44,6 +45,7 @@ const billingMachineV5 = setup({
     overdueInvoices: [],
     overIdx: 0,
     failures: [],
+    newInvoices: [],
     dryRun: process.env.DRY_RUN === 'true'
   }),
   states: {
@@ -141,12 +143,27 @@ const billingMachineV5 = setup({
           total: `$${(total / 100).toFixed(2)}`
         });
 
+        if (snapData.paymentDue) {
+          console.log('🤔 this new invoice has a payment due date already:', {snapId: snap.id, runId: context.runId, paymentDue: snapData.paymentDue});
+        } else {
+          console.warn('This reservation has no payment due date:', {snapId: snap.id, runId: context.runId});
+        }
+
+        const generateRandomDateFromPast7Days = () => {
+          const now = new Date();
+          // Generate a random number of days between 0 and 6 (inclusive)
+          const randomDays = Math.floor(Math.random() * 7);
+          // Create a new date that is randomDays ago from now
+          const randomDate = new Date(now.getTime() - (randomDays * 24 * 60 * 60 * 1000));
+          return randomDate;
+        };
+
         return {
           currentInvoice: {
             invoiceId: `INV-${String(Date.now()).split('').reverse().join('').substring(2,7)}-${Math.random().toString(36).substring(2, 7)}`,
             reservationId: snap.id,
             date: new Date(),
-            dueDate: snapData.paymentDue ?? new Date(Date.now() + 72 * 60 * 60 * 1000),
+            dueDate: snapData.paymentDue ?? generateRandomDateFromPast7Days(), // TODO: remove the dummy data generation before production
 
             user: { 
               id: snapData.User.id, 
@@ -181,9 +198,17 @@ const billingMachineV5 = setup({
           currentInvoice: context.currentInvoice, 
           dryRun: context.dryRun,
           reservations: context.reservations,
-          resIdx: context.resIdx
+          resIdx: context.resIdx,
+          newInvoices: context.newInvoices
         }),
-        onDone: { target: 'incrementRes' },
+        onDone: { 
+          target: 'incrementRes',
+          actions: [
+            assign({
+              newInvoices: ({ event }) => event.output
+            })
+          ]
+        },
         onError: { 
           target: 'fatalError',
           actions: [
@@ -285,7 +310,9 @@ const billingMachineV5 = setup({
           runId: context.runId, 
           failures: context.failures, 
           reservations: context.reservations, 
-          dryRun: context.dryRun 
+          dryRun: context.dryRun, 
+          overdueInvoices: context.overdueInvoices, 
+          newInvoices: context.newInvoices
         }),
         onDone: { target: 'done' },
         onError: { 

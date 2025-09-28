@@ -6,7 +6,7 @@ const { logger } = require('firebase-functions');
 const incrementResIdx = assign({ 
   resIdx: ({ context }) => {
     const newIdx = context.resIdx + 1;
-    logger.info(`🔧 [BILLING] Incrementing reservation index: ${context.resIdx} → ${newIdx}`);
+    logger.info(`🔧 [BILLING] Incrementing reservation index: ${context.resIdx} → ${newIdx} / ${context.reservations.length -1}`);
     return newIdx;
   }
 });
@@ -15,7 +15,7 @@ const incrementResIdx = assign({
 const incrementOverIdx = assign({ 
   overIdx: ({ context }) => {
     const newIdx = context.overIdx + 1;
-    logger.info(`🔧 [BILLING] Incrementing overdue index: ${context.overIdx} → ${newIdx}`);
+    logger.info(`🔧 [BILLING] Incrementing overdue index: ${context.overIdx} → ${newIdx} / ${context.overdueInvoices.length -1}`);
     return newIdx;
   }
 });

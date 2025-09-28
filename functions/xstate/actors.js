@@ -1,9 +1,10 @@
 // actors.js - XState v5 Actors (formerly services)
 const { fromPromise } = require('xstate');
 const { logger } = require('firebase-functions');
+const { Timestamp, getFirestore, FieldValue } = require('firebase-admin/firestore');
 const admin = require('firebase-admin');
 
-const db = admin.firestore();
+const db = getFirestore();
 
 // Initialize billing run
 const initializeRunActor = fromPromise(async ({ input }) => {
@@ -59,15 +60,16 @@ const initializeRunActor = fromPromise(async ({ input }) => {
 // Fetch overdue invoices
 const fetchOverdueInvoicesActor = fromPromise(async ({ input }) => {
   try {
-    logger.info('🔧 [BILLING] Fetching overdue invoices...');
+    logger.info('🔧 [BILLING] Fetching newly-overdue invoices...');
+
     const snap = await db.collection('Invoices')
       .where('status', '==', 'unpaid')
-      .where('dueDate', '<', admin.firestore.Timestamp.now())
+      .where('dueDate', '<', Timestamp.now())
       .get();
-    logger.info('🔧 [BILLING] Found overdue invoices:', snap.docs.length);
+    logger.info('🔧 [BILLING] Found newly-overdue invoices:', snap.docs.length);
     return snap.docs;
   } catch (error) {
-    logger.error('🔧 [BILLING] Fetch overdue invoices failed:', error);
+    logger.error('🔧 [BILLING] Fetch newly-overdue invoices failed:', error);
     throw {
       message: error.message,
       code: error.code,
@@ -80,8 +82,9 @@ const fetchOverdueInvoicesActor = fromPromise(async ({ input }) => {
 // Persist invoice
 const persistInvoiceActor = fromPromise(async ({ input }) => {
   try {
-    const { currentInvoice, dryRun, reservations, resIdx } = input;
+    const { currentInvoice, dryRun, reservations, resIdx, newInvoices } = input;
     logger.info(`💾 [BILLING] Persisting invoice ${currentInvoice.invoiceId} for reservation ${currentInvoice.reservationId}`);
+    
     
     if (dryRun) {
       logger.info('🔍 [BILLING] DRY-RUN: Would persist invoice:', currentInvoice);
@@ -99,6 +102,8 @@ const persistInvoiceActor = fromPromise(async ({ input }) => {
         invoice: db.collection('Invoices').doc(currentInvoice.invoiceId)
       });
     });
+
+    return [`Invoices/${currentInvoice.invoiceId}`, ...newInvoices];
   } catch (error) {
     logger.error('🔧 [BILLING] Persist invoice failed:', error);
     throw {
@@ -136,7 +141,7 @@ const applyLateFeeActor = fromPromise(async ({ input }) => {
       const newTax = Math.round(newSubtotal * 0.08);
       await invSnap.ref.update({
         status: 'late',
-        lineItems: admin.firestore.FieldValue.arrayUnion(feeLI),
+        lineItems: FieldValue.arrayUnion(feeLI),
         subtotalCents: newSubtotal,
         taxCents: newTax,
         totalCents: newSubtotal + newTax
@@ -187,16 +192,18 @@ const recalcUserHoldActor = fromPromise(async ({ input }) => {
 // Wrap up billing run
 const wrapUpActor = fromPromise(async ({ input }) => {
   try {
-    const { runId, failures, reservations, dryRun } = input;
+    const { runId, failures, reservations, dryRun, overdueInvoices, newInvoices } = input;
     logger.info('🏁 [BILLING] Wrapping up billing run:', {
       runId,
       failures: failures.length,
-      reservationsProcessed: reservations.length
+      reservationsProcessed: reservations.length,
+      overdueInvoicesProcessed: overdueInvoices.map(inv => `Invoices/${inv.id}`),
+      newInvoicesProcessed: newInvoices
     });
     
     if (!dryRun) {
       return db.collection('BillingRuns').doc(runId)
-        .set({ status: 'success', endTime: new Date(), failures }, { merge: true });
+        .set({ status: 'success', endTime: new Date(), failures, reservations,  }, { merge: true });
     }
   } catch (error) {
     logger.error('🔧 [BILLING] Wrap up failed:', error);
