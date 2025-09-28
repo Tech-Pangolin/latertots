@@ -1,5 +1,5 @@
 // billingMachineV5.js - XState v5 Machine Definition
-const { createMachine, assign } = require('xstate');
+const { setup, assign } = require('xstate');
 const { logger } = require('firebase-functions');
 const { RESERVATION_STATUS, INVOICE_STATUS } = require('../constants');
 const admin = require('firebase-admin');
@@ -14,7 +14,27 @@ function convertToMinutes(date) {
   return date.getHours() * 60 + date.getMinutes();
 }
 
-const billingMachineV5 = createMachine({
+const billingMachineV5 = setup({
+  actors: {
+    initializeRunActor: actors.initializeRunActor,
+    fetchOverdueInvoicesActor: actors.fetchOverdueInvoicesActor,
+    persistInvoiceActor: actors.persistInvoiceActor,
+    applyLateFeeActor: actors.applyLateFeeActor,
+    recalcUserHoldActor: actors.recalcUserHoldActor,
+    wrapUpActor: actors.wrapUpActor
+  },
+  actions: {
+    storeInitData: actions.storeInitData,
+    incrementResIdx: actions.incrementResIdx,
+    incrementOverIdx: actions.incrementOverIdx,
+    addFailure: actions.addFailure
+  },
+  guards: {
+    isReservationPassComplete: guards.isReservationPassComplete,
+    isOverduePassComplete: guards.isOverduePassComplete,
+    isDryRun: guards.isDryRun
+  }
+}).createMachine({
   id: 'dailyBillingJob',
   initial: 'initializeRun',
   context: () => ({
@@ -32,15 +52,28 @@ const billingMachineV5 = createMachine({
     initializeRun: {
       entry: () => logger.info('🚀 [BILLING] Starting billing run initialization...'),
       invoke: {
-        src: actors.initializeRunActor,
-        input: ({ context }) => ({ dryRun: context.dryRun }),
+        src: 'initializeRunActor',
+        input: ({ context }) => {
+          logger.info('🔧 [BILLING] Actor context input:', { dryRun: context.dryRun });
+          return { dryRun: context.dryRun };
+        },
         onDone: {
           target: 'nextReservation',
-          actions: actions.storeInitData
+          actions: [
+            actions.storeInitData,
+            ({ event }) => logger.info('✅ [BILLING] Initialize run succeeded:', event.output)
+          ]
         },
         onError: {
           target: 'fatalError',
-          actions: actions.addFailure
+          actions: [
+            ({ event }) => {
+              logger.error('💥 [BILLING] Initialize run error event:', event);
+              logger.error('💥 [BILLING] Error event type:', typeof event);
+              logger.error('💥 [BILLING] Error event keys:', Object.keys(event || {}));
+            },
+            actions.addFailure
+          ]
         }
       }
     },
@@ -130,7 +163,7 @@ const billingMachineV5 = createMachine({
 
     persistInvoice: {
       invoke: {
-        src: actors.persistInvoiceActor,
+        src: 'persistInvoiceActor',
         input: ({ context }) => ({ 
           currentInvoice: context.currentInvoice, 
           dryRun: context.dryRun,
@@ -140,7 +173,10 @@ const billingMachineV5 = createMachine({
         onDone: { target: 'incrementRes' },
         onError: { 
           target: 'fatalError',
-          actions: actions.addFailure
+          actions: [
+            ({ event }) => logger.error('💥 [BILLING] Persist invoice error event:', event),
+            actions.addFailure
+          ]
         }
       }
     },
@@ -153,7 +189,7 @@ const billingMachineV5 = createMachine({
     completeReservationPass: {
       entry: () => logger.info('✅ [BILLING] Reservation pass complete, starting overdue invoices pass'),
       invoke: {
-        src: actors.fetchOverdueInvoicesActor,
+        src: 'fetchOverdueInvoicesActor',
         input: ({ context }) => ({ dryRun: context.dryRun }),
         onDone: {
           target: 'nextOverdueInvoice',
@@ -164,7 +200,10 @@ const billingMachineV5 = createMachine({
         },
         onError: {
           target: 'fatalError',
-          actions: actions.addFailure
+          actions: [
+            ({ event }) => logger.error('💥 [BILLING] Fetch overdue invoices error event:', event),
+            actions.addFailure
+          ]
         }
       }
     },
@@ -183,7 +222,7 @@ const billingMachineV5 = createMachine({
 
     applyLateFee: {
       invoke: {
-        src: actors.applyLateFeeActor,
+        src: 'applyLateFeeActor',
         input: ({ context }) => ({ 
           overdueInvoices: context.overdueInvoices, 
           overIdx: context.overIdx, 
@@ -204,7 +243,7 @@ const billingMachineV5 = createMachine({
 
     recalcUserHold: {
       invoke: {
-        src: actors.recalcUserHoldActor,
+        src: 'recalcUserHoldActor',
         input: ({ context }) => ({ 
           uid: context.affectedUserId, 
           dryRun: context.dryRun 
@@ -224,7 +263,7 @@ const billingMachineV5 = createMachine({
 
     wrapUp: {
       invoke: {
-        src: actors.wrapUpActor,
+        src: 'wrapUpActor',
         input: ({ context }) => ({ 
           runId: context.runId, 
           failures: context.failures, 

@@ -11,6 +11,7 @@ const functions = require('firebase-functions');
 const logger = require("firebase-functions/logger");
 const admin = require('firebase-admin');
 const NotificationSchema = require('./schemas/NotificationSchema');
+
 admin.initializeApp();
 
 exports.createUserProfile = functions.auth.user().onCreate(async (user) => {
