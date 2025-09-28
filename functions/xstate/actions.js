@@ -4,16 +4,23 @@ const { logger } = require('firebase-functions');
 
 // Store initialization data
 const storeInitData = assign({
-  runId: (_ctx, ev) => {
-    const data = ev?.data || ev?.output || {};
+  runId: ({ context, event }) => {
+    // Debug: Log the full event structure
+    logger.info('🔍 [BILLING] Full event structure:', JSON.stringify(event, null, 2));
+    logger.info('🔍 [BILLING] Event type:', typeof event);
+    logger.info('🔍 [BILLING] Event keys:', Object.keys(event || {}));
+    
+    // In XState v5, actor results come in event.output
+    const data = event?.output || {};
     logger.info('🔧 [BILLING] Storing run data:', { 
       runId: data.runId, 
       reservationCount: data.reservations?.length || 0
     });
     return data.runId || '';
   },
-  reservations: (_ctx, ev) => {
-    const data = ev?.data || ev?.output || {};
+  reservations: ({ context, event }) => {
+    // In XState v5, actor results come in event.output
+    const data = event?.output || {};
     logger.info('🔧 [BILLING] Storing reservations:', data.reservations?.length || 0, 'reservations found');
     return data.reservations || [];
   }
@@ -21,53 +28,53 @@ const storeInitData = assign({
 
 // Increment reservation index
 const incrementResIdx = assign({ 
-  resIdx: (ctx) => {
-    const newIdx = ctx.resIdx + 1;
-    logger.info(`🔧 [BILLING] Incrementing reservation index: ${ctx.resIdx} → ${newIdx}`);
+  resIdx: ({ context }) => {
+    const newIdx = context.resIdx + 1;
+    logger.info(`🔧 [BILLING] Incrementing reservation index: ${context.resIdx} → ${newIdx}`);
     return newIdx;
   }
 });
 
 // Increment overdue index
 const incrementOverIdx = assign({ 
-  overIdx: (ctx) => {
-    const newIdx = ctx.overIdx + 1;
-    logger.info(`🔧 [BILLING] Incrementing overdue index: ${ctx.overIdx} → ${newIdx}`);
+  overIdx: ({ context }) => {
+    const newIdx = context.overIdx + 1;
+    logger.info(`🔧 [BILLING] Incrementing overdue index: ${context.overIdx} → ${newIdx}`);
     return newIdx;
   }
 });
 
 // Add failure record
-const addFailure = assign((ctx, ev) => {
-  const currentFailures = Array.isArray(ctx.failures) ? ctx.failures : [];
+const addFailure = assign(({ context, event }) => {
+  const currentFailures = Array.isArray(context.failures) ? context.failures : [];
   
   // Debug: Log the full event structure
-  logger.info('🔍 [BILLING] Full error event structure:', JSON.stringify(ev, null, 2));
-  logger.info('🔍 [BILLING] Event type:', typeof ev);
-  logger.info('🔍 [BILLING] Event is undefined:', ev === undefined);
+  logger.info('🔍 [BILLING] Full error event structure:', JSON.stringify(event, null, 2));
+  logger.info('🔍 [BILLING] Event type:', typeof event);
+  logger.info('🔍 [BILLING] Event is undefined:', event === undefined);
   
   // Extract error from XState v5 error event - try multiple paths
   let errorMessage = 'Unknown error';
-  let errorDetails = ev;
+  let errorDetails = event;
   
-  if (ev === undefined || ev === null) {
+  if (event === undefined || event === null) {
     errorMessage = 'Actor failed with no error details';
     errorDetails = { type: 'undefined_error', message: 'No error information available' };
-  } else if (ev?.error?.message) {
-    errorMessage = ev.error.message;
-    errorDetails = ev.error;
-  } else if (ev?.error) {
-    errorMessage = typeof ev.error === 'string' ? ev.error : ev.error.message || 'Unknown error';
-    errorDetails = ev.error;
-  } else if (ev?.message) {
-    errorMessage = ev.message;
-  } else if (ev?.data?.message) {
-    errorMessage = ev.data.message;
-    errorDetails = ev.data;
-  } else if (typeof ev === 'string') {
-    errorMessage = ev;
-  } else if (ev?.toString) {
-    errorMessage = ev.toString();
+  } else if (event?.error?.message) {
+    errorMessage = event.error.message;
+    errorDetails = event.error;
+  } else if (event?.error) {
+    errorMessage = typeof event.error === 'string' ? event.error : event.error.message || 'Unknown error';
+    errorDetails = event.error;
+  } else if (event?.message) {
+    errorMessage = event.message;
+  } else if (event?.data?.message) {
+    errorMessage = event.data.message;
+    errorDetails = event.data;
+  } else if (typeof event === 'string') {
+    errorMessage = event;
+  } else if (event?.toString) {
+    errorMessage = event.toString();
   }
   
   const newFailures = [...currentFailures, {
@@ -75,9 +82,9 @@ const addFailure = assign((ctx, ev) => {
     error: errorMessage,
     errorDetails: errorDetails,
     context: {
-      runId: ctx.runId,
-      resIdx: ctx.resIdx,
-      overIdx: ctx.overIdx
+      runId: context.runId,
+      resIdx: context.resIdx,
+      overIdx: context.overIdx
     }
   }];
   

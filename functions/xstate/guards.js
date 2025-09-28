@@ -2,8 +2,14 @@
 const { logger } = require('firebase-functions');
 
 // Check if all reservations are processed
-const isReservationPassComplete = (ctx) => {
-  const isComplete = ctx.resIdx >= ctx.reservations.length;
+const isReservationPassComplete = ({ context }) => {
+  // Safety check - if reservations array doesn't exist yet, we're not complete
+  if (!context.reservations || !Array.isArray(context.reservations)) {
+    logger.warn('⚠️ [BILLING] Reservations not loaded yet, cannot move to calculate charges', { runId: context.runId });
+    return false;
+  }
+  
+  const isComplete = context.resIdx >= context.reservations.length;
   if (isComplete) {
     logger.info('✅ [BILLING] All reservations processed, moving to overdue invoices');
   }
@@ -11,8 +17,8 @@ const isReservationPassComplete = (ctx) => {
 };
 
 // Check if all overdue invoices are processed
-const isOverduePassComplete = (ctx) => {
-  const isComplete = ctx.overIdx >= ctx.overdueInvoices.length;
+const isOverduePassComplete = ({ context }) => {
+  const isComplete = context.overIdx >= context.overdueInvoices.length;
   if (isComplete) {
     logger.info('✅ [BILLING] All overdue invoices processed, wrapping up');
   }
@@ -20,8 +26,8 @@ const isOverduePassComplete = (ctx) => {
 };
 
 // Check if dry run mode
-const isDryRun = (ctx) => {
-  return ctx.dryRun === true;
+const isDryRun = ({ context }) => {
+  return context.dryRun === true;
 };
 
 module.exports = {

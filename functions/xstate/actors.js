@@ -8,10 +8,6 @@ const db = admin.firestore();
 // Initialize billing run
 const initializeRunActor = fromPromise(async ({ input }) => {
   try {
-    logger.info('🔧 [BILLING] Initializing billing run...');
-    logger.info('🔧 [BILLING] Actor input received:', input);
-    
-    logger.info('🔧 [BILLING] Creating billing run document...');
     const runRef = db.collection('BillingRuns').doc();
     await runRef.set({ status: 'running', startTime: new Date() });
     logger.info('🔧 [BILLING] Created billing run:', { 
@@ -19,24 +15,33 @@ const initializeRunActor = fromPromise(async ({ input }) => {
       timestamp: new Date().toISOString() 
     });
     
-    logger.info('🔧 [BILLING] Querying reservations...');
     const resSnaps = await db.collection('Reservations')
       .where('invoice', '==', null)
       .where('status', '==', 'processing')
       .get();
-    logger.info('🔧 [BILLING] Found reservations:', resSnaps.docs.length);
+    logger.info('🔧 [BILLING] Fetched reservations: ', {runId: runRef.id, reservationsCount: resSnaps.docs.length});
     
-    const result = { runId: runRef.id, reservations: resSnaps.docs };
-    logger.info('🔧 [BILLING] Actor returning result:', { 
-      runId: result.runId, 
-      reservationCount: result.reservations.length 
+    // Fetch user data for all reservations
+    const userIds = [...new Set(resSnaps.docs.map(doc => doc.data().User.id))];
+    
+    const userSnaps = await Promise.all(
+      userIds.map(userId => db.collection('Users').doc(userId).get())
+    );
+    
+    const userData = {};
+    userSnaps.forEach(snap => {
+      if (snap.exists) {
+        userData[snap.id] = snap.data();
+      }
     });
     
-    return result;
+    logger.info('🔧 [BILLING] Fetched user data for:', Object.keys(userData).length, 'users');
+    
+    return { runId: runRef.id, reservations: resSnaps.docs, userData };
   } catch (error) {
     // Properly format the error for XState
-    logger.error('🔧 [BILLING] Initialize run failed:', error);
-    logger.error('🔧 [BILLING] Error details:', {
+    logger.error('💥 [BILLING] Initialize run failed:', error);
+    logger.error('💥 [BILLING] Error details:', {
       message: error.message,
       code: error.code,
       stack: error.stack,
@@ -84,6 +89,7 @@ const persistInvoiceActor = fromPromise(async ({ input }) => {
     }
     
     await db.runTransaction(async (tx) => {
+      console.log('🔍 [BILLING] Value of currentInvoice:', currentInvoice);
       tx.set(
         db.collection('Invoices').doc(currentInvoice.invoiceId),
         currentInvoice,

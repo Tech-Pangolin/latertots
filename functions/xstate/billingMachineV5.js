@@ -50,27 +50,20 @@ const billingMachineV5 = setup({
   states: {
     // State 0: Initialize & preload reservations
     initializeRun: {
-      entry: () => logger.info('🚀 [BILLING] Starting billing run initialization...'),
+      entry: () => logger.info('🚀 [BILLING] Starting new billing run'),
       invoke: {
         src: 'initializeRunActor',
         input: ({ context }) => {
-          logger.info('🔧 [BILLING] Actor context input:', { dryRun: context.dryRun });
           return { dryRun: context.dryRun };
         },
         onDone: {
-          target: 'nextReservation',
-          actions: [
-            actions.storeInitData,
-            ({ event }) => logger.info('✅ [BILLING] Initialize run succeeded:', event.output)
-          ]
+          target: 'storeData',
         },
         onError: {
           target: 'fatalError',
           actions: [
             ({ event }) => {
-              logger.error('💥 [BILLING] Initialize run error event:', event);
-              logger.error('💥 [BILLING] Error event type:', typeof event);
-              logger.error('💥 [BILLING] Error event keys:', Object.keys(event || {}));
+              logger.error('💥 [BILLING] New billing run failed to initialize:', {...event, runId: event.output?.runId});
             },
             actions.addFailure
           ]
@@ -78,9 +71,24 @@ const billingMachineV5 = setup({
       }
     },
 
+    // Store the data from the actor
+    storeData: {
+      entry: assign({
+        runId: ({ event }) => {
+          return event.output?.runId || '';
+        },
+        reservations: ({ event }) => {
+          return event.output?.reservations || [];
+        },
+        userData: ({ event }) => {
+          return event.output?.userData || {};
+        }
+      }),
+      always: { target: 'nextReservation' }
+    },
+
     // PASS A: Reservations → Invoices
     nextReservation: {
-      entry: ({ context }) => logger.info(`🔍 [BILLING] Checking reservation ${context.resIdx + 1}/${context.reservations.length}`),
       always: [
         { 
           guard: guards.isReservationPassComplete,
@@ -88,7 +96,7 @@ const billingMachineV5 = setup({
         },
         { 
           target: 'calculateCharges',
-          actions: ({ context }) => logger.info(`💰 [BILLING] Processing reservation ${context.resIdx + 1}: ${context.reservations[context.resIdx]?.id}`)
+          actions: ({ context }) => logger.info(`💰 [BILLING] Processing reservation ${context.resIdx + 1}/${context.reservations.length}: ${context.reservations[context.resIdx]?.id}`, { runId: context.runId })
         }
       ]
     },
@@ -100,12 +108,7 @@ const billingMachineV5 = setup({
         const start = snapData.start.toDate();
         const end = snapData.end.toDate();
         
-        logger.info(`🧮 [BILLING] Calculating charges for reservation ${snap.id}:`, {
-          start: start.toISOString(),
-          end: end.toISOString(),
-          duration: `${((end - start) / (1000 * 60 * 60)).toFixed(2)} hours`
-        });
-
+        
         const billableMins = Math.max(60, // minimum 1 hour
           Math.min(480, // max 8 hours
             convertToMinutes(end) - convertToMinutes(start)
@@ -113,13 +116,24 @@ const billingMachineV5 = setup({
         );
         const billableHours = billableMins / 60;
 
-        const baseSubtotal = Math.round(billableHours * 2000); // $20/hour
+        logger.info(`💻 [BILLING] Calculating charges for reservation ${snap.id}:`, {
+          start: start.toISOString(),
+          end: end.toISOString(),
+          duration: `${billableHours.toFixed(2)} hours`,
+          runId: context.runId
+        });
+
+        const rateCentsPerHour = 2000;
+        const baseSubtotal = Math.round(billableHours * rateCentsPerHour); // $20/hour
         const lateAddon = billableHours > 4 ? 500 : 0; // $5 late fee if over 4 hours
         const subtotal  = baseSubtotal + lateAddon;
         const tax       = Math.round(subtotal * 0.08); // 8% tax
         const total     = subtotal + tax;
 
-        logger.info(`💵 [BILLING] Invoice calculation:`, {
+        logger.info(`💵 [BILLING] Invoice calculation completed:`, {
+          runId: context.runId,
+          reservationId: snap.id,
+          rateCentsPerHour,
           billableHours: billableHours.toFixed(2),
           baseSubtotal: `$${(baseSubtotal / 100).toFixed(2)}`,
           lateAddon: `$${(lateAddon / 100).toFixed(2)}`,
@@ -130,16 +144,16 @@ const billingMachineV5 = setup({
 
         return {
           currentInvoice: {
-            invoiceId: `INV-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            invoiceId: `INV-${String(Date.now()).split('').reverse().join('').substring(2,7)}-${Math.random().toString(36).substring(2, 7)}`,
             reservationId: snap.id,
-            date: admin.firestore.Timestamp.now(),
-            dueDate: snapData.paymentDue ?? admin.firestore.Timestamp.now(),
+            date: new Date(),
+            dueDate: snapData.paymentDue ?? new Date(Date.now() + 72 * 60 * 60 * 1000),
 
             user: { 
               id: snapData.User.id, 
-              name: snapData.User.data().Name, 
-              phone: snapData.User.data().CellNumber, 
-              email: snapData.User.data().Email 
+              name: context.userData[snapData.User.id]?.Name || 'Unknown',
+              phone: context.userData[snapData.User.id]?.CellNumber || 'Unknown',
+              email: context.userData[snapData.User.id]?.Email || 'Unknown'
             },
 
             lineItems: [
@@ -158,7 +172,7 @@ const billingMachineV5 = setup({
           }
         };
       }),
-      always: { target: 'persistInvoice' }
+      always: { target: 'persistInvoice',}
     },
 
     persistInvoice: {
@@ -193,10 +207,12 @@ const billingMachineV5 = setup({
         input: ({ context }) => ({ dryRun: context.dryRun }),
         onDone: {
           target: 'nextOverdueInvoice',
-          actions: assign({
-            overdueInvoices: ({ event }) => event.output,
-            overIdx: () => 0
-          })
+          actions: [
+            assign({
+              overdueInvoices: ({ event }) => event.output,
+              overIdx: () => 0
+            })
+          ]
         },
         onError: {
           target: 'fatalError',
@@ -230,9 +246,11 @@ const billingMachineV5 = setup({
         }),
         onDone: {
           target: 'recalcUserHold',
-          actions: assign({
-            affectedUserId: ({ event }) => event.output.userId
-          })
+          actions: [
+            assign({
+              affectedUserId: ({ event }) => event.output.userId
+            })
+          ]
         },
         onError: { 
           target: 'fatalError',
