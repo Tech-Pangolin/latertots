@@ -11,13 +11,15 @@ const functions = require('firebase-functions');
 const logger = require("firebase-functions/logger");
 const admin = require('firebase-admin');
 const NotificationSchema = require('./schemas/NotificationSchema');
+const { getFirestore } = require('firebase-admin/firestore');
 
 admin.initializeApp();
+const db = getFirestore();
 
 exports.createUserProfile = functions.auth.user().onCreate(async (user) => {
-  return admin.firestore().collection('Users').doc(user.uid).set({
+  return db.collection('Users').doc(user.uid).set({
     Email: user.email,
-    Role: admin.firestore().doc('Roles/parent-user'),
+    Role: db.doc('Roles/parent-user'),
     archived: false,
   })
 });
@@ -68,7 +70,7 @@ exports.updateAdminClaims = functions.firestore
   .schedule('every 15 minutes')
   .onRun(async () => {
     logger.info('calculateCharges: function triggered');
-    const reservationsRef = admin.firestore().collection('reservations');
+    const reservationsRef = db.collection('reservations');
 
     // Query reservations that are locked and unpaid
     const reservationsSnapshot = await reservationsRef
@@ -76,7 +78,7 @@ exports.updateAdminClaims = functions.firestore
       .where('status', '==', 'unpaid')
       .get();
 
-    const batch = admin.firestore().batch();
+    const batch = db.batch();
 
     reservationsSnapshot.forEach((doc) => {
       const reservation = doc.data();
@@ -122,7 +124,7 @@ exports.updateAdminClaims = functions.firestore
         status: 'unpaid',
       });
 
-      await admin.firestore().collection('auditLogs').add({
+      await db.collection('auditLogs').add({
         type: 'reservationLock',
         details: {
           reservationId: context.params.reservationId,
@@ -141,8 +143,8 @@ const createNotification = async (notificationData) => {
   try {
     const notification = {
       ...notificationData,
-      createdAt: admin.firestore().Timestamp.now(),
-      expiresAt: notificationData.expiresAt || admin.firestore().Timestamp.fromDate(
+      createdAt: db.Timestamp.now(),
+      expiresAt: notificationData.expiresAt || db.Timestamp.fromDate(
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
       )
     };
@@ -154,7 +156,7 @@ const createNotification = async (notificationData) => {
       return;
     }
     
-    await admin.firestore().collection('Notifications').add(value);
+    await db.collection('Notifications').add(value);
   } catch (error) {
     logger.error('Error creating notification:', error);
   }
@@ -236,7 +238,7 @@ exports.createUserAccountIssueNotification = functions.firestore
 // exports.createOverduePaymentNotification = functions.pubsub
 //   .schedule('every 24 hours')
 //   .onRun(async () => {
-//     const reservationsRef = admin.firestore().collection('Reservations');
+//     const reservationsRef = db.collection('Reservations');
 //     const now = admin.firestore.Timestamp.now();
 //     const sevenDaysAgo = admin.firestore.Timestamp.fromDate(
 //       new Date(now.toDate().getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -282,7 +284,7 @@ exports.createUserAccountIssueNotification = functions.firestore
 // exports.createCapacityWarningNotification = functions.pubsub
 //   .schedule('every 6 hours')
 //   .onRun(async () => {
-//     const reservationsRef = admin.firestore().collection('Reservations');
+//     const reservationsRef = db.collection('Reservations');
 //     const now = new Date();
 //     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 //     const dayAfter = new Date(now.getTime() + 48 * 60 * 60 * 1000);
@@ -315,14 +317,14 @@ exports.createUserAccountIssueNotification = functions.firestore
 exports.cleanupExpiredNotifications = functions.pubsub
   .schedule('every 24 hours')
   .onRun(async () => {
-    const notificationsRef = admin.firestore().collection('Notifications');
+    const notificationsRef = db.collection('Notifications');
     const now = admin.firestore.Timestamp.now();
     
     const expiredNotifications = await notificationsRef
       .where('expiresAt', '<', now)
       .get();
     
-    const batch = admin.firestore().batch();
+    const batch = db.batch();
     expiredNotifications.docs.forEach(doc => {
       batch.delete(doc.ref);
     });
