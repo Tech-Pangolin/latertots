@@ -6,7 +6,7 @@ import { DateTime, Duration } from 'luxon';
 import { config } from 'dotenv';
 import ReservationSchema from '../../src/schemas/ReservationSchema.mjs';
 import { Timestamp, DocumentReference } from 'firebase/firestore';
-import { RESERVATION_STATUS, COLLECTIONS, ROLES, CONTACT_PERMISSIONS, CONTACT_RELATIONS, GENDERS } from '../../src/Helpers/constants.mjs';
+import { RESERVATION_STATUS, COLLECTIONS, ROLES, CONTACT_PERMISSIONS, CONTACT_RELATIONS, GENDERS, INVOICE_STATUS } from '../../src/Helpers/constants.mjs';
 
 // Load environment variables from .env file
 config();
@@ -166,7 +166,7 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
       "Child": childRef,
       "allDay": false,
       "archived": false,
-      "status": _.sample(Object.values(RESERVATION_STATUS)),
+      "status": _.sample([RESERVATION_STATUS.PROCESSING, _.sample(Object.values(RESERVATION_STATUS))]),
       "invoice": null,
       "title": childData.Name,
       "userId": parent.id,
@@ -174,16 +174,27 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
       "end": Timestamp.fromDate(end),
       "extendedProps": {
         "childId": childRef.id,
-        "status": _.sample(Object.values(RESERVATION_STATUS))
+        "status": _.sample([RESERVATION_STATUS.PROCESSING, ...Object.values(RESERVATION_STATUS)]) // give processing a 50% chance for testing
       }
     };
 
     try {
       const validatedData = validateReservationData(reservationData);
       await reservRef.set(validatedData);
-      console.log(`Created valid reservation: ${reservRef.id}`);
+      console.log(`Created valid reservation: `, {id: reservRef.id, status: validatedData.status});
     } catch (error) {
       console.error(`Failed to create reservation ${x}:`, error.message);
+    }
+  }
+
+  // if invoices exist, mark some of them as paid or late
+  const invoicesSnap = await db.collection(COLLECTIONS.INVOICES).get();
+  if (invoicesSnap.docs.length > 0) {
+    const invoices = invoicesSnap.docs;
+    const randomInvoices = _.sampleSize(invoices, _.random(Math.floor(invoices.length / 3), invoices.length));
+    console.log(`Randomizing status of ${randomInvoices.length} invoices`);
+    for (const invoice of randomInvoices) {
+      await invoice.ref.update({ status: _.sample(Object.values(INVOICE_STATUS)) });
     }
   }
 
