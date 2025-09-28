@@ -2,30 +2,6 @@
 const { assign } = require('xstate');
 const { logger } = require('firebase-functions');
 
-// Store initialization data
-const storeInitData = assign({
-  runId: ({ context, event }) => {
-    // Debug: Log the full event structure
-    logger.info('🔍 [BILLING] Full event structure:', JSON.stringify(event, null, 2));
-    logger.info('🔍 [BILLING] Event type:', typeof event);
-    logger.info('🔍 [BILLING] Event keys:', Object.keys(event || {}));
-    
-    // In XState v5, actor results come in event.output
-    const data = event?.output || {};
-    logger.info('🔧 [BILLING] Storing run data:', { 
-      runId: data.runId, 
-      reservationCount: data.reservations?.length || 0
-    });
-    return data.runId || '';
-  },
-  reservations: ({ context, event }) => {
-    // In XState v5, actor results come in event.output
-    const data = event?.output || {};
-    logger.info('🔧 [BILLING] Storing reservations:', data.reservations?.length || 0, 'reservations found');
-    return data.reservations || [];
-  }
-});
-
 // Increment reservation index
 const incrementResIdx = assign({ 
   resIdx: ({ context }) => {
@@ -45,36 +21,36 @@ const incrementOverIdx = assign({
 });
 
 // Add failure record
-const addFailure = assign(({ context, event }) => {
-  const currentFailures = Array.isArray(context.failures) ? context.failures : [];
+const addFailure = assign(({ context: ctx, event: ev }) => {
+  const currentFailures = Array.isArray(ctx.failures) ? ctx.failures : [];
   
   // Debug: Log the full event structure
-  logger.info('🔍 [BILLING] Full error event structure:', JSON.stringify(event, null, 2));
-  logger.info('🔍 [BILLING] Event type:', typeof event);
-  logger.info('🔍 [BILLING] Event is undefined:', event === undefined);
+  logger.info('🔍 [BILLING] Full error event structure:', JSON.stringify(ev, null, 2));
+  logger.info('🔍 [BILLING] Event type:', typeof ev);
+  logger.info('🔍 [BILLING] Event is undefined:', ev === undefined);
   
   // Extract error from XState v5 error event - try multiple paths
   let errorMessage = 'Unknown error';
-  let errorDetails = event;
+  let errorDetails = ev;
   
-  if (event === undefined || event === null) {
+  if (ev === undefined || ev === null) {
     errorMessage = 'Actor failed with no error details';
     errorDetails = { type: 'undefined_error', message: 'No error information available' };
-  } else if (event?.error?.message) {
-    errorMessage = event.error.message;
-    errorDetails = event.error;
-  } else if (event?.error) {
-    errorMessage = typeof event.error === 'string' ? event.error : event.error.message || 'Unknown error';
-    errorDetails = event.error;
-  } else if (event?.message) {
-    errorMessage = event.message;
-  } else if (event?.data?.message) {
-    errorMessage = event.data.message;
-    errorDetails = event.data;
-  } else if (typeof event === 'string') {
-    errorMessage = event;
-  } else if (event?.toString) {
-    errorMessage = event.toString();
+  } else if (ev?.error?.message) {
+    errorMessage = ev.error.message;
+    errorDetails = ev.error;
+  } else if (ev?.error) {
+    errorMessage = typeof ev.error === 'string' ? ev.error : ev.error.message || 'Unknown error';
+    errorDetails = ev.error;
+  } else if (ev?.message) {
+    errorMessage = ev.message;
+  } else if (ev?.data?.message) {
+    errorMessage = ev.data.message;
+    errorDetails = ev.data;
+  } else if (typeof ev === 'string') {
+    errorMessage = ev;
+  } else if (ev?.toString) {
+    errorMessage = ev.toString();
   }
   
   const newFailures = [...currentFailures, {
@@ -82,9 +58,9 @@ const addFailure = assign(({ context, event }) => {
     error: errorMessage,
     errorDetails: errorDetails,
     context: {
-      runId: context.runId,
-      resIdx: context.resIdx,
-      overIdx: context.overIdx
+      runId: ctx.runId,
+      resIdx: ctx.resIdx,
+      overIdx: ctx.overIdx
     }
   }];
   
@@ -98,7 +74,6 @@ const addFailure = assign(({ context, event }) => {
 });
 
 module.exports = {
-  storeInitData,
   incrementResIdx,
   incrementOverIdx,
   addFailure

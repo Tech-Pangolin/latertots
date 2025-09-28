@@ -24,7 +24,6 @@ const billingMachineV5 = setup({
     wrapUpActor: actors.wrapUpActor
   },
   actions: {
-    storeInitData: actions.storeInitData,
     incrementResIdx: actions.incrementResIdx,
     incrementOverIdx: actions.incrementOverIdx,
     addFailure: actions.addFailure
@@ -151,8 +150,8 @@ const billingMachineV5 = setup({
 
             user: { 
               id: snapData.User.id, 
-              name: context.userData[snapData.User.id]?.Name || 'Unknown',
-              phone: context.userData[snapData.User.id]?.CellNumber || 'Unknown',
+              name: context.userData[snapData.User.id]?.Name || 'Unknown', 
+              phone: context.userData[snapData.User.id]?.CellNumber || 'Unknown', 
               email: context.userData[snapData.User.id]?.Email || 'Unknown'
             },
 

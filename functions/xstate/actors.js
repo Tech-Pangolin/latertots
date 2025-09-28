@@ -35,7 +35,7 @@ const initializeRunActor = fromPromise(async ({ input }) => {
       }
     });
     
-    logger.info('🔧 [BILLING] Fetched user data for:', Object.keys(userData).length, 'users');
+    logger.info(`🔧 [BILLING] Fetched user data for: ${Object.keys(userData).length} users`, { userData: Object.keys(userData).map(id => userData[id].Name) });
     
     return { runId: runRef.id, reservations: resSnaps.docs, userData };
   } catch (error) {
