@@ -64,7 +64,7 @@ const billingMachineV5 = setup({
           target: 'fatalError',
           actions: [
             ({ event }) => {
-              logger.error('💥 [BILLING] New billing run failed to initialize:', {...event, runId: event.output?.runId});
+              logger.error('❌ [BILLING] New billing run failed to initialize:', {...event, runId: event.output?.runId});
             },
             actions.addFailure
           ]
@@ -143,12 +143,6 @@ const billingMachineV5 = setup({
           total: `$${(total / 100).toFixed(2)}`
         });
 
-        if (snapData.paymentDue) {
-          console.log('🤔 this new invoice has a payment due date already:', {snapId: snap.id, runId: context.runId, paymentDue: snapData.paymentDue});
-        } else {
-          console.warn('This reservation has no payment due date:', {snapId: snap.id, runId: context.runId});
-        }
-
         const generateRandomDateFromPast7Days = () => {
           const now = new Date();
           // Generate a random number of days between 0 and 6 (inclusive)
@@ -199,7 +193,8 @@ const billingMachineV5 = setup({
           dryRun: context.dryRun,
           reservations: context.reservations,
           resIdx: context.resIdx,
-          newInvoices: context.newInvoices
+          newInvoices: context.newInvoices,
+          runId: context.runId
         }),
         onDone: { 
           target: 'incrementRes',
@@ -212,7 +207,7 @@ const billingMachineV5 = setup({
         onError: { 
           target: 'fatalError',
           actions: [
-            ({ event }) => logger.error('💥 [BILLING] Persist invoice error event:', event),
+            ({ event }) => logger.error('❌ [BILLING] Persist invoice error event:', event),
             actions.addFailure
           ]
         }
@@ -241,7 +236,7 @@ const billingMachineV5 = setup({
         onError: {
           target: 'fatalError',
           actions: [
-            ({ event }) => logger.error('💥 [BILLING] Fetch overdue invoices error event:', event),
+            ({ event }) => logger.error('❌ [BILLING] Fetch overdue invoices error event:', event),
             actions.addFailure
           ]
         }
@@ -250,7 +245,7 @@ const billingMachineV5 = setup({
 
     // PASS B: Overdue invoices → late fees
     nextOverdueInvoice: {
-      entry: ({ context }) => logger.info(`🔍 [BILLING] Checking overdue invoice ${context.overIdx + 1}/${context.overdueInvoices.length}`),
+      entry: ({ context }) => {},
       always: [
         { 
           guard: guards.isOverduePassComplete,
@@ -324,7 +319,7 @@ const billingMachineV5 = setup({
 
     fatalError: { 
       type: 'final',
-      entry: ({ context }) => logger.error('💥 [BILLING] Fatal error occurred:', { failures: context.failures })
+      entry: ({ context }) => logger.error('❌ [BILLING] Fatal error occurred:', { failures: context.failures })
     },
     done: { 
       type: 'final',

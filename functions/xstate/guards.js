@@ -11,7 +11,7 @@ const isReservationPassComplete = ({ context }) => {
   
   const isComplete = context.resIdx >= context.reservations.length;
   if (isComplete) {
-    logger.info('✅ [BILLING] All reservations processed, moving to overdue invoices');
+    logger.info(`✅ [BILLING] All ${context.reservations.length} reservations processed, moving to overdue invoices`);
   }
   return isComplete;
 };
@@ -20,7 +20,7 @@ const isReservationPassComplete = ({ context }) => {
 const isOverduePassComplete = ({ context }) => {
   const isComplete = context.overIdx >= context.overdueInvoices.length;
   if (isComplete) {
-    logger.info('✅ [BILLING] All overdue invoices processed, wrapping up');
+    logger.info(`✅ [BILLING] All ${context.overdueInvoices.length} overdue invoices processed, wrapping up`);
   }
   return isComplete;
 };

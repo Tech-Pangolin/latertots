@@ -12,6 +12,7 @@ const logger = require("firebase-functions/logger");
 const admin = require('firebase-admin');
 const NotificationSchema = require('./schemas/NotificationSchema');
 const { getFirestore } = require('firebase-admin/firestore');
+const _ = require('lodash');
 
 admin.initializeApp();
 const db = getFirestore();
@@ -33,11 +34,23 @@ exports.updateAdminClaims = functions.firestore
     const beforeData = change.before.data();
     const afterData = change.after.data();
 
+    // Check what's different and skip if no role change
+    const differences = _.differenceWith(Object.entries(beforeData), Object.entries(afterData), _.isEqual);
+    if (differences.length === 0) {
+      logger.info('🔍 [fxn:updateAdminClaims]: No changes detected. Skipping admin claims update.');
+      return;
+    } else if (differences.length > 0 && !differences.map(([key, value]) => key).includes('Role')) {
+      logger.info('🔍 [fxn:updateAdminClaims]: No role change detected. Skipping admin claims update.');
+      return;
+    }
+       
+
     // Get the new Role reference
     const newRoleRef = afterData.Role;
 
     // Check if the Role reference has changed
-    if (beforeData.Role !== newRoleRef) {
+    if (!_.isEqual(beforeData.Role, newRoleRef)) {
+      logger.info(`🔧 [fxn:updateAdminClaims]: Updating admin claims for ${userId}`, { differences });
       try {
         let newRoleName = null;
 
@@ -47,93 +60,22 @@ exports.updateAdminClaims = functions.firestore
           if (roleDoc.exists) {
             newRoleName = roleDoc.data().name;
           } else {
-            logger.warn(`Role document ${newRoleRef.path} does not exist.`);
+            logger.warn(`⚠️ [fxn:updateAdminClaims]: Role document ${newRoleRef.path} does not exist.`);
           }
         }
 
         if (newRoleName === 'admin') {
           // Add the 'admin' custom claim
           await admin.auth().setCustomUserClaims(userId, { role: 'admin' });
-          logger.info(`Custom claims updated: ${userId} is now an admin.`);
+          logger.info(`✅ [fxn:updateAdminClaims]: Custom claims updated: ${userId} is now an admin.`);
         } else {
           // Remove the 'admin' custom claim (or reset role)
           await admin.auth().setCustomUserClaims(userId, { role: null });
-          logger.info(`Custom claims updated: ${userId} is no longer an admin.`);
+          logger.info(`✅ [fxn:updateAdminClaims]: Custom claims updated: ${userId} is no longer an admin.`);
         }
       } catch (error) {
-        logger.error(`Error updating custom claims for ${userId}:`, error);
+        logger.error(`❌ [fxn:updateAdminClaims]: Error updating custom claims for ${userId}:`, error);
       }
-    }
-  });
-
-  exports.calculateCharges = functions.pubsub
-  .schedule('every 15 minutes')
-  .onRun(async () => {
-    logger.info('calculateCharges: function triggered');
-    const reservationsRef = db.collection('reservations');
-
-    // Query reservations that are locked and unpaid
-    const reservationsSnapshot = await reservationsRef
-      .where('locked', '==', true)
-      .where('status', '==', 'unpaid')
-      .get();
-
-    const batch = db.batch();
-
-    reservationsSnapshot.forEach((doc) => {
-      const reservation = doc.data();
-
-      // Calculate charges based on service duration
-      const total = reservation.services.reduce((sum, service) => {
-        const duration = Math.ceil(
-          (service.endTime.toDate() - service.startTime.toDate()) / 900000
-        ); // Round up to nearest 15 min
-        return sum + duration * service.rate;
-      }, 0);
-
-      // Update the reservation with calculated charges
-      batch.update(doc.ref, {
-        charges: {
-          total,
-          breakdown: reservation.services.map((service) => ({
-            serviceType: service.serviceType,
-            amount: Math.ceil(
-              (service.endTime.toDate() - service.startTime.toDate()) / 900000
-            ) * service.rate,
-          })),
-        },
-        status: 'unpaid', // Retain the unpaid status
-      });
-    });
-
-    // Commit batched updates
-    await batch.commit();
-    logger.info('calculateCharges: complete for all eligible reservations.');
-  });
-
-  exports.lockReservation = functions.firestore
-  .document('reservations/{reservationId}')
-  .onUpdate(async (change, context) => {
-    logger.info(`lockReservation: checking reservation ${context.params.reservationId} for lock`);
-    const after = change.after.data();
-
-    // If actualPickupTime is set, lock the reservation and set status to "unpaid"
-    if (after.actualPickupTime && !after.locked) {
-      await change.after.ref.update({
-        locked: true,
-        status: 'unpaid',
-      });
-
-      await db.collection('auditLogs').add({
-        type: 'reservationLock',
-        details: {
-          reservationId: context.params.reservationId,
-          status: 'unpaid',
-        },
-        timestamp: admin.firestore.Timestamp.now(),
-      });
-
-      logger.info(`Reservation ${context.params.reservationId} locked and marked as unpaid.`);
     }
   });
 
@@ -186,8 +128,8 @@ exports.createReservationCancellationNotification = functions.firestore
     const before = change.before.data();
     const after = change.after.data();
     
-    if (before.extendedProps?.status !== 'cancelled' && 
-        after.extendedProps?.status === 'cancelled') {
+    if (before.status !== 'cancelled' && 
+        after.status === 'cancelled') {
       await createNotification({
         message: `Reservation cancelled by user: ${after.title}`,
         type: 'admin',
@@ -214,7 +156,7 @@ exports.createReservationCancellationNotification = functions.firestore
 //   });
 
 // 4. User account issues (payment holds)
-exports.createUserAccountIssueNotification = functions.firestore
+exports.createUserAccountProblemNotification = functions.firestore
   .document('Users/{userId}')
   .onUpdate(async (change, context) => {
     const before = change.before.data();
@@ -346,7 +288,7 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
     const dryRun = req.query.dryRun === 'true' || process.env.DRY_RUN === 'true';
     const logLevel = req.query.logLevel || process.env.LOG_LEVEL || 'INFO';
     
-    logger.info('Daily billing job triggered via HTTP', {
+    logger.info('🚀 [fxn:dailyBillingJob]: Daily billing job triggered via HTTP', {
       timestamp: new Date().toISOString(),
       dryRun,
       logLevel,
@@ -370,12 +312,12 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
         if (snapshot.matches('done')) {
           resolve();
         } else if (snapshot.matches('fatalError')) {
-          reject(new Error('Billing job failed'));
+          reject(new Error('❌ [fxn:dailyBillingJob]: Billing job failed'));
         }
       });
     });
     
-    logger.info('Daily billing job completed successfully', { 
+    logger.info('🎉 [fxn:dailyBillingJob]: Daily billing job completed successfully', { 
       dryRun,
       timestamp: new Date().toISOString()
     });
@@ -387,7 +329,7 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
     });
     
   } catch (error) {
-    logger.error('Daily billing job failed', {
+    logger.error('❌ [fxn:dailyBillingJob]: Daily billing job failed', {
       error: error.message,
       stack: error.stack,
       timestamp: new Date().toISOString(),

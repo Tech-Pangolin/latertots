@@ -11,7 +11,7 @@ const initializeRunActor = fromPromise(async ({ input }) => {
   try {
     const runRef = db.collection('BillingRuns').doc();
     await runRef.set({ status: 'running', startTime: new Date() });
-    logger.info('🔧 [BILLING] Created billing run:', { 
+    logger.info('⏳ [BILLING] Created billing run:', { 
       runId: runRef.id, 
       timestamp: new Date().toISOString() 
     });
@@ -20,7 +20,7 @@ const initializeRunActor = fromPromise(async ({ input }) => {
       .where('invoice', '==', null)
       .where('status', '==', 'processing')
       .get();
-    logger.info('🔧 [BILLING] Fetched reservations: ', {runId: runRef.id, reservationsCount: resSnaps.docs.length});
+    logger.info('💚 [BILLING] Fetched reservations: ', {runId: runRef.id, reservationsCount: resSnaps.docs.length});
     
     // Fetch user data for all reservations
     const userIds = [...new Set(resSnaps.docs.map(doc => doc.data().User.id))];
@@ -36,13 +36,13 @@ const initializeRunActor = fromPromise(async ({ input }) => {
       }
     });
     
-    logger.info(`🔧 [BILLING] Fetched user data for: ${Object.keys(userData).length} users`, { userData: Object.keys(userData).map(id => userData[id].Name) });
+    logger.info(`💚 [BILLING] Fetched user data for: ${Object.keys(userData).length} users`, { userData: Object.keys(userData).map(id => userData[id].Name) });
     
     return { runId: runRef.id, reservations: resSnaps.docs, userData };
   } catch (error) {
     // Properly format the error for XState
-    logger.error('💥 [BILLING] Initialize run failed:', error);
-    logger.error('💥 [BILLING] Error details:', {
+    logger.error('❌ [BILLING] Initialize run failed:', error);
+    logger.error('❌ [BILLING] Error details:', {
       message: error.message,
       code: error.code,
       stack: error.stack,
@@ -60,16 +60,14 @@ const initializeRunActor = fromPromise(async ({ input }) => {
 // Fetch overdue invoices
 const fetchOverdueInvoicesActor = fromPromise(async ({ input }) => {
   try {
-    logger.info('🔧 [BILLING] Fetching newly-overdue invoices...');
-
     const snap = await db.collection('Invoices')
       .where('status', '==', 'unpaid')
       .where('dueDate', '<', Timestamp.now())
       .get();
-    logger.info('🔧 [BILLING] Found newly-overdue invoices:', snap.docs.length);
+    logger.info('💚 [BILLING] Found newly-overdue invoices:', snap.docs.length);
     return snap.docs;
   } catch (error) {
-    logger.error('🔧 [BILLING] Fetch newly-overdue invoices failed:', error);
+    logger.error('❌ [BILLING] Fetch newly-overdue invoices failed:', error);
     throw {
       message: error.message,
       code: error.code,
@@ -82,17 +80,14 @@ const fetchOverdueInvoicesActor = fromPromise(async ({ input }) => {
 // Persist invoice
 const persistInvoiceActor = fromPromise(async ({ input }) => {
   try {
-    const { currentInvoice, dryRun, reservations, resIdx, newInvoices } = input;
-    logger.info(`💾 [BILLING] Persisting invoice ${currentInvoice.invoiceId} for reservation ${currentInvoice.reservationId}`);
-    
+    const { currentInvoice, dryRun, reservations, resIdx, newInvoices, runId } = input;
     
     if (dryRun) {
-      logger.info('🔍 [BILLING] DRY-RUN: Would persist invoice:', currentInvoice);
+      logger.info('👀 [BILLING] DRY-RUN: Would persist invoice:', currentInvoice);
       return;
     }
     
     await db.runTransaction(async (tx) => {
-      console.log('🔍 [BILLING] Value of currentInvoice:', currentInvoice);
       tx.set(
         db.collection('Invoices').doc(currentInvoice.invoiceId),
         currentInvoice,
@@ -101,11 +96,12 @@ const persistInvoiceActor = fromPromise(async ({ input }) => {
       tx.update(reservations[resIdx].ref, { 
         invoice: db.collection('Invoices').doc(currentInvoice.invoiceId)
       });
+      logger.info('💾 [BILLING] Persisted invoice:', {invoiceId: currentInvoice.invoiceId, reservationId: currentInvoice.reservationId, runId});
     });
 
     return [`Invoices/${currentInvoice.invoiceId}`, ...newInvoices];
   } catch (error) {
-    logger.error('🔧 [BILLING] Persist invoice failed:', error);
+    logger.error('❌ [BILLING] Persist invoice failed:', error);
     throw {
       message: error.message,
       code: error.code,
@@ -124,7 +120,7 @@ const applyLateFeeActor = fromPromise(async ({ input }) => {
     const feeExists = data.lineItems?.some((li) => li.tag === 'LATE_FEE');
     
     if (dryRun) {
-      logger.info('🔍 [BILLING] DRY-RUN late-fee check', invSnap.id, { feeExists });
+      logger.info('👀 [BILLING] DRY-RUN late-fee check', invSnap.id, { feeExists });
       return { userId: data.user.id };
     }
     
@@ -152,7 +148,7 @@ const applyLateFeeActor = fromPromise(async ({ input }) => {
     
     return { userId: data.user.id };
   } catch (error) {
-    logger.error('🔧 [BILLING] Apply late fee failed:', error);
+    logger.error('❌ [BILLING] Apply late fee failed:', error);
     throw {
       message: error.message,
       code: error.code,
@@ -167,7 +163,7 @@ const recalcUserHoldActor = fromPromise(async ({ input }) => {
   try {
     const { uid, dryRun } = input;
     if (dryRun) {
-      logger.info('🔍 [BILLING] DRY-RUN recalc hold', uid);
+      logger.info('👀 [BILLING] DRY-RUN recalc hold', { userId: uid });
       return;
     }
     
@@ -179,7 +175,7 @@ const recalcUserHoldActor = fromPromise(async ({ input }) => {
     const hold = snap.size > 2;
     await db.collection('Users').doc(uid).set({ paymentHold: hold }, { merge: true });
   } catch (error) {
-    logger.error('🔧 [BILLING] Recalc user hold failed:', error);
+    logger.error('❌ [BILLING] Recalc user hold failed:', error);
     throw {
       message: error.message,
       code: error.code,
@@ -193,20 +189,25 @@ const recalcUserHoldActor = fromPromise(async ({ input }) => {
 const wrapUpActor = fromPromise(async ({ input }) => {
   try {
     const { runId, failures, reservations, dryRun, overdueInvoices, newInvoices } = input;
+
+    const reservationsProcessed = reservations.map(res => `Reservations/${res.id}`);
+    const overdueInvoicesProcessed = overdueInvoices.map(inv => `Invoices/${inv.id}`);
+    const newInvoicesProcessed = newInvoices;
+
     logger.info('🏁 [BILLING] Wrapping up billing run:', {
       runId,
       failures: failures.length,
-      reservationsProcessed: reservations.length,
-      overdueInvoicesProcessed: overdueInvoices.map(inv => `Invoices/${inv.id}`),
-      newInvoicesProcessed: newInvoices
+      reservationsProcessed,
+      overdueInvoicesProcessed,
+      newInvoicesProcessed
     });
     
     if (!dryRun) {
       return db.collection('BillingRuns').doc(runId)
-        .set({ status: 'success', endTime: new Date(), failures, reservations,  }, { merge: true });
+        .set({ status: 'success', endTime: new Date(), failures, reservations: reservationsProcessed, newOverdueInvoices: overdueInvoicesProcessed, newInvoices: newInvoicesProcessed }, { merge: true });
     }
   } catch (error) {
-    logger.error('🔧 [BILLING] Wrap up failed:', error);
+    logger.error('❌ [BILLING] Wrap up failed:', error);
     throw {
       message: error.message,
       code: error.code,

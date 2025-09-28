@@ -20,8 +20,8 @@ const flipCoin = () => _.random(10) < 6
 const validateReservationData = (data) => {
   const { error, value } = ReservationSchema.validate(data, { abortEarly: false });
   if (error) {
-    console.error('Reservation validation failed:', error.details);
-    throw new Error(`Invalid reservation data: ${error.message}`);
+    console.error('❌ [emulator/firestore/seed]: Reservation validation failed:', error.details);
+    throw new Error(`❌ [emulator/firestore/seed]: Invalid reservation data: ${error.message}`);
   }
   return value;
 };
@@ -31,6 +31,9 @@ function formatDate(dt) {
   return dt.setZone('America/Denver')
            .toLocaleString({ month: 'long', day: 'numeric', year: 'numeric' });
 }
+
+// Counter for seeding issues
+const issues = 0;
 
 // startEnd: picks a random weekday within ±7 days, a random start between 07:00–19:00 MST/MDT,
 // then an end up to 4 hours later.
@@ -181,9 +184,10 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     try {
       const validatedData = validateReservationData(reservationData);
       await reservRef.set(validatedData);
-      console.log(`Created valid reservation: `, {id: reservRef.id, status: validatedData.status});
+      console.log(`✅ [emulator/firestore/seed]: Created valid reservation: `, {id: reservRef.id, status: validatedData.status});
     } catch (error) {
-      console.error(`Failed to create reservation ${x}:`, error.message);
+      console.error(`❌ [emulator/firestore/seed]: Failed to create reservation ${x}:`, error.message);
+      issues++;
     }
   }
 
@@ -192,7 +196,7 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
   if (invoicesSnap.docs.length > 0) {
     const invoices = invoicesSnap.docs;
     const randomInvoices = _.sampleSize(invoices, _.random(Math.floor(invoices.length / 3), invoices.length));
-    console.log(`Randomizing status of ${randomInvoices.length} invoices`);
+    console.log(`🎪 [emulator/firestore/seed]: Randomizing status of ${randomInvoices.length} invoices`);
     for (const invoice of randomInvoices) {
       await invoice.ref.update({ status: _.sample(Object.values(INVOICE_STATUS)) });
     }
@@ -200,4 +204,8 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
 
 });
 
-console.log('Emulator seeded with dummy test data.');  
+if (issues > 0) {
+  console.log(`⚠️ [emulator/firestore/seed]: ${issues} issues were encountered during seeding.`);
+} else {
+  console.log('🎉 [emulator/firestore/seed]: Emulator seeded with dummy test data.');  
+}
