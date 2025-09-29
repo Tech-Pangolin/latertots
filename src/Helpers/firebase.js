@@ -132,6 +132,79 @@ export class FirebaseDbService {
     }
   };
 
+
+  /**
+   * Queries all users and their associated children.
+   * 
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects, each containing their associated children.
+   * @throws {Error} - If there is an error querying the users.
+   */
+  getUsersWithChildren = async () => {
+    const usersRef = collection(db, "Users");
+    const usersSnap = await getDocs(usersRef);
+
+    const results = [];
+
+    for (const userDoc of usersSnap.docs) {
+      const userData = userDoc.data();
+      const childIds = userData.Children || []; // Array of child IDs
+
+      let childrenData = [];
+      if (childIds.length > 0) {
+        // Firestore where('id', 'in', [...]) only supports up to 10 IDs per query
+        const childrenRef = collection(db, "Children");
+        const childrenQuery = query(childrenRef, where("__name__", "in", childIds.slice(0, 10)));
+        const childrenSnap = await getDocs(childrenQuery);
+
+        childrenData = childrenSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+      }
+
+      results.push({
+        id: userDoc.id,
+        ...userData,
+        children: childrenData,
+      });
+    }
+
+    return results;
+  }
+  /**
+    * Queries all children and their associated parents(users).
+    * 
+    * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects, each containing their associated children.
+    * @throws {Error} - If there is an error querying the users.
+    */
+  getChildrenWithParents = async () => {
+    const childrenRef = collection(db, "Children");
+    const childrenSnap = await getDocs(childrenRef);
+
+    const results = [];
+
+    for (const childDoc of childrenSnap.docs) {
+      const childData = childDoc.data();
+      const parentId = childData.parentId; // <-- recommended field
+
+      let parentData = null;
+      if (parentId) {
+        const parentSnap = await getDoc(doc(db, "Users", parentId));
+        if (parentSnap.exists()) {
+          parentData = { id: parentSnap.id, ...parentSnap.data() };
+        }
+      }
+
+      results.push({
+        id: childDoc.id,
+        ...childData,
+        parent: parentData,
+      });
+    }
+
+    return results;
+  }
+
   /**
    * Queries all the children associated with the current user.
    * 
