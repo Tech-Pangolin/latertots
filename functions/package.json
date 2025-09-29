@@ -17,7 +17,8 @@
     "firebase-functions": "^5.0.0",
     "joi": "^17.13.3",
     "nodemailer": "^7.0.6",
-    "xstate": "^5.22.0"
+    "xstate": "^5.22.0",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "firebase-functions-test": "^3.1.0"
