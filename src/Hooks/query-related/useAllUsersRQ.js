@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../components/AuthProvider";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import { collection, query, where } from "firebase/firestore";
 import { db } from "../../config/firestore";
 import { COLLECTIONS } from "../../Helpers/constants";
@@ -26,14 +26,14 @@ export function useAllUsersRQ() {
   // Next, get the initial fetch of data
   const queryResult = useQuery({
     queryKey,
-      queryFn: async () => {
-        const result = await dbService.fetchDocs(allUsersQuery, false);
-        return result;
-      },
+    queryFn: async () => {
+      const result = await dbService.fetchDocs(allUsersQuery, false);
+      return result;
+    },
     onError: (error) => {
       console.error("❌ HOOK: Error fetching users data", error);
     },
-    enabled: !!dbService && !!currentUser, // Only run if dbService and currentUser are available
+    enabled: !!dbService && !!currentUser, 
     initialData: []
   })
 
@@ -53,11 +53,11 @@ export function useAllUsersRQ() {
       // Only update if data has actually changed
       if (!_.isEqual(currentData, fresh)) {
         queryClient.setQueryData(queryKey, fresh);
-      } 
-    }, false); // Use same auth level as query function
+      }
+    }, false); 
     
     return () => {
-      isSubscribed = false; // Prevent further updates
+      isSubscribed = false; 
       unsubscribe();
     };
   }, [dbService, queryClient]); // Removed queryKey from dependencies to prevent re-subscription. These values are stable.

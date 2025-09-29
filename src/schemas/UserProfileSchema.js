@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { ROLES } from '../Helpers/constants';
 import { DocumentReference } from 'firebase/firestore';
-import { createImageValidation, createPhotoURLValidation } from '../Helpers/validationHelpers';
+import { createImageValidation, createPhotoURLValidation } from '../Helpers/validationHelpers.mjs';
 
 export const generateUserProfileSchema = (forFormValidation = false) => {
   let schemaFields = {

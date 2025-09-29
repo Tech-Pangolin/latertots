@@ -1,5 +1,39 @@
 import Joi from 'joi';
-import { IMAGE_UPLOAD } from './constants';
+import { DocumentReference } from 'firebase/firestore';
+import { IMAGE_UPLOAD } from './constants.mjs';
+
+/**
+ * Custom Joi validation for DocumentReference objects that works with both
+ * real DocumentReference instances and Firebase emulator/testing DocumentReferences
+ * 
+ * Usage:
+ * - DocumentReferenceOrCompatible.required() - for required fields
+ * - DocumentReferenceOrCompatible.optional().allow(null) - for optional fields
+ */
+export const DocumentReferenceOrCompatible = Joi.object().custom((value, helpers) => {
+  // Allow null for optional DocumentReference fields
+  if (value === null) {
+    return value;
+  }
+  
+  // Check if it's a real DocumentReference instance
+  if (value instanceof DocumentReference) {
+    return value;
+  }
+  
+  // Check if it has DocumentReference-like properties (for emulator/testing)
+  if (value && typeof value === 'object' && 
+      (value.id || value.path || value.firestore || value._delegate)) {
+    return value;
+  }
+  
+  return helpers.error('custom.documentReference', {
+    message: 'Must be a valid DocumentReference object or null'
+  });
+}).messages({
+  'any.required': 'DocumentReference is required',
+  'object.base': 'Must be a valid DocumentReference object'
+});
 
 /**
  * Creates a Joi validation schema for image file uploads
@@ -76,4 +110,10 @@ export const createImageValidation = (options = {}) => {
  */
 export const createPhotoURLValidation = () => {
   return Joi.string().uri().optional();
+};
+
+export default {
+  DocumentReferenceOrCompatible,
+  createImageValidation,
+  createPhotoURLValidation
 };

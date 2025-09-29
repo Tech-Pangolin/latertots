@@ -5,7 +5,7 @@ import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
 import { IMAGE_UPLOAD } from "./constants";
-import ReservationSchema from "../schemas/ReservationSchema";
+import ReservationSchema from "../schemas/ReservationSchema.mjs";
 
 
 export class FirebaseDbService {

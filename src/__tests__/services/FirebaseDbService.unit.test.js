@@ -648,7 +648,7 @@ describe('FirebaseDbService Proper Unit Tests', () => {
       addDoc.mockResolvedValue(mockDocRef);
       
       // Mock the validation by mocking the ReservationSchema directly
-      const ReservationSchema = require('../../schemas/ReservationSchema').default;
+      const ReservationSchema = require('../../schemas/ReservationSchema.mjs').default;
       const originalValidateAsync = ReservationSchema.validateAsync;
       ReservationSchema.validateAsync = jest.fn().mockResolvedValue(mockReservationData);
       
