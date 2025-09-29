@@ -58,7 +58,7 @@ jest.mock('../../Helpers/firebase', () => {
     FirebaseDbService: MockFirebaseDbService,
   };
 });
-import { renderWithProviders, createMockUser, createMockAdminUser, FIREBASE_ERRORS } from '../utils/testUtils';
+import { renderWithProviders, createMockUser, createMockAdminUser, FIREBASE_ERRORS } from '../../utils/testUtils';
 import { AuthProvider, useAuth, signInWithGoogle, signInWithEmail } from '../../components/AuthProvider';
 import { FirebaseDbService } from '../../Helpers/firebase';
 

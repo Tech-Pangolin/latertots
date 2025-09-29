@@ -5,7 +5,7 @@ import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
 import { IMAGE_UPLOAD } from "./constants";
-import ReservationSchema from "../schemas/ReservationSchema";
+import ReservationSchema from "../schemas/ReservationSchema.mjs";
 
 
 export class FirebaseDbService {
@@ -13,7 +13,7 @@ export class FirebaseDbService {
     this.userContext = userContext;
   }
 
-  
+
   /**
    * Fetches the avatar photo URL of a user based on the provided user ID.
    * 
@@ -97,7 +97,7 @@ export class FirebaseDbService {
    * @returns {Promise<string>} - A promise that resolves to the ID of the created document.
    * @throws {Error} - If there is an error creating the document.
    */
-  createChildDocument = async (childData) => {
+  async createChildDocument(childData) {
     this.validateAuth();
     try {
       const docRef = await addDoc(collection(db, "Children"), childData);
@@ -132,6 +132,79 @@ export class FirebaseDbService {
     }
   };
 
+
+  /**
+   * Queries all users and their associated children.
+   * 
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects, each containing their associated children.
+   * @throws {Error} - If there is an error querying the users.
+   */
+  getUsersWithChildren = async () => {
+    const usersRef = collection(db, "Users");
+    const usersSnap = await getDocs(usersRef);
+
+    const results = [];
+
+    for (const userDoc of usersSnap.docs) {
+      const userData = userDoc.data();
+      const childIds = userData.Children || []; // Array of child IDs
+
+      let childrenData = [];
+      if (childIds.length > 0) {
+        // Firestore where('id', 'in', [...]) only supports up to 10 IDs per query
+        const childrenRef = collection(db, "Children");
+        const childrenQuery = query(childrenRef, where("__name__", "in", childIds.slice(0, 10)));
+        const childrenSnap = await getDocs(childrenQuery);
+
+        childrenData = childrenSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+      }
+
+      results.push({
+        id: userDoc.id,
+        ...userData,
+        children: childrenData,
+      });
+    }
+
+    return results;
+  }
+  /**
+    * Queries all children and their associated parents(users).
+    * 
+    * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects, each containing their associated children.
+    * @throws {Error} - If there is an error querying the users.
+    */
+  getChildrenWithParents = async () => {
+    const childrenRef = collection(db, "Children");
+    const childrenSnap = await getDocs(childrenRef);
+
+    const results = [];
+
+    for (const childDoc of childrenSnap.docs) {
+      const childData = childDoc.data();
+      const parentId = childData.parentId; // <-- recommended field
+
+      let parentData = null;
+      if (parentId) {
+        const parentSnap = await getDoc(doc(db, "Users", parentId));
+        if (parentSnap.exists()) {
+          parentData = { id: parentSnap.id, ...parentSnap.data() };
+        }
+      }
+
+      results.push({
+        id: childDoc.id,
+        ...childData,
+        parent: parentData,
+      });
+    }
+
+    return results;
+  }
+
   /**
    * Queries all the children associated with the current user.
    * 
@@ -153,7 +226,7 @@ export class FirebaseDbService {
           return [];
         } else if (!Array.isArray(childrenRefs)) {
           // This happens when there's only one child and the data is not an array
-          childrenRefs = [childrenRefs]; 
+          childrenRefs = [childrenRefs];
         }
         const childrenPromises = childrenRefs.map(async (childRef) => {
           try {
@@ -172,6 +245,27 @@ export class FirebaseDbService {
       }
     } catch (error) {
       logger.error("Error querying children:", error);
+      throw error;
+    }
+  };
+  /**
+   * Queries all the children associated with the current user.
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects.
+   * @throws {Error} - If there is an error querying the users.
+   */
+  fetchAllCurrentUsers = async () => {
+    this.validateAuth();
+    try {
+      const q = query(collection(db, "Users"), where("archived", "==", false));
+      const querySnapshot = await getDocs(q);
+      const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (users) {
+        return users;
+      } else {
+        throw new Error("No Users found");
+      }
+    } catch (error) {
+      logger.error("Error querying users:", error);
       throw error;
     }
   };
@@ -368,25 +462,25 @@ export class FirebaseDbService {
    */
   checkReservationOverlapLimit(newReservation, unsavedEvents = []) {
     this.validateAuth();
-    
+
     let eventsOverlappingNewReservation = unsavedEvents.filter(event => {
       if (newReservation.id && event.id === newReservation.id) return false;
       return (
         new Date(event.end) > new Date(newReservation.start) &&
         new Date(event.start) < new Date(newReservation.end)
-      ); 
+      );
     });
-    
+
     const overlapMarkers = [];
     eventsOverlappingNewReservation.forEach(evt => {
       overlapMarkers.push({ ts: new Date(evt.start), delta: +1 });
-      overlapMarkers.push({ ts: new Date(evt.end),   delta: -1 });
+      overlapMarkers.push({ ts: new Date(evt.end), delta: -1 });
     });
 
     // compare timestamps first, but if those are equal,
     // compare deltas to ensure -1 comes before +1
-    overlapMarkers.sort((a,b) => a.ts - b.ts || (a.delta - b.delta) );
-    
+    overlapMarkers.sort((a, b) => a.ts - b.ts || (a.delta - b.delta));
+
     let maxOverlap = 0;
     let currentOverlap = 0;
     overlapMarkers.forEach(marker => {
@@ -569,7 +663,7 @@ export class FirebaseDbService {
    * @param {string} password - The password of the user.
    * @returns {Promise<User>} A promise that resolves to the authenticated user object.
    */
-  createUserAndAuthenticate = async (firebaseAuth, email, password) => {
+  async createUserAndAuthenticate(firebaseAuth, email, password) {
     let userCredential = null
     try {
       userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
@@ -580,7 +674,7 @@ export class FirebaseDbService {
           CellNumber: "",
           City: "",
           Email: userCredential.user.email,
-          Name:   userCredential.user.displayName || "",
+          Name: userCredential.user.displayName || "",
           Role: doc(db, 'Roles', 'parent-user'),
           State: "",
           StreetAddress: "",
@@ -589,7 +683,7 @@ export class FirebaseDbService {
           paymentHold: false,
           Children: [],
           Contacts: []
-      });
+        });
         logger.info("User document initialized with template data.");
       } catch (error) {
         logger.error("createUserAndAuthenticate: Could not initialize /Users document with template data: ", error);
@@ -613,14 +707,14 @@ export class FirebaseDbService {
    * @param {Object} authUser - The Firebase Auth user object from Google sign-in.
    * @returns {Promise<void>} A promise that resolves when the user profile is created.
    */
-  createUserProfileFromGoogleAuth = async (authUser) => {
+  async createUserProfileFromGoogleAuth(authUser) {
     try {
       await setDoc(doc(db, 'Users', authUser.uid), {
         // Map available Google data
         Email: authUser.email,
         Name: authUser.displayName || "",
         PhotoURL: authUser.PhotoURL || authUser.photoURL || undefined,
-        
+
         // Hard-coded defaults (same as email/password flow)
         CellNumber: "",
         City: "",
@@ -633,7 +727,7 @@ export class FirebaseDbService {
         Children: [],
         Contacts: []
       });
-      
+
       logger.info("Google user profile created successfully:", authUser.uid);
     } catch (error) {
       logger.error("Error creating Google user profile:", error);

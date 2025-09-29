@@ -33,15 +33,27 @@ To run the application's tests, use the following command:
 npm test
 ```
 
-## Building the Application
+## Editing db schema and access rules
 
-To build the application for production, use the following command:
+There are two copies of the schema and rules files (`root` and `/emulator`). KEEP THEM SYNCHRONIZED. ONLY PUSH FROM THE ROOT COPY.
 
+Local --> Cloud
 ```sh
-npm run build
-```
+# Push rules
+npx firebase deploy --only firestore:rules
 
-The built application will be in the `build` folder.
+# Push indexes
+npx firebase deploy --only firestore:indexes
+
+```
+No changes are present on the server until the command is run.
+
+Cloud --> Local
+```sh
+npx firebase init firestore
+```
+In case there have been edits directly through the web interface, it's good practice to pull down and overwrite or merge before any attempt to push changes.
+
 
 ## Contributing
 

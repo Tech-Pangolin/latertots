@@ -26,8 +26,7 @@ const ScheduleChildSitterPage = () => {
   const [modalOpenState, setModalOpenState] = useState(false);
   const navigate = useNavigate();
   const { data: events = [], setMonthYear } = useReservationsByMonthDayRQ()
-  console.log(events[0]?.start)
-  // console.log(luxonDateTimeFromJSDate(new Date(events[0]?.start)))
+  
   // Fetch children data
   useEffect(() => {
     if (!dbService) return;
