@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import AdminDashNotificationsFeed from '../../components/Dashboard/AdminDashNotificationsFeed';
 import AdminNotificationCard from '../../components/Dashboard/AdminNotificationCard';
 import { useAuth } from '../../components/AuthProvider';
-import { createMockUser, createMockAdminUser, renderWithProviders } from '../utils/testUtils';
+import { createMockUser, createMockAdminUser, renderWithProviders } from '../../utils/testUtils';
 
 // Mock the AuthProvider
 jest.mock('../../components/AuthProvider', () => ({

@@ -5,7 +5,7 @@ import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
 import { IMAGE_UPLOAD } from "./constants";
-import ReservationSchema from "../schemas/ReservationSchema";
+import ReservationSchema from "../schemas/ReservationSchema.mjs";
 
 
 export class FirebaseDbService {
@@ -97,7 +97,7 @@ export class FirebaseDbService {
    * @returns {Promise<string>} - A promise that resolves to the ID of the created document.
    * @throws {Error} - If there is an error creating the document.
    */
-  createChildDocument = async (childData) => {
+  async createChildDocument(childData) {
     this.validateAuth();
     try {
       const docRef = await addDoc(collection(db, "Children"), childData);
@@ -663,7 +663,7 @@ export class FirebaseDbService {
    * @param {string} password - The password of the user.
    * @returns {Promise<User>} A promise that resolves to the authenticated user object.
    */
-  createUserAndAuthenticate = async (firebaseAuth, email, password) => {
+  async createUserAndAuthenticate(firebaseAuth, email, password) {
     let userCredential = null
     try {
       userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
@@ -707,7 +707,7 @@ export class FirebaseDbService {
    * @param {Object} authUser - The Firebase Auth user object from Google sign-in.
    * @returns {Promise<void>} A promise that resolves when the user profile is created.
    */
-  createUserProfileFromGoogleAuth = async (authUser) => {
+  async createUserProfileFromGoogleAuth(authUser) {
     try {
       await setDoc(doc(db, 'Users', authUser.uid), {
         // Map available Google data

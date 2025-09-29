@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { GENDERS, MIN_AGE_FOR_CHILD_YEARS } from '../Helpers/constants';
-import { createImageValidation, createPhotoURLValidation } from '../Helpers/validationHelpers';
+import { createImageValidation, createPhotoURLValidation } from '../Helpers/validationHelpers.mjs';
 
 function twoYearsAgo() {
   const date = new Date();

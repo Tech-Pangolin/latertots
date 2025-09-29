@@ -29,6 +29,14 @@ function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className='container-fluid' style={{ background: `url('/assets/img/login/loginbg-fw.png')`, backgroundSize: 'cover', backgroundPosition: 'center', width: '100%', minHeight: '100vh' }}>
       <div className="container">
@@ -64,7 +72,7 @@ function LoginPage() {
               </div>
               <div className='row'>
                 <div className='col-12'>
-                  <button onClick={signInWithGoogle} className="google-btn w-100 mt-2" type="button">
+                  <button onClick={handleGoogleSignIn} className="google-btn w-100 mt-2" type="button">
                     <GoogleIcon size={16} />
                     <span className="ms-2">Sign in with Google</span>
                   </button>
