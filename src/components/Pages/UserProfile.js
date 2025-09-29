@@ -28,10 +28,13 @@ const UserProfile = () => {
   // Handle tab switching from navigation state
   useEffect(() => {
     if (location.state?.switchToTab) {
-      setActiveTab(location.state.switchToTab);
-    }
+      console.log(location.state.switchToTab)
+    }  
   }, [location.state]);
+  useEffect(() => {
+    console.log("loaded payment information")
 
+  },[]);
   // TODO: Open a dialog to show/edit child details when clicking on a child's name
   // Dialog state
   const [selectedChild, setSelectedChild] = useState(null);
@@ -133,6 +136,21 @@ const UserProfile = () => {
             </li>
             <li className="nav-item" role="presentation">
               <button
+                className={`nav-link ${activeTab === 'payment' ? 'active' : ''}`}
+                id="payment-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#payment-tab-pane"
+                type="button"
+                role="tab"
+                aria-controls="payment-tab-pane"
+                aria-selected={activeTab === 'payment'}
+                onClick={() => setActiveTab('payment')}
+              >
+                Payment Information
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
                 className={`nav-link ${activeTab === 'security' ? 'active' : ''}`}
                 id="security-tab"
                 data-bs-toggle="tab"
@@ -217,6 +235,15 @@ const UserProfile = () => {
                     <ContactsTable contacts={contacts} />
                   </div>
                 </div>
+              </div>
+            </div>
+            <div className={`tab-pane fade ${activeTab === 'payment' ? 'show active' : ''}`} id="payment-tab-pane" role="tabpanel" aria-labelledby="payment-tab" tabIndex="0">
+              <div className='px-5 py-5'>
+                <div className=" row"  >
+                  <div className="col-12"><h4 className="mt-2">Payment Information</h4></div>
+                </div>
+                <h5 className="mt-5">Payment</h5>
+           
               </div>
             </div>
             <div className={`tab-pane fade ${activeTab === 'security' ? 'show active' : ''}`} id="security-tab-pane" role="tabpanel" aria-labelledby="security-tab" tabIndex="0">
