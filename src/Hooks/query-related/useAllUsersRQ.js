@@ -33,7 +33,7 @@ export function useAllUsersRQ() {
     onError: (error) => {
       console.error("❌ HOOK: Error fetching users data", error);
     },
-    enabled: !!dbService && !!currentUser, // Only run if dbService and currentUser are available
+    enabled: !!dbService && !!currentUser, 
     initialData: []
   })
 
@@ -54,34 +54,13 @@ export function useAllUsersRQ() {
       if (!_.isEqual(currentData, fresh)) {
         queryClient.setQueryData(queryKey, fresh);
       }
-    }, false); // Use same auth level as query function
+    }, false); 
     
     return () => {
-      isSubscribed = false; // Prevent further updates
+      isSubscribed = false; 
       unsubscribe();
     };
   }, [dbService, queryClient]); // Removed queryKey from dependencies to prevent re-subscription. These values are stable.
 
-  // Memoize the result to prevent unnecessary re-renders
-  const stableResult = useMemo(() => {
-    return {
-      data: queryResult.data,
-      isLoading: queryResult.isLoading,
-      isError: queryResult.isError,
-      error: queryResult.error,
-      isFetching: queryResult.isFetching,
-      isSuccess: queryResult.isSuccess,
-      isFetched: queryResult.isFetched,
-      refetch: queryResult.refetch
-    };
-  }, [
-    queryResult.data?.length, // Only depend on data length, not the data reference
-    queryResult.isLoading,
-    queryResult.isError,
-    queryResult.isFetching,
-    queryResult.isSuccess,
-    queryResult.isFetched
-  ]);
-
-  return stableResult;
+  return queryResult;
 }

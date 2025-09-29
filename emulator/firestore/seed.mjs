@@ -32,7 +32,8 @@ function formatDate(dt) {
 }
 
 // Counter for seeding issues
-const issues = 0;
+let issues = 0;
+
 // startEnd: picks a random weekday within ±7 days, a random start between 07:00–19:00 MST/MDT,
 // then an end up to 4 hours later.
 function startEnd(past = true) {
