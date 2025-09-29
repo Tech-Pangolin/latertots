@@ -11,7 +11,7 @@ const functions = require('firebase-functions');
 const logger = require("firebase-functions/logger");
 const admin = require('firebase-admin');
 const NotificationSchema = require('./schemas/NotificationSchema');
-const { getFirestore } = require('firebase-admin/firestore');
+const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 const _ = require('lodash');
 
 admin.initializeApp();
@@ -85,7 +85,7 @@ const createNotification = async (notificationData) => {
   try {
     const notification = {
       ...notificationData,
-      createdAt: db.Timestamp.now(),
+      createdAt: Timestamp.now(),
       expiresAt: notificationData.expiresAt || db.Timestamp.fromDate(
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
       )
@@ -309,9 +309,9 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
     // Wait for completion
     await new Promise((resolve, reject) => {
       actor.subscribe((snapshot) => {
-        if (snapshot.matches('done')) {
+        if (snapshot.matches('completedSuccessfully') || snapshot.matches('completedWithProblems')) {
           resolve();
-        } else if (snapshot.matches('fatalError')) {
+        } else if (snapshot.matches('fatalError') || snapshot.matches('initializationFailed')) {
           reject(new Error('❌ [fxn:dailyBillingJob]: Billing job failed'));
         }
       });

@@ -27,12 +27,19 @@ const billingMachineV5 = setup({
   actions: {
     incrementResIdx: actions.incrementResIdx,
     incrementOverIdx: actions.incrementOverIdx,
-    addFailure: actions.addFailure
+    addFailure: actions.addFailure,
+    categorizeError: actions.categorizeError,
+    logError: actions.logError
   },
   guards: {
     isReservationPassComplete: guards.isReservationPassComplete,
     isOverduePassComplete: guards.isOverduePassComplete,
-    isDryRun: guards.isDryRun
+    isDryRun: guards.isDryRun,
+    isCriticalError: guards.isCriticalError,
+    isBusinessLogicError: guards.isBusinessLogicError,
+    isTransientError: guards.isTransientError,
+    isRetryableError: guards.isRetryableError,
+    hasRetryAttemptsRemaining: guards.hasRetryAttemptsRemaining
   }
 }).createMachine({
   id: 'dailyBillingJob',
@@ -61,31 +68,50 @@ const billingMachineV5 = setup({
           target: 'storeData',
         },
         onError: {
-          target: 'fatalError',
-          actions: [
-            ({ event }) => {
-              logger.error('❌ [BILLING] New billing run failed to initialize:', {...event, runId: event.output?.runId});
-            },
-            actions.addFailure
-          ]
+          target: 'initializationFailed',
+          actions: ({ event }) => logger.error('❌ [BILLING] Initialize run failed - no billing run created:', {
+            error: event.error?.message,
+            code: event.error?.code,
+            runId: 'none'
+          })
         }
       }
     },
 
     // Store the data from the actor
     storeData: {
-      entry: assign({
-        runId: ({ event }) => {
-          return event.output?.runId || '';
-        },
-        reservations: ({ event }) => {
-          return event.output?.reservations || [];
-        },
-        userData: ({ event }) => {
-          return event.output?.userData || {};
-        }
-      }),
+      entry: [
+        ({ event }) => logger.info('🔍 [BILLING] StoreData entry - DEBUG:', {
+          eventOutput: event.output,
+          runId: event.output?.runId,
+          reservationsCount: event.output?.reservations?.length || 0,
+          userDataKeys: Object.keys(event.output?.userData || {})
+        }),
+        assign({
+          runId: ({ event }) => {
+            const runId = event.output?.runId || '';
+            logger.info('🔍 [BILLING] Storing runId:', { runId });
+            return runId;
+          },
+          reservations: ({ event }) => {
+            const reservations = event.output?.reservations || [];
+            logger.info('🔍 [BILLING] Storing reservations:', { count: reservations.length });
+            return reservations;
+          },
+          userData: ({ event }) => {
+            const userData = event.output?.userData || {};
+            logger.info('🔍 [BILLING] Storing userData:', { keys: Object.keys(userData) });
+            return userData;
+          }
+        })
+      ],
       always: { target: 'nextReservation' }
+    },
+
+    // Initialization failed - no billing run created
+    initializationFailed: {
+      entry: () => logger.error('❌ [BILLING] Billing run ended in failure due to initialization error'),
+      type: 'final'
     },
 
     // PASS A: Reservations → Invoices
@@ -205,10 +231,9 @@ const billingMachineV5 = setup({
           ]
         },
         onError: { 
-          target: 'fatalError',
+          target: 'categorizeError',
           actions: [
-            ({ event }) => logger.error('❌ [BILLING] Persist invoice error event:', event),
-            actions.addFailure
+            ({ event }) => logger.error('❌ [BILLING] Persist invoice error event:', event)
           ]
         }
       }
@@ -234,10 +259,9 @@ const billingMachineV5 = setup({
           ]
         },
         onError: {
-          target: 'fatalError',
+          target: 'categorizeError',
           actions: [
-            ({ event }) => logger.error('❌ [BILLING] Fetch overdue invoices error event:', event),
-            actions.addFailure
+            ({ event }) => logger.error('❌ [BILLING] Fetch overdue invoices error event:', event)
           ]
         }
       }
@@ -272,8 +296,7 @@ const billingMachineV5 = setup({
           ]
         },
         onError: { 
-          target: 'fatalError',
-          actions: actions.addFailure
+          target: 'categorizeError'
         }
       }
     },
@@ -287,8 +310,7 @@ const billingMachineV5 = setup({
         }),
         onDone: { target: 'incrementOver' },
         onError: { 
-          target: 'fatalError',
-          actions: actions.addFailure
+          target: 'categorizeError'
         }
       }
     },
@@ -307,23 +329,169 @@ const billingMachineV5 = setup({
           reservations: context.reservations, 
           dryRun: context.dryRun, 
           overdueInvoices: context.overdueInvoices, 
-          newInvoices: context.newInvoices
+          newInvoices: context.newInvoices,
+          finalStatus: context.finalStatus || 'success', // Default to success
+          hasFailures: context.failures.length > 0
         }),
         onDone: { target: 'done' },
         onError: { 
-          target: 'fatalError',
-          actions: actions.addFailure
+          target: 'done',
+          actions: ({ event }) => logger.error('❌ [BILLING] WrapUp failed - completing run anyway:', {
+            error: event.error?.message
+          })
         }
       }
     },
 
+    // Error categorization state
+    categorizeError: {
+      entry: [
+        actions.categorizeError,
+        actions.logError,
+        actions.addFailure
+      ],
+      always: [
+        { 
+          guard: guards.isCriticalError,
+          target: 'criticalError' 
+        },
+        { 
+          guard: guards.isBusinessLogicError,
+          target: 'businessLogicError' 
+        },
+        { 
+          guard: guards.isTransientError,
+          target: 'transientError' 
+        },
+        { 
+          target: 'criticalError' // Default to critical for unknown errors
+        }
+      ]
+    },
+
+    // Critical errors that stop the entire run
+    criticalError: { 
+      entry: ({ context }) => logger.error('❌ [BILLING] Critical error occurred - DEBUG:', { 
+        failures: context.failures,
+        lastError: context.lastError,
+        contextRunId: context.runId,
+        contextFailuresCount: context.failures?.length || 0,
+        contextReservationsCount: context.reservations?.length || 0
+      }),
+      always: { 
+        target: 'wrapUp',
+        actions: assign({ finalStatus: 'failed' })
+      }
+    },
+
+    // Business logic errors that allow continuation
+    businessLogicError: {
+      entry: ({ context }) => logger.warn('⚠️ [BILLING] Business logic error occurred - DEBUG:', { 
+        lastError: context.lastError,
+        contextRunId: context.runId,
+        contextFailuresCount: context.failures?.length || 0,
+        contextReservationsCount: context.reservations?.length || 0,
+        resIdx: context.resIdx,
+        overIdx: context.overIdx
+      }),
+      always: [
+        { 
+          guard: guards.isReservationPassComplete,
+          target: 'completeReservationPass' 
+        },
+        { 
+          target: 'incrementRes' 
+        }
+      ]
+    },
+
+    // Transient errors that can be retried
+    transientError: {
+      entry: ({ context }) => logger.warn('🔄 [BILLING] Transient error occurred, will retry - DEBUG:', { 
+        lastError: context.lastError,
+        contextRunId: context.runId,
+        contextFailuresCount: context.failures?.length || 0,
+        contextReservationsCount: context.reservations?.length || 0,
+        resIdx: context.resIdx,
+        overIdx: context.overIdx
+      }),
+      always: [
+        { 
+          guard: guards.hasRetryAttemptsRemaining,
+          target: 'retryOperation' 
+        },
+        { 
+          target: 'incrementRes' // After max retries, continue with next item
+        }
+      ]
+    },
+
+    // Retry operation state
+    retryOperation: {
+      entry: ({ context }) => logger.info('🔄 [BILLING] Retrying operation:', { 
+        operation: context.lastError?.operation,
+        retryCount: (context.lastError?.retryCount || 0) + 1
+      }),
+      after: {
+        5000: { target: 'retryCurrentOperation' } // Wait 5 seconds before retry
+      }
+    },
+
+    // Retry the current operation
+    retryCurrentOperation: {
+      entry: assign({
+        lastError: ({ context }) => ({
+          ...context.lastError,
+          retryCount: (context.lastError?.retryCount || 0) + 1
+        })
+      }),
+      always: [
+        { 
+          guard: ({ context }) => context.lastError?.operation === 'CREATE_INVOICE',
+          target: 'persistInvoice' 
+        },
+        { 
+          guard: ({ context }) => context.lastError?.operation === 'APPLY_LATE_FEE',
+          target: 'applyLateFee' 
+        },
+        { 
+          guard: ({ context }) => context.lastError?.operation === 'RECALC_USER_HOLD',
+          target: 'recalcUserHold' 
+        },
+        { 
+          target: 'incrementRes' // Default fallback - continue processing
+        }
+      ]
+    },
+
+    // Legacy fatal error state (kept for backward compatibility)
     fatalError: { 
       type: 'final',
       entry: ({ context }) => logger.error('❌ [BILLING] Fatal error occurred:', { failures: context.failures })
     },
-    done: { 
+    done: {
+      always: [
+        {
+          guard: ({ context }) => context.failures.length > 0,
+          target: 'completedWithProblems'
+        },
+        {
+          target: 'completedSuccessfully'
+        }
+      ]
+    },
+
+    completedSuccessfully: {
       type: 'final',
-      entry: () => logger.info('✅ [BILLING] Billing run completed successfully')
+      entry: ({ context }) => logger.info('✅ [BILLING] Billing run completed successfully', {runId: context.runId})
+    },
+
+    completedWithProblems: {
+      type: 'final',
+      entry: ({ context }) => logger.info('⚠️ [BILLING] Billing run completed with problems:', {
+        failuresCount: context.failures.length,
+        runId: context.runId
+      })
     }
   }
 });

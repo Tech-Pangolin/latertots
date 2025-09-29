@@ -6,6 +6,25 @@ const admin = require('firebase-admin');
 
 const db = getFirestore();
 
+// Error categorization helpers
+const categorizeError = (error) => {
+  if (error.code === 'permission-denied') return 'PERMISSION';
+  if (error.code === 'unavailable' || error.code === 'deadline-exceeded') return 'NETWORK';
+  if (error.code === 'invalid-argument' || error.code === 'failed-precondition') return 'VALIDATION';
+  if (error.code === 'not-found') return 'BUSINESS_LOGIC';
+  if (error.code === 'already-exists') return 'BUSINESS_LOGIC';
+  if (error.message?.includes('quota') || error.message?.includes('limit')) return 'RESOURCE_LIMIT';
+  return 'UNKNOWN';
+};
+
+const isRetryableError = (error) => {
+  const retryableCodes = ['unavailable', 'deadline-exceeded', 'internal', 'aborted'];
+  const retryableMessages = ['timeout', 'network', 'connection', 'temporary'];
+  
+  return retryableCodes.includes(error.code) || 
+         retryableMessages.some(msg => error.message?.toLowerCase().includes(msg));
+};
+
 // Initialize billing run
 const initializeRunActor = fromPromise(async ({ input }) => {
   try {
@@ -48,12 +67,27 @@ const initializeRunActor = fromPromise(async ({ input }) => {
       stack: error.stack,
       name: error.name
     });
-    throw {
+    
+    // Categorize error type
+    const errorType = categorizeError(error);
+    const retryable = isRetryableError(error);
+    
+    // Enrich error with context
+    const enrichedError = {
       message: error.message,
       code: error.code,
       stack: error.stack,
-      actor: 'initializeRunActor'
+      actor: 'initializeRunActor',
+      operation: 'INITIALIZE_RUN',
+      errorType: errorType,
+      retryable: retryable,
+      context: {
+        runId: runRef?.id || 'unknown',
+        dryRun: input.dryRun
+      }
     };
+    
+    throw enrichedError;
   }
 });
 
@@ -68,12 +102,26 @@ const fetchOverdueInvoicesActor = fromPromise(async ({ input }) => {
     return snap.docs;
   } catch (error) {
     logger.error('❌ [BILLING] Fetch newly-overdue invoices failed:', error);
-    throw {
+    
+    // Categorize error type
+    const errorType = categorizeError(error);
+    const retryable = isRetryableError(error);
+    
+    // Enrich error with context
+    const enrichedError = {
       message: error.message,
       code: error.code,
       stack: error.stack,
-      actor: 'fetchOverdueInvoicesActor'
+      actor: 'fetchOverdueInvoicesActor',
+      operation: 'FETCH_OVERDUE_INVOICES',
+      errorType: errorType,
+      retryable: retryable,
+      context: {
+        dryRun: input.dryRun
+      }
     };
+    
+    throw enrichedError;
   }
 });
 
@@ -102,12 +150,30 @@ const persistInvoiceActor = fromPromise(async ({ input }) => {
     return [`Invoices/${currentInvoice.invoiceId}`, ...newInvoices];
   } catch (error) {
     logger.error('❌ [BILLING] Persist invoice failed:', error);
-    throw {
+    
+    // Categorize error type
+    const errorType = categorizeError(error);
+    const retryable = isRetryableError(error);
+    
+    // Enrich error with context
+    const enrichedError = {
       message: error.message,
       code: error.code,
       stack: error.stack,
-      actor: 'persistInvoiceActor'
+      actor: 'persistInvoiceActor',
+      operation: 'CREATE_INVOICE',
+      errorType: errorType,
+      retryable: retryable,
+      context: {
+        reservationId: currentInvoice.reservationId,
+        invoiceId: currentInvoice.invoiceId,
+        userId: currentInvoice.user.id,
+        runId: runId,
+        resIdx: resIdx
+      }
     };
+    
+    throw enrichedError;
   }
 });
 
@@ -149,12 +215,29 @@ const applyLateFeeActor = fromPromise(async ({ input }) => {
     return { userId: data.user.id };
   } catch (error) {
     logger.error('❌ [BILLING] Apply late fee failed:', error);
-    throw {
+    
+    // Categorize error type
+    const errorType = categorizeError(error);
+    const retryable = isRetryableError(error);
+    
+    // Enrich error with context
+    const enrichedError = {
       message: error.message,
       code: error.code,
       stack: error.stack,
-      actor: 'applyLateFeeActor'
+      actor: 'applyLateFeeActor',
+      operation: 'APPLY_LATE_FEE',
+      errorType: errorType,
+      retryable: retryable,
+      context: {
+        invoiceId: invSnap?.id || 'unknown',
+        userId: data?.user?.id || 'unknown',
+        overIdx: overIdx,
+        dryRun: dryRun
+      }
     };
+    
+    throw enrichedError;
   }
 });
 
@@ -176,26 +259,45 @@ const recalcUserHoldActor = fromPromise(async ({ input }) => {
     await db.collection('Users').doc(uid).set({ paymentHold: hold }, { merge: true });
   } catch (error) {
     logger.error('❌ [BILLING] Recalc user hold failed:', error);
-    throw {
+    
+    // Categorize error type
+    const errorType = categorizeError(error);
+    const retryable = isRetryableError(error);
+    
+    // Enrich error with context
+    const enrichedError = {
       message: error.message,
       code: error.code,
       stack: error.stack,
-      actor: 'recalcUserHoldActor'
+      actor: 'recalcUserHoldActor',
+      operation: 'RECALC_USER_HOLD',
+      errorType: errorType,
+      retryable: retryable,
+      context: {
+        userId: uid,
+        dryRun: dryRun
+      }
     };
+    
+    throw enrichedError;
   }
 });
 
 // Wrap up billing run
 const wrapUpActor = fromPromise(async ({ input }) => {
   try {
-    const { runId, failures, reservations, dryRun, overdueInvoices, newInvoices } = input;
+    const { runId, failures, reservations, dryRun, overdueInvoices, newInvoices, finalStatus, hasFailures } = input;
 
     const reservationsProcessed = reservations.map(res => `Reservations/${res.id}`);
     const overdueInvoicesProcessed = overdueInvoices.map(inv => `Invoices/${inv.id}`);
     const newInvoicesProcessed = newInvoices;
 
+    // Determine the appropriate status based on failures
+    const actualStatus = hasFailures ? 'completed_with_problems' : 'success';
+    
     logger.info('🏁 [BILLING] Wrapping up billing run:', {
       runId,
+      finalStatus: actualStatus,
       failures: failures.length,
       reservationsProcessed,
       overdueInvoicesProcessed,
@@ -204,16 +306,24 @@ const wrapUpActor = fromPromise(async ({ input }) => {
     
     if (!dryRun) {
       return db.collection('BillingRuns').doc(runId)
-        .set({ status: 'success', endTime: new Date(), failures, reservations: reservationsProcessed, newOverdueInvoices: overdueInvoicesProcessed, newInvoices: newInvoicesProcessed }, { merge: true });
+        .set({ 
+          status: actualStatus, 
+          endTime: new Date(), 
+          failures, 
+          reservations: reservationsProcessed, 
+          newOverdueInvoices: overdueInvoicesProcessed, 
+          newInvoices: newInvoicesProcessed 
+        }, { merge: true });
     }
   } catch (error) {
-    logger.error('❌ [BILLING] Wrap up failed:', error);
-    throw {
-      message: error.message,
-      code: error.code,
-      stack: error.stack,
-      actor: 'wrapUpActor'
-    };
+    logger.error('❌ [BILLING] Wrap up failed - completing run anyway:', {
+      error: error.message,
+      runId: runId,
+      failuresCount: failures.length
+    });
+    
+    // Don't throw - just complete the run even if we can't update the BillingRun document
+    return;
   }
 });
 

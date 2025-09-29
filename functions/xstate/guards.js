@@ -30,8 +30,68 @@ const isDryRun = ({ context }) => {
   return context.dryRun === true;
 };
 
+// Error categorization guards
+const isCriticalError = ({ context }) => {
+  const errorType = context.lastError?.errorType;
+  const result = errorType === 'PERMISSION' || errorType === 'RESOURCE_LIMIT' || errorType === 'UNKNOWN';
+  logger.info('🔍 [BILLING] isCriticalError guard - DEBUG:', {
+    errorType,
+    result,
+    lastError: context.lastError,
+    contextRunId: context.runId
+  });
+  return result;
+};
+
+const isBusinessLogicError = ({ context }) => {
+  const errorType = context.lastError?.errorType;
+  const result = errorType === 'BUSINESS_LOGIC' || errorType === 'VALIDATION';
+  logger.info('🔍 [BILLING] isBusinessLogicError guard - DEBUG:', {
+    errorType,
+    result,
+    lastError: context.lastError,
+    contextRunId: context.runId
+  });
+  return result;
+};
+
+const isTransientError = ({ context }) => {
+  const errorType = context.lastError?.errorType;
+  const retryable = context.lastError?.retryable;
+  const result = errorType === 'NETWORK' && retryable;
+  logger.info('🔍 [BILLING] isTransientError guard - DEBUG:', {
+    errorType,
+    retryable,
+    result,
+    lastError: context.lastError,
+    contextRunId: context.runId
+  });
+  return result;
+};
+
+const isRetryableError = ({ context }) => {
+  return context.lastError?.retryable === true;
+};
+
+const hasRetryAttemptsRemaining = ({ context }) => {
+  const retryCount = context.lastError?.retryCount || 0;
+  const result = retryCount < 3; // Max 3 retries
+  logger.info('🔍 [BILLING] hasRetryAttemptsRemaining guard - DEBUG:', {
+    retryCount,
+    result,
+    lastError: context.lastError,
+    contextRunId: context.runId
+  });
+  return result;
+};
+
 module.exports = {
   isReservationPassComplete,
   isOverduePassComplete,
-  isDryRun
+  isDryRun,
+  isCriticalError,
+  isBusinessLogicError,
+  isTransientError,
+  isRetryableError,
+  hasRetryAttemptsRemaining
 };
