@@ -14,7 +14,8 @@ function IntroPage() {
             subject: formData.get('subject'),
             message: formData.get('message'),
         };
-        fetch("https://nodemailer-base.onrender.com/send", {
+        // fetch("https://nodemailer-base.onrender.com/send", {
+        fetch("http://localhost:5001/send", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
@@ -22,25 +23,6 @@ function IntroPage() {
             .then(response => response.json())
             .then(data => console.log(data))
             .catch(error => console.error("Error:", error));
-        // 
-        // console.log(data)
-        // try {
-        //     const response = await fetch("https://latertotsdropin.com/api/sendEmail.php", {
-        //         method: "POST",
-        //         headers: { "Content-Type": "application/json" },
-        //         body: JSON.stringify(formData),
-        //     });
-
-        //     const result = await response.json();
-        //     if (response.ok && result.success) {
-        //         setStatus("✅ Email sent successfully!");
-        //         // setFormData({ name: "", email: "", subject: "", message: "" });
-        //     } else {
-        //         setStatus("❌ " + (result.message || "Failed to send email"));
-        //     }
-        // } catch (err) {
-        //     setStatus("❌ Network error: " + err.message);
-        // }
     };
 
     return (
@@ -131,7 +113,8 @@ function IntroPage() {
                                     <div className="address">
                                         <i className="bi bi-geo-alt"></i>
                                         <h4>Location:</h4>
-                                        <p>Concord, North Carolina</p>
+                                        <p>10007 Weddington Road</p>
+                                        <p>Concord, North Carolina 28027</p>
                                     </div>
 
                                     <div className="email">
