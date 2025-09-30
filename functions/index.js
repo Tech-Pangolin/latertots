@@ -10,12 +10,24 @@
 const functions = require('firebase-functions/v1');
 const logger = require("firebase-functions/logger");
 const admin = require('firebase-admin');
+const corsLib = require('cors');
 const NotificationSchema = require('./schemas/NotificationSchema');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 const _ = require('lodash');
 
 admin.initializeApp();
 const db = getFirestore();
+const cors = corsLib({ origin: true });
+
+const { latertotsEmail, emailPasscode } = require('./config');
+// Create transporter once
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: latertotsEmail.value(),
+    pass: emailPasscode.value(),
+  },
+});
 
 exports.createUserProfile = functions.auth.user().onCreate(async (user) => {
   return db.collection('Users').doc(user.uid).set({
@@ -339,7 +351,7 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
 
 // Stripe Webhook Handler
 exports.stripeWebhook = onRequest(
-  { 
+  {
     secrets: [require('./config').stripeSecretKey, require('./config').stripeWebhookSecret],
     cors: false,  // Disable CORS to preserve raw body
     rawBody: true  // Enable raw body access for signature verification
@@ -367,8 +379,8 @@ exports.stripeWebhook = onRequest(
         });
       }
 
-      const rawBody = Buffer.isBuffer(req.rawBody) 
-        ? req.rawBody.toString('utf8') 
+      const rawBody = Buffer.isBuffer(req.rawBody)
+        ? req.rawBody.toString('utf8')
         : req.rawBody || JSON.stringify(req.body);
 
       if (!rawBody) {
@@ -395,17 +407,17 @@ exports.stripeWebhook = onRequest(
         processed: result.processed
       });
 
-  } catch (error) {
-    logger.error('❌ [fxn:stripeWebhook]: Webhook processing failed', {
-      error: error.message
-    });
+    } catch (error) {
+      logger.error('❌ [fxn:stripeWebhook]: Webhook processing failed', {
+        error: error.message
+      });
 
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
 
 // Scheduled Payment Processing
 exports.processScheduledPayments = functions.pubsub
@@ -466,32 +478,60 @@ exports.processRefund = onRequest(
       const reservation = await getReservationByInvoice(invoiceId);
       await markReservationCancelled(reservation.id, `Refunded: ${reason}`);
 
-    logger.info('✅ [fxn:processRefund]: Refund processed successfully', {
-      invoiceId,
-      refundId: refundResult.id,
-      timestamp: new Date().toISOString()
-    });
+      logger.info('✅ [fxn:processRefund]: Refund processed successfully', {
+        invoiceId,
+        refundId: refundResult.id,
+        timestamp: new Date().toISOString()
+      });
 
-    res.status(200).json({
-      success: true,
-      refundId: refundResult.id,
-      timestamp: new Date().toISOString()
-    });
+      res.status(200).json({
+        success: true,
+        refundId: refundResult.id,
+        timestamp: new Date().toISOString()
+      });
 
-  } catch (error) {
-    logger.error('❌ [fxn:processRefund]: Refund processing failed', {
-      error: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
+    } catch (error) {
+      logger.error('❌ [fxn:processRefund]: Refund processing failed', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
 
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
+      res.status(500).json({
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+export const sendContactEmail = onRequest({ region: "us-central1" }, async (req, res) => {
+  cors(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).json({ success: false, message: "Method Not Allowed" });
+      return;
+    }
+
+    const { name, email, subject, message } = req.body;
+
+    const mailOptions = {
+      from: latertotsEmail.value(),
+      to: latertotsEmail.value(),
+      subject: subject || "New Contact Form Message",
+      text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+      res.json({ success: true, message: "Email sent successfully!" });
+    } catch (error) {
+      logger.error("Email send failed", error);
+      res.status(500).json({ success: false, message: "Failed to send email" });
+    }
+  });
 });
+
+
 
 // Deployment command: firebase deploy --only functions
 // Run from the root of the project directory
