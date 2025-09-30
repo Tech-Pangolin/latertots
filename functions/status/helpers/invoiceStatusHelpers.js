@@ -1,7 +1,7 @@
 // invoiceStatusHelpers.js - Invoice status update helpers
 const admin = require('firebase-admin');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
-const { logger } = require('firebase-functions');
+const logger = require('firebase-functions/logger');
 const { INVOICE_STATUS } = require('../../constants');
 
 const db = getFirestore();

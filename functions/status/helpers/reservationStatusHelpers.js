@@ -1,7 +1,7 @@
 // reservationStatusHelpers.js - Reservation status update helpers
 const admin = require('firebase-admin');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
-const { logger } = require('firebase-functions');
+const logger = require('firebase-functions/logger');
 const { RESERVATION_STATUS } = require('../../constants');
 
 const db = getFirestore();
