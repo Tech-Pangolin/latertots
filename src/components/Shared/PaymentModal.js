@@ -9,8 +9,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 
 const PaymentModal = ({ showPaymentDialog, newEvents, hourlyRate, grandTotalTime, grandTotalBill, onCancel, onProceed }) => {
-
-    console.log(newEvents);
     return (
         <Dialog open={showPaymentDialog} onClose={onCancel} aria-labelledby="payment-dialog-title" fullWidth>
             <DialogTitle id="payment-dialog-title">Payment Summary</DialogTitle>
@@ -22,6 +20,7 @@ const PaymentModal = ({ showPaymentDialog, newEvents, hourlyRate, grandTotalTime
                             <TableCell>Title</TableCell>
                             <TableCell>Total Time (hrs)</TableCell>
                             <TableCell>Total Bill ($)</TableCell>
+                            <TableCell>Group Activity?</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -30,19 +29,21 @@ const PaymentModal = ({ showPaymentDialog, newEvents, hourlyRate, grandTotalTime
                                 <TableCell>{entry.title}</TableCell>
                                 <TableCell>{entry.totalTime}</TableCell>
                                 <TableCell>${(entry.totalTime * hourlyRate).toFixed(2)}</TableCell>
+                                <TableCell>{entry.groupActivity ? 'Yes' : 'No'}</TableCell>
                             </TableRow>
                         ))}
-                        <TableRow style={{ fontWeight: "bold" }}>
-                            <TableCell>Grand Total</TableCell>
-                            <TableCell>{grandTotalTime}</TableCell>
-                            <TableCell>${grandTotalBill.toFixed(2)}</TableCell>
+                        <TableRow style={{ fontWeight: "bold", backgroundColor: "#f0f0f0" }}>
+                            <TableCell><strong>Grand Total</strong></TableCell>
+                            <TableCell><strong>{grandTotalTime}</strong></TableCell>
+                            <TableCell><strong>${grandTotalBill.toFixed(2)}</strong></TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>
+                <p className='mt-5'>Please proceed to payment with Stripe to confirm your reservations.</p>
             </DialogContent>
             <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
-                <button onClick={onCancel} style={{ marginRight: '8px' }}>Cancel</button>
-                <button onClick={onProceed} style={{ backgroundColor: '#4caf50', color: 'white' }}>Proceed to Payment</button>
+                <button onClick={onCancel} className='btn btn-secondary' style={{ marginRight: '8px' }}>Cancel</button>
+                <button onClick={onProceed} className='btn btn-success' style={{ backgroundColor: '#4caf50', color: 'white' }}>Pay with Stripe</button>
             </div>
         </Dialog>
     );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, Button, TextField, Dialog, DialogActions, DialogTitle, DialogContent, MenuItem, Select, InputLabel, OutlinedInput, FormControl, Checkbox, FormControlLabel } from '@mui/material';
+import { Button, TextField, Dialog, DialogActions, DialogTitle, DialogContent, MenuItem, Select, InputLabel, OutlinedInput, FormControl, Checkbox, FormControlLabel } from '@mui/material';
 import { checkAgainstBusinessHours, checkFutureStartTime, getCurrentDate, getCurrentTime } from '../../Helpers/calendar';
 import { calculateTimeDifference } from '../../Helpers/datetime';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,6 +19,8 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
   const [grandTotalBill, setGrandTotalBill] = useState(0);
   const [grandTotalTime, setGrandTotalTime] = useState(0);
   const [newEvents, setNewEvents] = useState([]); // Store new events for payment dialog
+  const [reservationsToPay, setReservationsToPay] = useState([]); // Store reservations to pay after payment
+  const [paymentError, setPaymentError] = useState(false); // Store any payment errors
   const [errors, setErrors] = useState({
     start: '',
     end: '',
@@ -85,6 +87,61 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     return errors;
   }, setErrors, 500);
 
+  const handleClosePaymentModal = () => {
+    setShowPaymentDialog(false);
+    setNewEvents([]);
+    setGrandTotalBill(0);
+    setGrandTotalTime(0);
+  }
+
+  const handleSubmitPayment = async() => {
+    console.log(reservationsToPay, currentUser)
+    // Process payment logic here (e.g., integrate with Stripe)
+    const paymentObj = {
+      userId: currentUser.uid,
+      lineItems: reservationsToPay.map(({ id, totalTime }) => ({
+        childId: id,
+        duration: totalTime,
+        rate: hourlyRate
+      }))
+    }
+    // Placeholder: example structure of sending payment data to backend
+    // Replace with actual payment processing logic
+    // const stripe = window.Stripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+    console.log('Processing payment with the following details:', paymentObj);
+    try {
+      const response = await fetch('/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentObj),
+      });
+      const session = await response.json();
+      const stripe = {redirectToCheckout: async ({sessionId}) => {return {error: null}}}; // TODO: Replace with actual Stripe initialization
+  
+      const result = await stripe.redirectToCheckout({
+        sessionId: session.id,
+      });
+
+      if (result.error) {
+        setPaymentError(result.error.message);
+      } else {
+        newEvents.forEach((validatedEvent) => {
+          saveNewEventMutation.mutate({ loggedInUserId: currentUser.uid, newEvent: validatedEvent });
+        });
+        handleClosePaymentModal();
+      }
+    } catch (error) {
+      console.log(error)
+      setPaymentError(error.message);
+      handleClosePaymentModal();
+    }
+
+
+  }
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -122,14 +179,11 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     console.log(newEvents)
     const totalTime = newEvents.reduce((sum, event) => sum + parseFloat(event.totalTime), 0);
     const totalBill = newEvents.reduce((sum, event) => sum + (event.totalTime * hourlyRate), 0);
-    console.log(newEvents,totalTime, totalBill)
+    console.log(newEvents, totalTime, totalBill)
 
     setGrandTotalBill(totalBill);
     setGrandTotalTime(totalTime);
-    // newEvents.forEach((validatedEvent) => {
-    //   saveNewEventMutation.mutate({ loggedInUserId: currentUser.uid, newEvent: validatedEvent });
-    // });
-    handleClose();
+    setReservationsToPay([...newEvents]);
     setShowPaymentDialog(true); // Open the payment dialog after successful validation
   };
 
@@ -138,6 +192,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
       <Dialog open={modalOpenState} aria-labelledby="form-dialog-title">
         <DialogTitle id="form-dialog-title">Reservation</DialogTitle>
         <DialogContent>
+          {paymentError && <p style={{color: 'red'}}> There was an error with your payment</p>}
           <form onSubmit={handleSubmit}>
 
             <FormControl fullWidth style={{ marginTop: '1rem' }}>
@@ -222,7 +277,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
           </Button>
         </DialogActions>
       </Dialog>
-      <PaymentModal showPaymentDialog={showPaymentDialog} newEvents={newEvents} hourlyRate={hourlyRate} grandTotalTime={grandTotalTime} grandTotalBill={grandTotalBill} />
+      <PaymentModal onCancel={handleClosePaymentModal} onProceed={handleSubmitPayment} showPaymentDialog={showPaymentDialog} newEvents={reservationsToPay} hourlyRate={hourlyRate} grandTotalTime={grandTotalTime} grandTotalBill={grandTotalBill} />
 
     </>
   );
