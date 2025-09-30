@@ -2,7 +2,7 @@
 const admin = require('firebase-admin');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 const logger = require('firebase-functions/logger');
-const { PAYMENT_ACTIVITY_TYPES, PAYMENT_ACTIVITY_STATUS } = require('../../constants');
+const { PAYMENT_ACTIVITY_TYPES, PAYMENT_ACTIVITY_STATUS, STRIPE } = require('../../constants');
 const Stripe = require('stripe');
 
 const db = getFirestore();
@@ -19,7 +19,7 @@ let stripe = null;
 const initializeStripe = (secretKey) => {
   if (!stripe) {
     stripe = new Stripe(secretKey, {
-      apiVersion: '2023-10-16', // Use latest API version
+      apiVersion: STRIPE.API_VERSION,
     });
   }
   return stripe;

@@ -11,10 +11,6 @@ const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
 const latertotsEmail = defineSecret('LATERTOTS_EMAIL_ADDRESS');
 const emailPasscode = defineSecret('EMAIL_PASSCODE');
 
-// Non-sensitive configuration with defaults
-const logLevel = defineString('LOG_LEVEL', { default: 'INFO' });
-const maxRetryAttempts = defineInt('MAX_RETRY_ATTEMPTS', { default: 3 });
-const retryIntervalHours = defineInt('RETRY_INTERVAL_HOURS', { default: 24 }); 
 
 module.exports = {
   // Secrets (from Secret Manager)
@@ -22,9 +18,4 @@ module.exports = {
   stripeWebhookSecret,
   latertotsEmail,
   emailPasscode,
-  
-  // Configuration (with defaults)
-  logLevel,
-  maxRetryAttempts,
-  retryIntervalHours
 };
