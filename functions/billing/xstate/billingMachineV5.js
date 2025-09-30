@@ -1,7 +1,7 @@
 // billingMachineV5.js - XState v5 Machine Definition
 const { setup, assign } = require('xstate');
 const logger = require('firebase-functions/logger');
-const { RESERVATION_STATUS, INVOICE_STATUS } = require('../constants');
+const { RESERVATION_STATUS, INVOICE_STATUS } = require('../../constants');
 const admin = require('firebase-admin');
 const _ = require('lodash');
 

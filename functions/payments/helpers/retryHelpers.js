@@ -231,6 +231,7 @@ const createFirstPaymentActivity = async (invoiceId, invoice) => {
  * @returns {Promise<Object>} - Processing result
  */
 const processScheduledPayments = async () => {
+  const { stripeSecretKey } = require('../../config');
   try {
     logger.info('🚀 [RETRY] Starting scheduled payment processing');
     
@@ -265,7 +266,7 @@ const processScheduledPayments = async () => {
         const { createPaymentIntent } = require('./stripeHelpers');
         const paymentIntent = await createPaymentIntent(invoiceData.invoiceId, {
           customerId: null // Will create new customer if needed
-        });
+        }, stripeSecretKey.value());
         
         // Update payment activity with Payment Intent ID
         await db
