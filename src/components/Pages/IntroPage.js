@@ -15,7 +15,7 @@ function IntroPage() {
             message: formData.get('message'),
         };
         // fetch("https://nodemailer-base.onrender.com/send", {
-        fetch("http://localhost:5001/send", {
+        fetch("https://us-central1-latertots-a6694.cloudfunctions.net/sendContactEmail", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
