@@ -2447,7 +2447,8 @@ blockquote p {
 #home-tab,
 #profile-tab,
 #contact-tab,
-#security-tab {
+#security-tab,
+#payment-tab {
   font-size: 22px;
   font-family: 'Manjari', sans-serif;
   color: #FFF;
@@ -2456,7 +2457,8 @@ blockquote p {
 #home-tab.active,
 #profile-tab.active,
 #contact-tab.active,
-#security-tab.active {
+#security-tab.active,
+#payment-tab.active {
 
   color: #000;
 }

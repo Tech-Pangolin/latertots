@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogTitle, DialogContent, MenuItem, Select, InputLabel, OutlinedInput, FormControl, Checkbox, FormControlLabel } from '@mui/material';
 import { checkAgainstBusinessHours, checkFutureStartTime, getCurrentDate, getCurrentTime } from '../../Helpers/calendar';
+import { calculateTimeDifference } from '../../Helpers/datetime';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../AuthProvider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
 import useDebouncedValidateField from '../../Hooks/useDebouncedValidateField';
+import PaymentModal from './PaymentModal';
 
 
 // Remember to create state for the open/closed state of the modal and the form data
 const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, children, scheduleChildSitterPage_queryKey }) => {
   const queryClient = useQueryClient();
   const { currentUser, dbService } = useAuth();
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false); // Placeholder for future payment dialog state
+  const hourlyRate = 20; // Example hourly rate, replace with actual logic if needed
+  const [grandTotalBill, setGrandTotalBill] = useState(0);
+  const [grandTotalTime, setGrandTotalTime] = useState(0);
+  const [newEvents, setNewEvents] = useState([]); // Store new events for payment dialog
+  const [reservationsToPay, setReservationsToPay] = useState([]); // Store reservations to pay after payment
+  const [paymentError, setPaymentError] = useState(false); // Store any payment errors
   const [errors, setErrors] = useState({
     start: '',
     end: '',
@@ -78,6 +87,61 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     return errors;
   }, setErrors, 500);
 
+  const handleClosePaymentModal = () => {
+    setShowPaymentDialog(false);
+    setNewEvents([]);
+    setGrandTotalBill(0);
+    setGrandTotalTime(0);
+  }
+
+  const handleSubmitPayment = async() => {
+    console.log(reservationsToPay, currentUser)
+    // Process payment logic here (e.g., integrate with Stripe)
+    const paymentObj = {
+      userId: currentUser.uid,
+      lineItems: reservationsToPay.map(({ id, totalTime }) => ({
+        childId: id,
+        duration: totalTime,
+        rate: hourlyRate
+      }))
+    }
+    // Placeholder: example structure of sending payment data to backend
+    // Replace with actual payment processing logic
+    // const stripe = window.Stripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+    console.log('Processing payment with the following details:', paymentObj);
+    try {
+      const response = await fetch('/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentObj),
+      });
+      const session = await response.json();
+      const stripe = {redirectToCheckout: async ({sessionId}) => {return {error: null}}}; // TODO: Replace with actual Stripe initialization
+  
+      const result = await stripe.redirectToCheckout({
+        sessionId: session.id,
+      });
+
+      if (result.error) {
+        setPaymentError(result.error.message);
+      } else {
+        newEvents.forEach((validatedEvent) => {
+          saveNewEventMutation.mutate({ loggedInUserId: currentUser.uid, newEvent: validatedEvent });
+        });
+        handleClosePaymentModal();
+      }
+    } catch (error) {
+      console.log(error)
+      setPaymentError(error.message);
+      handleClosePaymentModal();
+    }
+
+
+  }
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,7 +157,8 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
         extendedProps: {
           status: 'pending',
           childId: child.id
-        }
+        },
+        totalTime: calculateTimeDifference(formData.start, formData.end)
       }
     });
 
@@ -111,101 +176,110 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
       alert('No more than 5 reservations can take place simultaneously. Please check available time slots and try again.');
       return;
     }
+    console.log(newEvents)
+    const totalTime = newEvents.reduce((sum, event) => sum + parseFloat(event.totalTime), 0);
+    const totalBill = newEvents.reduce((sum, event) => sum + (event.totalTime * hourlyRate), 0);
+    console.log(newEvents, totalTime, totalBill)
 
-    newEvents.forEach((validatedEvent) => {
-      saveNewEventMutation.mutate({ loggedInUserId: currentUser.uid, newEvent: validatedEvent });
-    });
-    handleClose();
+    setGrandTotalBill(totalBill);
+    setGrandTotalTime(totalTime);
+    setReservationsToPay([...newEvents]);
+    setShowPaymentDialog(true); // Open the payment dialog after successful validation
   };
 
   return (
-    <Dialog open={modalOpenState} aria-labelledby="form-dialog-title">
-      <DialogTitle id="form-dialog-title">Reservation</DialogTitle>
-      <DialogContent>
-        <form onSubmit={handleSubmit}>
+    <>
+      <Dialog open={modalOpenState} aria-labelledby="form-dialog-title">
+        <DialogTitle id="form-dialog-title">Reservation</DialogTitle>
+        <DialogContent>
+          {paymentError && <p style={{color: 'red'}}> There was an error with your payment</p>}
+          <form onSubmit={handleSubmit}>
 
-          <FormControl fullWidth style={{ marginTop: '1rem' }}>
-            <InputLabel id="multiselect-child-label">Name</InputLabel>
-            <Select
-              labelId="multiselect-child-label"
-              name="selectedChild"
-              multiple
-              value={formData.selectedChild.map(child => child.id) || []}
-              onChange={(e) => {
-                const { value } = e.target;
-                const selectedChildren = value.map(id =>
-                  childrenOptions.find(child => child.id === id)
-                );
-                setFormData({ ...formData, selectedChild: selectedChildren });
-              }}
-              input={<OutlinedInput label="Name" />}
+            <FormControl fullWidth style={{ marginTop: '1rem' }}>
+              <InputLabel id="multiselect-child-label">Name</InputLabel>
+              <Select
+                labelId="multiselect-child-label"
+                name="selectedChild"
+                multiple
+                value={formData.selectedChild.map(child => child.id) || []}
+                onChange={(e) => {
+                  const { value } = e.target;
+                  const selectedChildren = value.map(id =>
+                    childrenOptions.find(child => child.id === id)
+                  );
+                  setFormData({ ...formData, selectedChild: selectedChildren });
+                }}
+                input={<OutlinedInput label="Name" />}
+                required
+                error={!!errors.selectedChild}
+              >
+                {childrenOptions.map((child) => (
+                  <MenuItem key={child.id} value={child.id}>
+                    {child.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={formData.groupActivity}
+                  onChange={handleChange}
+                  name="groupActivity"
+                />
+              }
+              label="Participate in group activity"
+            />
+            <TextField
+              name="date"
+              label="Date"
+              type="date"
+              value={formData.date}
+              onChange={handleChange}
               required
-              error={!!errors.selectedChild}
-            >
-              {childrenOptions.map((child) => (
-                <MenuItem key={child.id} value={child.id}>
-                  {child.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={formData.groupActivity}
-                onChange={handleChange}
-                name="groupActivity"
-              />
-            }
-            label="Participate in group activity"
-          />
-          <TextField
-            name="date"
-            label="Date"
-            type="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-            fullWidth
-            style={{ marginTop: '1rem' }}
-            error={!!errors.date}
-            helperText={errors.date}
-          />
-          <TextField
-            name="start"
-            label="Dropoff Time"
-            type="time"
-            value={formData.start}
-            onChange={handleChange}
-            required
-            fullWidth
-            style={{ marginTop: '1rem' }}
-            error={!!errors.start}
-            helperText={errors.start}
-          />
-          <TextField
-            name="end"
-            label="Pickup Time"
-            type="time"
-            value={formData.end}
-            onChange={handleChange}
-            required
-            fullWidth
-            style={{ marginTop: '1rem' }}
-            error={!!errors.end}
-            helperText={errors.end}
-          />
-        </form>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} color="primary">
-          Submit
-        </Button>
-      </DialogActions>
-    </Dialog>
+              fullWidth
+              style={{ marginTop: '1rem' }}
+              error={!!errors.date}
+              helperText={errors.date}
+            />
+            <TextField
+              name="start"
+              label="Dropoff Time"
+              type="time"
+              value={formData.start}
+              onChange={handleChange}
+              required
+              fullWidth
+              style={{ marginTop: '1rem' }}
+              error={!!errors.start}
+              helperText={errors.start}
+            />
+            <TextField
+              name="end"
+              label="Pickup Time"
+              type="time"
+              value={formData.end}
+              onChange={handleChange}
+              required
+              fullWidth
+              style={{ marginTop: '1rem' }}
+              error={!!errors.end}
+              helperText={errors.end}
+            />
+          </form>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} color="primary">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <PaymentModal onCancel={handleClosePaymentModal} onProceed={handleSubmitPayment} showPaymentDialog={showPaymentDialog} newEvents={reservationsToPay} hourlyRate={hourlyRate} grandTotalTime={grandTotalTime} grandTotalBill={grandTotalBill} />
+
+    </>
   );
 };
 

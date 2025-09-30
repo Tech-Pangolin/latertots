@@ -61,10 +61,33 @@ export const firebaseTimestampToFormDateString = (timestamp) => {
 export const isEventOnCalendarDay = (eventDate, calendarDay) => {
   const event = new Date(eventDate);
   const day = new Date(calendarDay);
-  
+
   // Set both dates to start of day for comparison
   const eventStartOfDay = new Date(event.getFullYear(), event.getMonth(), event.getDate());
   const calendarStartOfDay = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-  
+
   return eventStartOfDay.getTime() === calendarStartOfDay.getTime();
+};
+
+
+/**
+ * Calculates the difference in time between start time and end time
+ */
+export const calculateTimeDifference = (startTime, endTime) => {
+  // Parse "HH:MM"
+  const [sh, sm] = startTime.split(":").map(Number);
+  const [eh, em] = endTime.split(":").map(Number);
+
+  // Convert to minutes from midnight
+  const startMinutes = sh * 60 + sm;
+  const endMinutes = eh * 60 + em;
+
+  // Difference in minutes (handle crossing midnight)
+  let diffMinutes = endMinutes - startMinutes;
+  if (diffMinutes < 0) diffMinutes += 24 * 60;
+
+  // Convert to hours as a decimal
+  const diffHours = diffMinutes / 60;
+
+  return diffHours.toFixed(2);
 };
