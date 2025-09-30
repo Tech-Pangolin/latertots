@@ -1,6 +1,6 @@
 // actions.js - XState v5 Actions
 const { assign } = require('xstate');
-const { logger } = require('firebase-functions');
+const logger = require('firebase-functions/logger');
 
 // Increment reservation index
 const incrementResIdx = assign({ 

@@ -1,6 +1,6 @@
 // billingMachineV5.js - XState v5 Machine Definition
 const { setup, assign } = require('xstate');
-const { logger } = require('firebase-functions');
+const logger = require('firebase-functions/logger');
 const { RESERVATION_STATUS, INVOICE_STATUS } = require('../constants');
 const admin = require('firebase-admin');
 const _ = require('lodash');
@@ -34,7 +34,6 @@ const billingMachineV5 = setup({
   guards: {
     isReservationPassComplete: guards.isReservationPassComplete,
     isOverduePassComplete: guards.isOverduePassComplete,
-    isDryRun: guards.isDryRun,
     isCriticalError: guards.isCriticalError,
     isBusinessLogicError: guards.isBusinessLogicError,
     isTransientError: guards.isTransientError,
@@ -52,8 +51,7 @@ const billingMachineV5 = setup({
     overdueInvoices: [],
     overIdx: 0,
     failures: [],
-    newInvoices: [],
-    dryRun: process.env.DRY_RUN === 'true'
+    newInvoices: []
   }),
   states: {
     // State 0: Initialize & preload reservations
@@ -62,7 +60,7 @@ const billingMachineV5 = setup({
       invoke: {
         src: 'initializeRunActor',
         input: ({ context }) => {
-          return { dryRun: context.dryRun };
+          return {};
         },
         onDone: {
           target: 'storeData',
@@ -216,7 +214,6 @@ const billingMachineV5 = setup({
         src: 'persistInvoiceActor',
         input: ({ context }) => ({ 
           currentInvoice: context.currentInvoice, 
-          dryRun: context.dryRun,
           reservations: context.reservations,
           resIdx: context.resIdx,
           newInvoices: context.newInvoices,
@@ -248,7 +245,7 @@ const billingMachineV5 = setup({
       entry: () => logger.info('✅ [BILLING] Reservation pass complete, starting overdue invoices pass'),
       invoke: {
         src: 'fetchOverdueInvoicesActor',
-        input: ({ context }) => ({ dryRun: context.dryRun }),
+        input: ({ context }) => ({}),
         onDone: {
           target: 'nextOverdueInvoice',
           actions: [
@@ -284,8 +281,7 @@ const billingMachineV5 = setup({
         src: 'applyLateFeeActor',
         input: ({ context }) => ({ 
           overdueInvoices: context.overdueInvoices, 
-          overIdx: context.overIdx, 
-          dryRun: context.dryRun 
+          overIdx: context.overIdx
         }),
         onDone: {
           target: 'recalcUserHold',
@@ -305,8 +301,7 @@ const billingMachineV5 = setup({
       invoke: {
         src: 'recalcUserHoldActor',
         input: ({ context }) => ({ 
-          uid: context.affectedUserId, 
-          dryRun: context.dryRun 
+          uid: context.affectedUserId
         }),
         onDone: { target: 'incrementOver' },
         onError: { 
@@ -327,7 +322,6 @@ const billingMachineV5 = setup({
           runId: context.runId, 
           failures: context.failures, 
           reservations: context.reservations, 
-          dryRun: context.dryRun, 
           overdueInvoices: context.overdueInvoices, 
           newInvoices: context.newInvoices,
           finalStatus: context.finalStatus || 'success', // Default to success

@@ -19,9 +19,8 @@
 
 const admin = require('firebase-admin');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
-const { logger } = require('firebase-functions');
+const logger = require('firebase-functions/logger');
 const { PAYMENT_ACTIVITY_TYPES, PAYMENT_ACTIVITY_STATUS } = require('../../constants');
-const functions = require('firebase-functions');
 
 const db = getFirestore();
 
@@ -35,14 +34,15 @@ const db = getFirestore();
  */
 const verifyWebhookSignature = (payload, signature, secretKey, webhookSecret) => {
   try {
+    // Initialize Stripe with the real secret key
     const stripe = require('stripe')(secretKey);
     
+    // Only the webhook secret is needed for signature verification
     const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
     return event;
   } catch (error) {
     logger.error('❌ [WEBHOOK] Signature verification failed:', {
-      error: error.message,
-      timestamp: new Date().toISOString()
+      error: error.message
     });
     throw new Error('Invalid webhook signature');
   }

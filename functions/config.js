@@ -10,7 +10,6 @@ const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
 const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
 
 // Non-sensitive configuration with defaults
-const dryRun = defineBoolean('DRY_RUN', { default: false });
 const logLevel = defineString('LOG_LEVEL', { default: 'INFO' });
 const maxRetryAttempts = defineInt('MAX_RETRY_ATTEMPTS', { default: 3 });
 const retryIntervalHours = defineInt('RETRY_INTERVAL_HOURS', { default: 24 });
@@ -21,7 +20,6 @@ module.exports = {
   stripeWebhookSecret,
   
   // Configuration (with defaults)
-  dryRun,
   logLevel,
   maxRetryAttempts,
   retryIntervalHours

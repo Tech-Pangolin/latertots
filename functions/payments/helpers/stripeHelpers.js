@@ -1,7 +1,7 @@
 // stripeHelpers.js - Stripe API interaction helpers
 const admin = require('firebase-admin');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
-const { logger } = require('firebase-functions');
+const logger = require('firebase-functions/logger');
 const { PAYMENT_ACTIVITY_TYPES, PAYMENT_ACTIVITY_STATUS } = require('../../constants');
 const Stripe = require('stripe');
 

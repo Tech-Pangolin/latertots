@@ -1,5 +1,5 @@
 // guards.js - XState v5 Guards
-const { logger } = require('firebase-functions');
+const logger = require('firebase-functions/logger');
 
 // Check if all reservations are processed
 const isReservationPassComplete = ({ context }) => {
@@ -25,10 +25,6 @@ const isOverduePassComplete = ({ context }) => {
   return isComplete;
 };
 
-// Check if dry run mode
-const isDryRun = ({ context }) => {
-  return context.dryRun === true;
-};
 
 // Error categorization guards
 const isCriticalError = ({ context }) => {
@@ -88,7 +84,6 @@ const hasRetryAttemptsRemaining = ({ context }) => {
 module.exports = {
   isReservationPassComplete,
   isOverduePassComplete,
-  isDryRun,
   isCriticalError,
   isBusinessLogicError,
   isTransientError,

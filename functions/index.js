@@ -7,7 +7,7 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-const functions = require('firebase-functions');
+const functions = require('firebase-functions/v1');
 const logger = require("firebase-functions/logger");
 const admin = require('firebase-admin');
 const NotificationSchema = require('./schemas/NotificationSchema');
@@ -285,12 +285,10 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
 
   try {
     // Get parameters from query string or environment
-    const dryRun = req.query.dryRun === 'true' || process.env.DRY_RUN === 'true';
     const logLevel = req.query.logLevel || process.env.LOG_LEVEL || 'INFO';
 
     logger.info('🚀 [fxn:dailyBillingJob]: Daily billing job triggered via HTTP', {
       timestamp: new Date().toISOString(),
-      dryRun,
       logLevel,
       userAgent: req.get('User-Agent'),
       method: req.method,
@@ -302,9 +300,7 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
     const { createActor } = require('xstate');
 
     // Create and start the v5 actor
-    const actor = createActor(billingMachineV5, {
-      input: { dryRun }
-    }).start();
+    const actor = createActor(billingMachineV5).start();
 
     // Wait for completion
     await new Promise((resolve, reject) => {
@@ -318,13 +314,11 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
     });
 
     logger.info('🎉 [fxn:dailyBillingJob]: Daily billing job completed successfully', {
-      dryRun,
       timestamp: new Date().toISOString()
     });
 
     res.status(200).json({
       success: true,
-      dryRun,
       timestamp: new Date().toISOString()
     });
 
@@ -332,8 +326,7 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
     logger.error('❌ [fxn:dailyBillingJob]: Daily billing job failed', {
       error: error.message,
       stack: error.stack,
-      timestamp: new Date().toISOString(),
-      dryRun: req.query.dryRun === 'true' || process.env.DRY_RUN === 'true'
+      timestamp: new Date().toISOString()
     });
 
     res.status(500).json({
@@ -346,59 +339,70 @@ exports.dailyBillingJob = onRequest(async (req, res) => {
 
 // Stripe Webhook Handler
 exports.stripeWebhook = onRequest(
-  { secrets: [require('./config').stripeSecretKey, require('./config').stripeWebhookSecret] },
+  { 
+    secrets: [require('./config').stripeSecretKey, require('./config').stripeWebhookSecret],
+    cors: false,  // Disable CORS to preserve raw body
+    rawBody: true  // Enable raw body access for signature verification
+  },
   async (req, res) => {
     const logger = require('firebase-functions/logger');
     const { stripeSecretKey, stripeWebhookSecret } = require('./config');
 
-    try {
-      logger.info('🔔 [fxn:stripeWebhook]: Stripe webhook received', {
-        timestamp: new Date().toISOString(),
-        method: req.method,
-        url: req.url
-      });
+    logger.info('🔔 [fxn:stripeWebhook]: Stripe webhook received', {
+      timestamp: new Date().toISOString(),
+      method: req.method,
+      url: req.url
+    });
 
+    try {
       // Verify webhook signature for security
       const { verifyWebhookSignature, processStripeWebhook } = require('./payments/helpers/webhookHelpers');
-      const signature = req.headers['stripe-signature'];
+      const signature = req.headers['stripe-signature'] || req.headers['Stripe-Signature'];
 
       if (!signature) {
         logger.error('❌ [fxn:stripeWebhook]: Missing Stripe signature header');
         return res.status(400).json({
           success: false,
-          error: 'Missing Stripe signature header',
-          timestamp: new Date().toISOString()
+          error: 'Missing Stripe signature header'
+        });
+      }
+
+      const rawBody = Buffer.isBuffer(req.rawBody) 
+        ? req.rawBody.toString('utf8') 
+        : req.rawBody || JSON.stringify(req.body);
+
+      if (!rawBody) {
+        logger.error('❌ [fxn:stripeWebhook]: No raw body available for signature verification');
+        return res.status(400).json({
+          success: false,
+          error: 'No raw body available for signature verification'
         });
       }
 
       // Verify and parse the webhook
-      const stripeEvent = verifyWebhookSignature(req.rawBody, signature, stripeSecretKey.value(), stripeWebhookSecret.value());
+      const stripeEvent = verifyWebhookSignature(rawBody, signature, stripeSecretKey.value(), stripeWebhookSecret.value());
 
       // Process Stripe webhook
       const result = await processStripeWebhook(stripeEvent);
 
-    logger.info('✅ [fxn:stripeWebhook]: Webhook processed successfully', {
-      result,
-      timestamp: new Date().toISOString()
-    });
+      logger.info('✅ [fxn:stripeWebhook]: Webhook processed successfully', {
+        eventType: stripeEvent.type,
+        eventId: stripeEvent.id
+      });
 
-    res.status(200).json({
-      success: true,
-      processed: result.processed,
-      timestamp: new Date().toISOString()
-    });
+      res.status(200).json({
+        success: true,
+        processed: result.processed
+      });
 
   } catch (error) {
     logger.error('❌ [fxn:stripeWebhook]: Webhook processing failed', {
-      error: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
+      error: error.message
     });
 
     res.status(500).json({
       success: false,
-      error: error.message,
-      timestamp: new Date().toISOString()
+      error: error.message
     });
   }
 });

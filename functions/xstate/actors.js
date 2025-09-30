@@ -1,6 +1,6 @@
 // actors.js - XState v5 Actors (formerly services)
 const { fromPromise } = require('xstate');
-const { logger } = require('firebase-functions');
+const logger = require('firebase-functions/logger');
 const { Timestamp, getFirestore, FieldValue } = require('firebase-admin/firestore');
 const admin = require('firebase-admin');
 
@@ -82,8 +82,7 @@ const initializeRunActor = fromPromise(async ({ input }) => {
       errorType: errorType,
       retryable: retryable,
       context: {
-        runId: runRef?.id || 'unknown',
-        dryRun: input.dryRun
+        runId: runRef?.id || 'unknown'
       }
     };
     
@@ -116,9 +115,7 @@ const fetchOverdueInvoicesActor = fromPromise(async ({ input }) => {
       operation: 'FETCH_OVERDUE_INVOICES',
       errorType: errorType,
       retryable: retryable,
-      context: {
-        dryRun: input.dryRun
-      }
+      context: {}
     };
     
     throw enrichedError;
@@ -128,12 +125,7 @@ const fetchOverdueInvoicesActor = fromPromise(async ({ input }) => {
 // Persist invoice
 const persistInvoiceActor = fromPromise(async ({ input }) => {
   try {
-    const { currentInvoice, dryRun, reservations, resIdx, newInvoices, runId } = input;
-    
-    if (dryRun) {
-      logger.info('👀 [BILLING] DRY-RUN: Would persist invoice:', currentInvoice);
-      return;
-    }
+    const { currentInvoice, reservations, resIdx, newInvoices, runId } = input;
     
     await db.runTransaction(async (tx) => {
       tx.set(
@@ -180,15 +172,10 @@ const persistInvoiceActor = fromPromise(async ({ input }) => {
 // Apply late fee
 const applyLateFeeActor = fromPromise(async ({ input }) => {
   try {
-    const { overdueInvoices, overIdx, dryRun } = input;
+    const { overdueInvoices, overIdx } = input;
     const invSnap = overdueInvoices[overIdx];
     const data = invSnap.data();
     const feeExists = data.lineItems?.some((li) => li.tag === 'LATE_FEE');
-    
-    if (dryRun) {
-      logger.info('👀 [BILLING] DRY-RUN late-fee check', invSnap.id, { feeExists });
-      return { userId: data.user.id };
-    }
     
     if (!feeExists) {
       const feeLI = {
@@ -232,8 +219,7 @@ const applyLateFeeActor = fromPromise(async ({ input }) => {
       context: {
         invoiceId: invSnap?.id || 'unknown',
         userId: data?.user?.id || 'unknown',
-        overIdx: overIdx,
-        dryRun: dryRun
+        overIdx: overIdx
       }
     };
     
@@ -244,11 +230,7 @@ const applyLateFeeActor = fromPromise(async ({ input }) => {
 // Recalculate user hold
 const recalcUserHoldActor = fromPromise(async ({ input }) => {
   try {
-    const { uid, dryRun } = input;
-    if (dryRun) {
-      logger.info('👀 [BILLING] DRY-RUN recalc hold', { userId: uid });
-      return;
-    }
+    const { uid } = input;
     
     const snap = await db.collection('Invoices')
       .where('user.id', '==', uid)
@@ -274,8 +256,7 @@ const recalcUserHoldActor = fromPromise(async ({ input }) => {
       errorType: errorType,
       retryable: retryable,
       context: {
-        userId: uid,
-        dryRun: dryRun
+        userId: uid
       }
     };
     
@@ -286,7 +267,7 @@ const recalcUserHoldActor = fromPromise(async ({ input }) => {
 // Wrap up billing run
 const wrapUpActor = fromPromise(async ({ input }) => {
   try {
-    const { runId, failures, reservations, dryRun, overdueInvoices, newInvoices, finalStatus, hasFailures } = input;
+    const { runId, failures, reservations, overdueInvoices, newInvoices, finalStatus, hasFailures } = input;
 
     const reservationsProcessed = reservations.map(res => `Reservations/${res.id}`);
     const overdueInvoicesProcessed = overdueInvoices.map(inv => `Invoices/${inv.id}`);
@@ -304,17 +285,15 @@ const wrapUpActor = fromPromise(async ({ input }) => {
       newInvoicesProcessed
     });
     
-    if (!dryRun) {
-      return db.collection('BillingRuns').doc(runId)
-        .set({ 
-          status: actualStatus, 
-          endTime: new Date(), 
-          failures, 
-          reservations: reservationsProcessed, 
-          newOverdueInvoices: overdueInvoicesProcessed, 
-          newInvoices: newInvoicesProcessed 
-        }, { merge: true });
-    }
+    return db.collection('BillingRuns').doc(runId)
+      .set({ 
+        status: actualStatus, 
+        endTime: new Date(), 
+        failures, 
+        reservations: reservationsProcessed, 
+        newOverdueInvoices: overdueInvoicesProcessed, 
+        newInvoices: newInvoicesProcessed 
+      }, { merge: true });
   } catch (error) {
     logger.error('❌ [BILLING] Wrap up failed - completing run anyway:', {
       error: error.message,
