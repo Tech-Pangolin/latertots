@@ -498,7 +498,13 @@ exports.processRefund = onRequest(
     }
   });
 
-exports.sendContactEmail = onRequest({ region: "us-central1" }, async (req, res) => {
+exports.sendContactEmail = onRequest({ 
+  region: "us-central1", 
+  secrets: [
+    require('./config').latertotsEmail, 
+    require('./config').emailPasscode
+  ] 
+}, async (req, res) => {
   cors(req, res, async () => {
     if (req.method !== "POST") {
       res.status(405).json({ success: false, message: "Method Not Allowed" });

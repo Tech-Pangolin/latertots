@@ -8,7 +8,7 @@ const { defineSecret, defineString, defineBoolean, defineInt } = require('fireba
 // Stripe secrets - stored in Google Cloud Secret Manager
 const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
 const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
-const latertotsEmail = defineString('LATERTOTS_EMAIL');
+const latertotsEmail = defineSecret('LATERTOTS_EMAIL_ADDRESS');
 const emailPasscode = defineSecret('EMAIL_PASSCODE');
 
 // Non-sensitive configuration with defaults
