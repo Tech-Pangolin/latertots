@@ -14,20 +14,13 @@ const corsLib = require('cors');
 const NotificationSchema = require('./schemas/NotificationSchema');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 const _ = require('lodash');
+const nodemailer = require('nodemailer'); 
 
 admin.initializeApp();
 const db = getFirestore();
 const cors = corsLib({ origin: true });
 
 const { latertotsEmail, emailPasscode } = require('./config');
-// Create transporter once
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: latertotsEmail.value(),
-    pass: emailPasscode.value(),
-  },
-});
 
 exports.createUserProfile = functions.auth.user().onCreate(async (user) => {
   return db.collection('Users').doc(user.uid).set({
@@ -505,7 +498,7 @@ exports.processRefund = onRequest(
     }
   });
 
-export const sendContactEmail = onRequest({ region: "us-central1" }, async (req, res) => {
+exports.sendContactEmail = onRequest({ region: "us-central1" }, async (req, res) => {
   cors(req, res, async () => {
     if (req.method !== "POST") {
       res.status(405).json({ success: false, message: "Method Not Allowed" });
@@ -513,6 +506,15 @@ export const sendContactEmail = onRequest({ region: "us-central1" }, async (req,
     }
 
     const { name, email, subject, message } = req.body;
+
+    // Create transporter inside the function where secrets are available
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: latertotsEmail.value(),
+        pass: emailPasscode.value(),
+      },
+    });
 
     const mailOptions = {
       from: latertotsEmail.value(),
