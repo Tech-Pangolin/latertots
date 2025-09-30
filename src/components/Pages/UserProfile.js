@@ -11,6 +11,7 @@ import { useChildrenRQ } from '../../Hooks/query-related/useChildrenRQ';
 import { useContactsRQ } from '../../Hooks/query-related/useContactsRQ';
 import { useAlerts } from '../../Hooks/useAlerts';
 import ChangePasswordForm from '../ChangePasswordForm';
+import { set } from 'lodash';
 
 
 const UserProfile = () => {
@@ -28,13 +29,10 @@ const UserProfile = () => {
   // Handle tab switching from navigation state
   useEffect(() => {
     if (location.state?.switchToTab) {
-      console.log(location.state.switchToTab)
-    }  
+      setActiveTab(location.state.switchToTab)
+    }
   }, [location.state]);
-  useEffect(() => {
-    console.log("loaded payment information")
 
-  },[]);
   // TODO: Open a dialog to show/edit child details when clicking on a child's name
   // Dialog state
   const [selectedChild, setSelectedChild] = useState(null);
@@ -55,10 +53,10 @@ const UserProfile = () => {
     setEditingChild(null);
   };
 
-  function canSchedule(){
-    const {StreetAddress, City, State, Zip, CellNumber} = currentUser || {};
+  function canSchedule() {
+    const { StreetAddress, City, State, Zip, CellNumber } = currentUser || {};
     if (!StreetAddress || !City || !State || !Zip || !CellNumber) return false;
-    if(children.length === 0) return false;
+    if (children.length === 0) return false;
     return true;
   }
 
@@ -75,10 +73,10 @@ const UserProfile = () => {
             </div>
             <div className="col-12 d-flex justify-content-center">
               <img className="rounded-circle" width="250px" height="250px" src={currentUser.PhotoURL ? currentUser.PhotoURL : "https://st3.depositphotos.com/15648834/17930/v/600/depositphotos_179308454-stock-illustration-unknown-person-silhouette-glasses-profile.jpg"} />
-            </div>  
-             {!canSchedule() && <span className="text-danger my-3 text-center">Complete your profile to book with us!</span>}
+            </div>
+            {!canSchedule() && <span className="text-danger my-3 text-center">Complete your profile to book with us!</span>}
             <div className='col-12 d-flex justify-content-center mt-5'>
-              <button onClick={() => window.location.href="/schedule"} disabled={!canSchedule()} className="border px-5 py-3 p-1 pink-text blink-text">Book Now</button>
+              <button onClick={() => window.location.href = "/schedule"} disabled={!canSchedule()} className="border px-5 py-3 p-1 pink-text blink-text">Book Now</button>
             </div>
           </div>
         </div>
@@ -210,9 +208,9 @@ const UserProfile = () => {
 
                 <div className="mt-3 experience">
                   <div className="row">
-                  {children.length > 0 &&
-                    children.map((child) => (<ChildCard key={child.id} child={child} onNameClick={handleNameClick} onEditChildFxn={handleEditChildFxn} />))
-                  }
+                    {children.length > 0 &&
+                      children.map((child) => (<ChildCard key={child.id} child={child} onNameClick={handleNameClick} onEditChildFxn={handleEditChildFxn} />))
+                    }
                   </div>
                   {children.length === 0 && <p className='mt-5'>No children added yet.</p>}
                 </div>
@@ -243,7 +241,7 @@ const UserProfile = () => {
                   <div className="col-12"><h4 className="mt-2">Payment Information</h4></div>
                 </div>
                 <h5 className="mt-5">Payment</h5>
-           
+
               </div>
             </div>
             <div className={`tab-pane fade ${activeTab === 'security' ? 'show active' : ''}`} id="security-tab-pane" role="tabpanel" aria-labelledby="security-tab" tabIndex="0">
