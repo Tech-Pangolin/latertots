@@ -28,29 +28,31 @@ const { processRefund } = require('./payments/refunds/refundProcessing');
 // Email functions
 const { sendContactEmail } = require('./email/contactEmail');
 
+
+
+
 // Export all functions
 exports.createUserProfile = createUserProfile;
 exports.updateAdminClaims = updateAdminClaims;
-
 exports.createReservationRequestNotification = createReservationRequestNotification;
 exports.createReservationCancellationNotification = createReservationCancellationNotification;
-
 exports.createUserAccountProblemNotification = createUserAccountProblemNotification;
-
-
 exports.cleanupExpiredNotifications = cleanupExpiredNotifications;
-
 exports.dailyBillingJob = dailyBillingJob;
-
 exports.stripeWebhook = stripeWebhook;
-
 exports.processScheduledPayments = processScheduledPayments;
-
 exports.processRefund = processRefund;
-
 exports.sendContactEmail = sendContactEmail;
 
 
 
 // Deployment command: firebase deploy --only functions
 // Run from the root of the project directory
+
+// Don't use functions config or env variables. Use parameterized secrets.
+// Set secrets command: firebase functions:secrets:set THE_NAME_OF_THE_SECRET
+    // Once you run the set command, it'll prompt you for the value of the secret.
+
+// Get secrets command: firebase functions:secrets:access THE_NAME_OF_THE_SECRET
+
+// See all the secret names: gcloud secrets list
