@@ -108,6 +108,9 @@ const createStripeCheckoutSession = async (options) => {
       cancel_url: options.cancelUrl,
       automatic_tax: CHECKOUT_CONFIG.AUTOMATIC_TAX,
       metadata: options.metadata,
+      customer_update: {
+        address: 'auto'
+      },
       saved_payment_method_options: {
         payment_method_save: CHECKOUT_CONFIG.SAVE_PAYMENT_METHODS ? 'enabled' : 'disabled'
       },

@@ -14,7 +14,7 @@ config();
 // Helpers
 
 // not quite 50/50
-const flipCoin = () => _.random(10) < 6
+const flipCoin = () => _.random(10) < 10
 
 // Validation helper for reservations
 const validateReservationData = (data) => {

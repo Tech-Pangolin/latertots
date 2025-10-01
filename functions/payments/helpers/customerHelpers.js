@@ -9,7 +9,6 @@ const db = getFirestore();
 /**
  * Get or create a Stripe customer for an app user
  * @param {string} latertotsUserId - The app user ID
- * @param {Object} userData - User data (email, name, phone)
  * @param {string} secretKey - Stripe secret key from Secret Manager
  * @returns {Promise<string>} - Stripe customer ID
  */
@@ -17,9 +16,34 @@ const getOrCreateStripeCustomer = async (latertotsUserId, secretKey) => {
   const stripe = new Stripe(secretKey);
   
   try {
-    // Check existing customer
+    // Fetch and validate user data
     const userDoc = await db.collection('Users').doc(latertotsUserId).get();
-    const existingCustomerId = userDoc.data()?.stripeCustomerId;
+    if (!userDoc.exists) {
+      throw new Error('User not found');
+    }
+    
+    const userData = userDoc.data();
+    
+    // Validate required user data for Stripe
+    if (!userData.Email) {
+      throw new Error('User email is required for payment processing');
+    }
+
+    if (userData.Phone && userData.Phone.length > 20) {
+      throw new Error('User phone number is too long for payment processing');
+    }
+    
+    if (!userData.Name) {
+      throw new Error('User name is required for payment processing');
+    }
+    
+    // Check if user has address data (required for Stripe Tax)
+    if (!userData.StreetAddress || !userData.City || !userData.State || !userData.Zip) {
+      throw new Error('User address is required for payment processing');
+    }
+    
+    // Check existing customer
+    const existingCustomerId = userData.stripeCustomerId;
     
     if (existingCustomerId) {
       logger.info('🔍 [CUSTOMER] Found existing Stripe customer:', {
@@ -29,20 +53,20 @@ const getOrCreateStripeCustomer = async (latertotsUserId, secretKey) => {
       return existingCustomerId;
     }
     
-    // Create new customer
+    // Create new customer with validated data
     const customer = await stripe.customers.create({
-      email: userDoc.data()?.Email,
-      name: userDoc.data()?.Name,
-      phone: userDoc.data()?.CellNumber,
+      email: userData.Email,
+      name: userData.Name,
+      phone: userData.CellNumber || userData.Phone || null,
       address: {
-        line1: userDoc.data()?.StreetAddress,
-        city: userDoc.data()?.City,
-        state: userDoc.data()?.State,
-        postal_code: userDoc.data()?.Zip,
-        country: 'US'
+        line1: userData.StreetAddress,
+        city: userData.City,
+        state: userData.State,
+        postal_code: userData.Zip,
+        country: userData.Country || 'US'
       },
       metadata: { 
-        [STRIPE_METADATA_KEYS.APP_USER_ID]: `Users/${latertotsUserId}` 
+        [STRIPE_METADATA_KEYS.APP_USER_ID]: latertotsUserId
       }
     });
     
