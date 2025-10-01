@@ -111,6 +111,7 @@ const createStripeCheckoutSession = async (options) => {
       customer_update: {
         address: 'auto'
       },
+      payment_intent_data: {metadata: options.metadata},
       saved_payment_method_options: {
         payment_method_save: CHECKOUT_CONFIG.SAVE_PAYMENT_METHODS ? 'enabled' : 'disabled'
       },

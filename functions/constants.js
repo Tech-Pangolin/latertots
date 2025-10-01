@@ -66,6 +66,12 @@ const PAYMENT_TYPES = {
   FULL: 'full'                       // Pay full amount upfront
 };
 
+// NEW: Deposit types for payment selection
+const DEPOSIT_TYPES = {
+  MINIMUM: 'minimum',                 // Pay 2-hour minimum upfront
+  FULL: 'full'                       // Pay full amount upfront
+};
+
 // NEW: Checkout session configuration (URLs will be set at runtime)
 const CHECKOUT_CONFIG = {
   PAYMENT_METHOD_TYPES: ['card'],
@@ -102,6 +108,7 @@ module.exports = {
   // NEW exports
   PAYMENT_PRICING,
   PAYMENT_TYPES,
+  DEPOSIT_TYPES,
   CHECKOUT_CONFIG,
   STRIPE_METADATA_KEYS,
   LINE_ITEM_TAGS

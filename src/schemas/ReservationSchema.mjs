@@ -10,7 +10,13 @@ const ReservationSchema = Joi.object({
   allDay: Joi.boolean().default(false).required(),                    // TODO: Remove all references to this field
 
   // Billing integration fields
-  invoice: DocumentReferenceOrCompatible.optional().allow(null),
+  stripePayments: Joi.object()
+    .required()
+    .keys({
+      minimum: Joi.alternatives().try(Joi.string(), Joi.valid(null)), 
+      remainder: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
+      full: Joi.alternatives().try(Joi.string(), Joi.valid(null))
+    }),
   status: Joi.string()
     .valid(...Object.values(RESERVATION_STATUS))
     .required()

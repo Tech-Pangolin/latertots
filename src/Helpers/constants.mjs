@@ -48,6 +48,11 @@ export const RESERVATION_STATUS = Object.freeze({
   COMPED: 'comped',           // Payment was waived, no fees apply
 })
 
+export const DEPOSIT_TYPES = Object.freeze({
+  MINIMUM: 'minimum',         // Pay 2-hour minimum upfront
+  FULL: 'full'               // Pay full amount upfront
+})
+
 export const GENDERS = Object.freeze({
   MALE: "Male",
   FEMALE: "Female",
@@ -150,6 +155,7 @@ if (typeof module !== 'undefined' && module.exports) {
     BUSINESS_HRS,
     ROLES,
     RESERVATION_STATUS,
+    DEPOSIT_TYPES,
     GENDERS,
     CONTACT_RELATIONS,
     MIN_AGE_FOR_CHILD_YEARS,

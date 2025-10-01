@@ -333,12 +333,8 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
     const reservations = JSON.parse(session.metadata.reservationIds || '[]');
     const paymentType = session.metadata.paymentType;
     const appUserId = session.metadata.appUserId;
+
     
-    // Create invoice for the payment
-    const invoice = await createInvoiceFromCheckout(session, reservations, paymentType);
-    
-    // Create reservations in Firestore
-    await createReservationsFromCheckout(reservations, session.customer, appUserId);
     
     // Update user's saved payment methods if any
     if (session.payment_method) {

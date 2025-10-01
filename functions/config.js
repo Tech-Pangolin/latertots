@@ -13,6 +13,7 @@ const emailPasscode = defineSecret('EMAIL_PASSCODE');
 
 // App configuration
 const appUrl = defineSecret('APP_URL');
+const reactUrl = defineSecret('REACT_URL');
 
 module.exports = {
   // Secrets (from Secret Manager)
@@ -21,6 +22,7 @@ module.exports = {
   latertotsEmail,
   emailPasscode,
   appUrl,
+  reactUrl,
 };
 
 // Don't use functions config or env variables. Use parameterized secrets.

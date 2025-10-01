@@ -25,6 +25,7 @@ const { stripeWebhook } = require('./payments/webhooks/stripeWebhook');
 const { processScheduledPayments } = require('./payments/scheduled/paymentProcessing');
 const { processRefund } = require('./payments/refunds/refundProcessing');
 const { createCheckoutSession } = require('./payments/checkout/createCheckoutSession');
+const { cleanupFailedPayments } = require('./payments/cleanup/cleanupFailedPayments');
 
 // Email functions
 const { sendContactEmail } = require('./email/contactEmail');
@@ -44,6 +45,7 @@ exports.stripeWebhook = stripeWebhook;
 exports.processScheduledPayments = processScheduledPayments;
 exports.processRefund = processRefund;
 exports.createCheckoutSession = createCheckoutSession;
+exports.cleanupFailedPayments = cleanupFailedPayments;
 exports.sendContactEmail = sendContactEmail;
 
 

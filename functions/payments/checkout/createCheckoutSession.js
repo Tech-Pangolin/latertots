@@ -3,7 +3,7 @@ const { onRequest } = require('firebase-functions/v2/https');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 const logger = require('firebase-functions/logger');
 const { PAYMENT_TYPES, STRIPE_METADATA_KEYS } = require('../../constants');
-const { stripeSecretKey, appUrl } = require('../../config');
+const { stripeSecretKey, appUrl, reactUrl } = require('../../config');
 const { getOrCreateStripeCustomer } = require('../helpers/customerHelpers');
 const { calculateReservationPricing, createStripeCheckoutSession } = require('../helpers/checkoutHelpers');
 
@@ -17,7 +17,7 @@ const db = getFirestore();
  */
 exports.createCheckoutSession = onRequest(
   {
-    secrets: [stripeSecretKey, appUrl],
+    secrets: [stripeSecretKey, appUrl, reactUrl],
     cors: true
   },
   async (request, response) => {
@@ -52,18 +52,20 @@ exports.createCheckoutSession = onRequest(
         latertotsUserId, 
         stripeSecretKey.value()
       );
+
+      logger.info('Reservations:', reservations);
       
       // Create Checkout Session
       const session = await createStripeCheckoutSession({
         customer: stripelatertotsUserId,
         lineItems: lineItems,
         metadata: {
-          [STRIPE_METADATA_KEYS.APP_USER_ID]: latertotsUserId,
-          [STRIPE_METADATA_KEYS.RESERVATION_IDS]: JSON.stringify(reservations.map(r => r.id)),
+          [STRIPE_METADATA_KEYS.APP_USER_ID]: `Users/${latertotsUserId}`,
+          [STRIPE_METADATA_KEYS.RESERVATION_IDS]: JSON.stringify(reservations.map(r => `Reservations/${r.reservationId}`)),
           [STRIPE_METADATA_KEYS.PAYMENT_TYPE]: paymentType
         },
-        successUrl: `${appUrl.value()}/payment-success`,
-        cancelUrl: `${appUrl.value()}/schedule`,
+        successUrl: `${reactUrl.value()}/schedule`,
+        cancelUrl: `${reactUrl.value()}/schedule`,
         secretKey: stripeSecretKey.value()
       });
       
