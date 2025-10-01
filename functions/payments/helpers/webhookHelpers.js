@@ -105,6 +105,12 @@ const processStripeWebhook = async (stripeEvent) => {
       case 'invoice.payment_failed':
         result = await handleInvoicePaymentFailure(stripeEvent);
         break;
+      case 'checkout.session.completed':
+        result = await handleCheckoutSessionCompleted(stripeEvent);
+        break;
+      case 'checkout.session.expired':
+        result = await handleCheckoutSessionExpired(stripeEvent);
+        break;
       default:
         logger.info('ℹ️ [WEBHOOK] Unhandled event type:', {
           eventType: stripeEvent.type,
@@ -308,6 +314,182 @@ const handleInvoicePaymentFailure = async (stripeEvent) => {
   return { processed: true, status: 'invoice_payment_failed' };
 };
 
+/**
+ * Handle checkout session completed
+ * @param {Object} stripeEvent - Stripe webhook event
+ * @returns {Promise<Object>} - Processing result
+ */
+const handleCheckoutSessionCompleted = async (stripeEvent) => {
+  const session = stripeEvent.data.object;
+  
+  try {
+    logger.info('✅ [WEBHOOK] Checkout session completed:', {
+      sessionId: session.id,
+      customerId: session.customer,
+      amountTotal: session.amount_total
+    });
+    
+    // Parse reservation data from metadata
+    const reservations = JSON.parse(session.metadata.reservationIds || '[]');
+    const paymentType = session.metadata.paymentType;
+    const appUserId = session.metadata.appUserId;
+    
+    // Create invoice for the payment
+    const invoice = await createInvoiceFromCheckout(session, reservations, paymentType);
+    
+    // Create reservations in Firestore
+    await createReservationsFromCheckout(reservations, session.customer, appUserId);
+    
+    // Update user's saved payment methods if any
+    if (session.payment_method) {
+      const { updateUserPaymentMethods } = require('./customerHelpers');
+      await updateUserPaymentMethods(appUserId, session.payment_method);
+    }
+    
+    logger.info('✅ [WEBHOOK] Checkout session processing completed:', {
+      sessionId: session.id,
+      invoiceId: invoice.id,
+      reservationCount: reservations.length
+    });
+    
+    return { processed: true, invoiceId: invoice.id, status: 'checkout_completed' };
+    
+  } catch (error) {
+    logger.error('❌ [WEBHOOK] Failed to process checkout session completion:', {
+      sessionId: session.id,
+      error: error.message
+    });
+    throw error;
+  }
+};
+
+/**
+ * Handle checkout session expired
+ * @param {Object} stripeEvent - Stripe webhook event
+ * @returns {Promise<Object>} - Processing result
+ */
+const handleCheckoutSessionExpired = async (stripeEvent) => {
+  const session = stripeEvent.data.object;
+  
+  logger.info('⏰ [WEBHOOK] Checkout session expired:', {
+    sessionId: session.id,
+    customerId: session.customer
+  });
+  
+  // TODO: Handle expired checkout sessions (cleanup, notifications, etc.)
+  
+  return { processed: true, status: 'checkout_expired' };
+};
+
+/**
+ * Create invoice from checkout session
+ * @param {Object} session - Stripe checkout session
+ * @param {Array} reservations - Reservation data
+ * @param {string} paymentType - Payment type (minimum/full)
+ * @returns {Promise<Object>} - Created invoice reference
+ */
+const createInvoiceFromCheckout = async (session, reservations, paymentType) => {
+  const { PAYMENT_TYPES, LINE_ITEM_TAGS, PAYMENT_PRICING } = require('../../constants');
+  const lineItems = [];
+  
+  if (paymentType === PAYMENT_TYPES.MINIMUM) {
+    const minimumRateCents = PAYMENT_PRICING.HOURLY_RATE_CENTS * PAYMENT_PRICING.MINIMUM_HOURS;
+    
+    reservations.forEach(reservation => {
+      // Base minimum deposit
+      lineItems.push({
+        tag: LINE_ITEM_TAGS.MINIMUM_DEPOSIT,
+        service: 'Child-Care Minimum Deposit',
+        durationHours: PAYMENT_PRICING.MINIMUM_HOURS,
+        rateCentsPerHour: PAYMENT_PRICING.HOURLY_RATE_CENTS,
+        subtotalCents: minimumRateCents
+      });
+      
+      // Add group activity fee if applicable
+      if (reservation.groupActivity) {
+        lineItems.push({
+          tag: LINE_ITEM_TAGS.GROUP_ACTIVITY,
+          service: 'Group Activity Participation',
+          durationHours: 1,
+          rateCentsPerHour: PAYMENT_PRICING.GROUP_ACTIVITY_FEE_CENTS,
+          subtotalCents: PAYMENT_PRICING.GROUP_ACTIVITY_FEE_CENTS
+        });
+      }
+    });
+  } else {
+    reservations.forEach(reservation => {
+      const baseAmount = Math.round(PAYMENT_PRICING.HOURLY_RATE_CENTS * reservation.durationHours);
+      
+      // Base child care charge
+      lineItems.push({
+        tag: LINE_ITEM_TAGS.BASE,
+        service: 'Child-Care',
+        durationHours: reservation.durationHours,
+        rateCentsPerHour: PAYMENT_PRICING.HOURLY_RATE_CENTS,
+        subtotalCents: baseAmount
+      });
+      
+      // Add group activity fee if applicable
+      if (reservation.groupActivity) {
+        lineItems.push({
+          tag: LINE_ITEM_TAGS.GROUP_ACTIVITY,
+          service: 'Group Activity Participation',
+          durationHours: 1,
+          rateCentsPerHour: PAYMENT_PRICING.GROUP_ACTIVITY_FEE_CENTS,
+          subtotalCents: PAYMENT_PRICING.GROUP_ACTIVITY_FEE_CENTS
+        });
+      }
+    });
+  }
+  
+  const invoiceData = {
+    invoiceId: `INV-${Date.now()}`,
+    stripeSessionId: session.id,
+    stripeCustomerId: session.customer,
+    reservations: reservations,
+    lineItems: lineItems,
+    subtotalCents: session.amount_subtotal,
+    taxCents: session.total_details?.amount_tax || 0,
+    totalCents: session.amount_total,
+    status: 'paid',
+    paymentType: paymentType,
+    createdAt: Timestamp.now()
+  };
+  
+  const invoiceRef = await db.collection('Invoices').add(invoiceData);
+  return invoiceRef;
+};
+
+/**
+ * Create reservations in Firestore from checkout session
+ * @param {Array} reservations - Reservation data
+ * @param {string} stripeCustomerId - Stripe customer ID
+ * @param {string} appUserId - App user ID
+ * @returns {Promise<void>}
+ */
+const createReservationsFromCheckout = async (reservations, stripeCustomerId, appUserId) => {
+  const batch = db.batch();
+  
+  reservations.forEach(reservation => {
+    const reservationRef = db.collection('Reservations').doc(reservation.id);
+    batch.set(reservationRef, {
+      ...reservation,
+      stripeCustomerId: stripeCustomerId,
+      appUserId: appUserId,
+      status: 'confirmed',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    });
+  });
+  
+  await batch.commit();
+  
+  logger.info('✅ [WEBHOOK] Created reservations from checkout:', {
+    reservationCount: reservations.length,
+    stripeCustomerId
+  });
+};
+
 module.exports = {
   verifyWebhookSignature,
   processStripeWebhook,
@@ -316,5 +498,7 @@ module.exports = {
   handlePaymentCanceled,
   handleDisputeCreated,
   handleInvoicePaymentSuccess,
-  handleInvoicePaymentFailure
+  handleInvoicePaymentFailure,
+  handleCheckoutSessionCompleted,
+  handleCheckoutSessionExpired
 };

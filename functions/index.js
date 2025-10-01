@@ -24,6 +24,7 @@ const { dailyBillingJob } = require('./billing/dailyBillingJob');
 const { stripeWebhook } = require('./payments/webhooks/stripeWebhook');
 const { processScheduledPayments } = require('./payments/scheduled/paymentProcessing');
 const { processRefund } = require('./payments/refunds/refundProcessing');
+const { createCheckoutSession } = require('./payments/checkout/createCheckoutSession');
 
 // Email functions
 const { sendContactEmail } = require('./email/contactEmail');
@@ -42,6 +43,7 @@ exports.dailyBillingJob = dailyBillingJob;
 exports.stripeWebhook = stripeWebhook;
 exports.processScheduledPayments = processScheduledPayments;
 exports.processRefund = processRefund;
+exports.createCheckoutSession = createCheckoutSession;
 exports.sendContactEmail = sendContactEmail;
 
 
