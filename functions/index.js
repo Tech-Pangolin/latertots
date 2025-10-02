@@ -30,6 +30,12 @@ const { cleanupFailedPayments } = require('./payments/cleanup/cleanupFailedPayme
 // Email functions
 const { sendContactEmail } = require('./email/contactEmail');
 
+// Form draft functions
+const { upsertFormDraft } = require('./formDrafts/upsertFormDraft');
+
+// Cleanup functions
+const { cleanupFailedReservations, cleanupFailedReservationsManual } = require('./cleanup/cleanupFailedReservations');
+
 
 
 
@@ -47,6 +53,9 @@ exports.processRefund = processRefund;
 exports.createCheckoutSession = createCheckoutSession;
 exports.cleanupFailedPayments = cleanupFailedPayments;
 exports.sendContactEmail = sendContactEmail;
+exports.upsertFormDraft = upsertFormDraft;
+exports.cleanupFailedReservations = cleanupFailedReservations;
+exports.cleanupFailedReservationsManual = cleanupFailedReservationsManual;
 
 
 

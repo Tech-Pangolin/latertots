@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getStorage, connectStorageEmulator } from "@firebase/storage";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -26,6 +27,7 @@ const app = initializeApp(firebaseConfig);
 // Initialize services
 const analytics = useEmulator ? null : getAnalytics(app);
 const storage = getStorage(app);
+const functions = getFunctions(app);
 
 // Connect to emulators if in emulator mode
 if (useEmulator) {
@@ -37,7 +39,16 @@ if (useEmulator) {
       console.warn('Storage emulator connection warning:', error.message);
     }
   }
+  
+  try {
+    connectFunctionsEmulator(functions, 'localhost', 5001);
+  } catch (error) {
+    // Connection might already exist, which is fine
+    if (!error.message.includes('already been called')) {
+      console.warn('Functions emulator connection warning:', error.message);
+    }
+  }
 }
 
-// export app, analytics, storage, and emulator flag
-export { app, analytics, storage, useEmulator };
+// export app, analytics, storage, functions, and emulator flag
+export { app, analytics, storage, functions, useEmulator };

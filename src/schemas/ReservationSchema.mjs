@@ -7,7 +7,7 @@ import { DocumentReferenceOrCompatible } from '../Helpers/validationHelpers.mjs'
 const ReservationSchema = Joi.object({
   // Administrative fields
   archived: Joi.boolean().default(false).required(),
-  allDay: Joi.boolean().default(false).required(),                    // TODO: Remove all references to this field
+  formDraftId: Joi.string().required(),
 
   // Billing integration fields
   stripePayments: Joi.object()

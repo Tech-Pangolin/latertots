@@ -7,7 +7,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
 import { checkAgainstBusinessHours, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
-import ReservationFormModal from '../Shared/ReservationFormModal';
+import UnifiedReservationModal from '../Shared/UnifiedReservationModal';
 import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
 import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -24,8 +24,27 @@ const ScheduleChildSitterPage = () => {
   const [isLoadingChildren, setIsLoadingChildren] = useState(true);
   const { currentUser, dbService } = useAuth();
   const [modalOpenState, setModalOpenState] = useState(false);
+  const [initialStep, setInitialStep] = useState('form');
   const navigate = useNavigate();
   const { data: events = [], setMonthYear } = useReservationsByMonthDayRQ()
+  
+  // Handle URL parameters for payment recovery
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    
+    if (paymentStatus === 'success') {
+      setInitialStep('payment_success');
+      setModalOpenState(true);
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (paymentStatus === 'failed') {
+      setInitialStep('payment_failed');
+      setModalOpenState(true);
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
   
   // Fetch children data
   useEffect(() => {
@@ -265,12 +284,12 @@ const ScheduleChildSitterPage = () => {
         </div>
       </Grid>
       <Grid item xs={1} />
-      <ReservationFormModal
+      <UnifiedReservationModal
         modalOpenState={modalOpenState}
         setModalOpenState={setModalOpenState}
         children={children}
-        events={events}
-        currentUserData={currentUser}
+        scheduleChildSitterPage_queryKey={['calendarReservationsByMonth', selectedDate.month - 1, selectedDate.year]}
+        initialStep={initialStep}
       />
     </Grid>
   );

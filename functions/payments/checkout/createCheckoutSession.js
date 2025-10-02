@@ -22,7 +22,7 @@ exports.createCheckoutSession = onRequest(
   },
   async (request, response) => {
     try {
-      const { reservations, paymentType, latertotsUserId } = request.body;
+      const { reservations, paymentType, latertotsUserId, successUrl, cancelUrl } = request.body;
       
       // Validate input
       if (!reservations || !Array.isArray(reservations) || reservations.length === 0) {
@@ -64,8 +64,8 @@ exports.createCheckoutSession = onRequest(
           [STRIPE_METADATA_KEYS.RESERVATION_IDS]: JSON.stringify(reservations.map(r => `Reservations/${r.reservationId}`)),
           [STRIPE_METADATA_KEYS.PAYMENT_TYPE]: paymentType
         },
-        successUrl: `${reactUrl.value()}/schedule`,
-        cancelUrl: `${reactUrl.value()}/schedule`,
+        successUrl: successUrl || `${reactUrl.value()}/schedule?payment=success`,
+        cancelUrl: cancelUrl || `${reactUrl.value()}/schedule?payment=failed`,
         secretKey: stripeSecretKey.value()
       });
       

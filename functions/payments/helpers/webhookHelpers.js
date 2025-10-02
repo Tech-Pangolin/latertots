@@ -18,7 +18,7 @@
  */
 
 const admin = require('firebase-admin');
-const { getFirestore, Timestamp } = require('firebase-admin/firestore');
+const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore');
 const logger = require('firebase-functions/logger');
 const { PAYMENT_ACTIVITY_TYPES, PAYMENT_ACTIVITY_STATUS } = require('../../constants');
 
@@ -333,8 +333,37 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
     const reservations = JSON.parse(session.metadata.reservationIds || '[]');
     const paymentType = session.metadata.paymentType;
     const appUserId = session.metadata.appUserId;
-
     
+    // Extract user ID from appUserId (format: "Users/{userId}")
+    const userId = appUserId.split('/')[1];
+    
+    // Update reservations with payment information
+    const batch = db.batch();
+    for (const reservationPath of reservations) {
+      const reservationId = reservationPath.split('/')[1];
+      const reservationRef = db.collection('Reservations').doc(reservationId);
+      
+      // Update stripePayments based on payment type
+      const stripePayments = {
+        minimum: paymentType === 'minimum' ? session.payment_intent : null,
+        remainder: paymentType === 'minimum' ? null : null,
+        full: paymentType === 'full' ? session.payment_intent : null
+      };
+      
+      batch.update(reservationRef, {
+        stripePayments,
+        status: 'confirmed', // Update status from PENDING to CONFIRMED
+        'extendedProps.status': 'confirmed', // Update extendedProps status as well
+        formDraftId: FieldValue.delete(), // Remove formDraftId
+        updatedAt: Timestamp.now()
+      });
+    }
+    
+    await batch.commit();
+    
+    // Delete the form draft
+    const formDraftRef = db.collection('FormDrafts').doc(userId);
+    await formDraftRef.delete();
     
     // Update user's saved payment methods if any
     if (session.payment_method) {
@@ -344,11 +373,12 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
     
     logger.info('✅ [WEBHOOK] Checkout session processing completed:', {
       sessionId: session.id,
-      invoiceId: invoice.id,
-      reservationCount: reservations.length
+      userId,
+      reservationCount: reservations.length,
+      paymentType
     });
     
-    return { processed: true, invoiceId: invoice.id, status: 'checkout_completed' };
+    return { processed: true, userId, reservationCount: reservations.length, status: 'checkout_completed' };
     
   } catch (error) {
     logger.error('❌ [WEBHOOK] Failed to process checkout session completion:', {
