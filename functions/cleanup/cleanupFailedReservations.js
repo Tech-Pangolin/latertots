@@ -8,35 +8,50 @@ const db = getFirestore();
 
 /**
  * Core cleanup logic - removes expired form drafts and their associated reservations
+ * If options.specificDraftId is provided, only that draft's orphaned reservations are removed
  */
-async function performCleanup() {
-  logger.info('🧹 [performCleanup]: Starting cleanup of failed reservations and expired form drafts');
+async function performCleanup(options = {}) {
+  const { specificDraftId = null, userId = null } = options;
+  logger.info('🧹 [performCleanup]: Starting cleanup of failed reservations and expired form drafts', { specificDraftId, userId });
   
   try {
     const now = new Date();
     
-    // Clean up expired form drafts
-    const expiredDrafts = await db.collection('FormDrafts')
-      .where('expiresAt', '<', now)
-      .get();
+    let draftsToProcess = [];
+    if (specificDraftId) {
+      const draftSnap = await db.collection('FormDrafts').doc(specificDraftId).get();
+      if (draftSnap.exists) {
+        draftsToProcess = [draftSnap];
+      } else {
+        logger.info(`🧹 [performCleanup]: No draft found for id ${specificDraftId}`);
+      }
+    } else {
+      // Clean up expired form drafts
+      const expiredDrafts = await db.collection('FormDrafts')
+        .where('expiresAt', '<', now)
+        .get();
+      draftsToProcess = expiredDrafts.docs;
+    }
     
-    logger.info(`🧹 [performCleanup]: Found ${expiredDrafts.size} expired form drafts`);
+    logger.info(`🧹 [performCleanup]: Found ${draftsToProcess.length} ${specificDraftId ? 'specific' : 'expired'} form drafts`);
     
-    let orphanedReservationsCount = 0;
-    for (const draft of expiredDrafts.docs) {
+    let failedOrOrphanedReservationsCount = 0;
+    let removedDraftsCount = 0;
+    for (const draft of draftsToProcess) {
       try {
         // Delete associated reservations
         const reservations = await db.collection('Reservations')
           .where('formDraftId', '==', draft.id)
           .get();
         
-        orphanedReservationsCount += reservations.docs.length;
+        failedOrOrphanedReservationsCount += reservations.docs.length;
         for (const reservation of reservations.docs) {
           await reservation.ref.delete();
         }
         
-        // Delete draft
+        // Delete draft (only when performing expired cleanup OR if specifically targeted)
         await draft.ref.delete();
+        removedDraftsCount += 1;
       } catch (error) {
         logger.error(`🧹 [performCleanup]: Error deleting draft FormDraft/${draft.id}`, error);
       }
@@ -44,14 +59,14 @@ async function performCleanup() {
     
     const result = {
       success: true,
-      message: `🧹 [performCleanup]: Cleanup completed: removed ${expiredDrafts.size} form drafts and ${orphanedReservationsCount} reservations`,
-      removedDrafts: expiredDrafts.size,
-      removedReservations: orphanedReservations
+      message: `🧹 [performCleanup]: Cleanup completed: removed ${removedDraftsCount} form drafts and ${failedOrOrphanedReservationsCount} reservations`,
+      removedDrafts: removedDraftsCount,
+      removedReservations: failedOrOrphanedReservationsCount
     };
     
     logger.info('🧹 [performCleanup]: Cleanup completed successfully', {
-      expiredDrafts: expiredDrafts.size,
-      orphanedReservationsCount
+      removedDrafts: removedDraftsCount,
+      failedOrOrphanedReservationsCount
     });
     
     return result;
@@ -65,7 +80,7 @@ async function performCleanup() {
  * Scheduled cleanup job - runs automatically
  */
 exports.cleanupFailedReservations = onSchedule({
-  schedule: '* * * * *', // Every minute (for testing in emulator)
+  schedule: '* * * * *', // Every minute (for testing in emulator) TODO: Change to hourly
   timeZone: 'America/New_York',
   memory: '256MiB',
   timeoutSeconds: 540,
@@ -92,3 +107,6 @@ exports.cleanupFailedReservationsManual = onCall(async (request) => {
     throw new Error(`🧹 [cleanupFailedReservationsManual]: Cleanup failed: ${error.message}`);
   }
 });
+
+// Export the core cleanup function for use by other modules
+exports.performCleanup = performCleanup;

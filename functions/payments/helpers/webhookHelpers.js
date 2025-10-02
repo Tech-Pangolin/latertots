@@ -397,14 +397,45 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
 const handleCheckoutSessionExpired = async (stripeEvent) => {
   const session = stripeEvent.data.object;
   
-  logger.info('⏰ [WEBHOOK] Checkout session expired:', {
-    sessionId: session.id,
-    customerId: session.customer
-  });
-  
-  // TODO: Handle expired checkout sessions (cleanup, notifications, etc.)
-  
-  return { processed: true, status: 'checkout_expired' };
+  try {
+    logger.info('⏰ [WEBHOOK] Checkout session expired:', {
+      sessionId: session.id,
+      customerId: session.customer
+    });
+    
+    // Extract user ID from session metadata
+    const appUserId = session.metadata?.appUserId;
+    if (appUserId) {
+      const userId = appUserId.split('/')[1]; // Extract from "Users/{userId}" format
+      
+      // Clean up the user's form draft and associated reservations
+      const { performCleanup } = require('../../cleanup/cleanupFailedReservations');
+      const cleanupResult = await performCleanup({ 
+        specificDraftId: userId,
+        userId: userId 
+      });
+      
+      logger.info('🧹 [WEBHOOK] Cleaned up expired checkout session:', {
+        sessionId: session.id,
+        userId,
+        cleanupResult
+      });
+    } else {
+      logger.warn('⚠️ [WEBHOOK] No appUserId found in expired session metadata:', {
+        sessionId: session.id,
+        metadata: session.metadata
+      });
+    }
+    
+    return { processed: true, status: 'checkout_expired' };
+    
+  } catch (error) {
+    logger.error('❌ [WEBHOOK] Failed to process expired checkout session:', {
+      sessionId: session.id,
+      error: error.message
+    });
+    throw error;
+  }
 };
 
 /**
