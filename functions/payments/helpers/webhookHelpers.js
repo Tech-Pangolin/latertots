@@ -96,14 +96,32 @@ const processStripeWebhook = async (stripeEvent) => {
       case 'payment_intent.canceled':
         result = await handlePaymentCanceled(stripeEvent);
         break;
+      case 'charge.succeeded':
+        result = await handleChargeSucceeded(stripeEvent);
+        break;
+      case 'charge.failed':
+        result = await handleChargeFailed(stripeEvent);
+        break;
+      case 'charge.refunded':
+        result = await handleChargeRefunded(stripeEvent);
+        break;
       case 'charge.dispute.created':
         result = await handleDisputeCreated(stripeEvent);
         break;
-      case 'invoice.payment_succeeded':
-        result = await handleInvoicePaymentSuccess(stripeEvent);
+      case 'customer.created':
+        result = await handleCustomerCreated(stripeEvent);
         break;
-      case 'invoice.payment_failed':
-        result = await handleInvoicePaymentFailure(stripeEvent);
+      case 'customer.updated':
+        result = await handleCustomerUpdated(stripeEvent);
+        break;
+      case 'customer.deleted':
+        result = await handleCustomerDeleted(stripeEvent);
+        break;
+      case 'payment_method.attached':
+        result = await handlePaymentMethodAttached(stripeEvent);
+        break;
+      case 'payment_method.detached':
+        result = await handlePaymentMethodDetached(stripeEvent);
         break;
       case 'checkout.session.completed':
         result = await handleCheckoutSessionCompleted(stripeEvent);
@@ -288,31 +306,6 @@ const handleDisputeCreated = async (stripeEvent) => {
   return { processed: true, disputeId, status: 'dispute_created' };
 };
 
-/**
- * Handle invoice payment success
- * @param {Object} stripeEvent - Stripe webhook event
- * @returns {Promise<Object>} - Processing result
- */
-const handleInvoicePaymentSuccess = async (stripeEvent) => {
-  logger.info('✅ [WEBHOOK] Invoice payment succeeded:', {
-    invoiceId: stripeEvent.data.object.id
-  });
-  
-  return { processed: true, status: 'invoice_payment_succeeded' };
-};
-
-/**
- * Handle invoice payment failure
- * @param {Object} stripeEvent - Stripe webhook event
- * @returns {Promise<Object>} - Processing result
- */
-const handleInvoicePaymentFailure = async (stripeEvent) => {
-  logger.info('❌ [WEBHOOK] Invoice payment failed:', {
-    invoiceId: stripeEvent.data.object.id
-  });
-  
-  return { processed: true, status: 'invoice_payment_failed' };
-};
 
 /**
  * Handle checkout session completed
@@ -547,15 +540,268 @@ const createReservationsFromCheckout = async (reservations, stripeCustomerId, ap
   });
 };
 
+/**
+ * Handle charge succeeded
+ * @param {Object} stripeEvent - Stripe webhook event
+ * @returns {Promise<Object>} - Processing result
+ */
+const handleChargeSucceeded = async (stripeEvent) => {
+  const charge = stripeEvent.data.object;
+  
+  logger.info('✅ [WEBHOOK] Charge succeeded:', {
+    chargeId: charge.id,
+    customerId: charge.customer,
+    amount: charge.amount,
+    currency: charge.currency
+  });
+  
+  // If metadata includes appUserId, create PaymentActivities entry for observability
+  if (charge.metadata?.appUserId) {
+    const appUserId = charge.metadata.appUserId;
+    const userId = appUserId.split('/')[1];
+    
+    // Create PaymentActivities entry for observability only
+    await db.collection('Users').doc(userId).collection('PaymentActivities').add({
+      type: PAYMENT_ACTIVITY_TYPES.PAYMENT_ATTEMPT,
+      status: PAYMENT_ACTIVITY_STATUS.SUCCESS,
+      stripeChargeId: charge.id,
+      stripeCustomerId: charge.customer,
+      amount: charge.amount,
+      currency: charge.currency,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    });
+  }
+  
+  return { processed: true, chargeId: charge.id, status: 'charge_succeeded' };
+};
+
+/**
+ * Handle charge failed
+ * @param {Object} stripeEvent - Stripe webhook event
+ * @returns {Promise<Object>} - Processing result
+ */
+const handleChargeFailed = async (stripeEvent) => {
+  const charge = stripeEvent.data.object;
+  const failureCode = charge.failure_code;
+  const failureMessage = charge.failure_message;
+  
+  logger.info('❌ [WEBHOOK] Charge failed:', {
+    chargeId: charge.id,
+    customerId: charge.customer,
+    amount: charge.amount,
+    failureCode,
+    failureMessage
+  });
+  
+  // If metadata includes appUserId, create PaymentActivities entry for observability
+  if (charge.metadata?.appUserId) {
+    const appUserId = charge.metadata.appUserId;
+    const userId = appUserId.split('/')[1];
+    
+    // Create PaymentActivities entry for observability only
+    await db.collection('Users').doc(userId).collection('PaymentActivities').add({
+      type: PAYMENT_ACTIVITY_TYPES.PAYMENT_ATTEMPT,
+      status: PAYMENT_ACTIVITY_STATUS.FAILED,
+      stripeChargeId: charge.id,
+      stripeCustomerId: charge.customer,
+      amount: charge.amount,
+      failureCode,
+      failureMessage,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    });
+  }
+  
+  return { processed: true, chargeId: charge.id, status: 'charge_failed', failureCode, failureMessage };
+};
+
+/**
+ * Handle charge refunded
+ * @param {Object} stripeEvent - Stripe webhook event
+ * @returns {Promise<Object>} - Processing result
+ */
+const handleChargeRefunded = async (stripeEvent) => {
+  const charge = stripeEvent.data.object;
+  
+  logger.info('💰 [WEBHOOK] Charge refunded:', {
+    chargeId: charge.id,
+    customerId: charge.customer,
+    amount: charge.amount,
+    refunded: charge.refunded
+  });
+  
+  // If metadata includes appUserId, create PaymentActivities entry for observability
+  if (charge.metadata?.appUserId) {
+    const appUserId = charge.metadata.appUserId;
+    const userId = appUserId.split('/')[1];
+    
+    // Create PaymentActivities entry for observability only
+    await db.collection('Users').doc(userId).collection('PaymentActivities').add({
+      type: PAYMENT_ACTIVITY_TYPES.REFUND,
+      status: PAYMENT_ACTIVITY_STATUS.SUCCESS,
+      stripeChargeId: charge.id,
+      stripeCustomerId: charge.customer,
+      amount: charge.amount,
+      refunded: charge.refunded,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    });
+  }
+  
+  return { processed: true, chargeId: charge.id, status: 'charge_refunded' };
+};
+
+/**
+ * Handle customer created
+ * @param {Object} stripeEvent - Stripe webhook event
+ * @returns {Promise<Object>} - Processing result
+ */
+const handleCustomerCreated = async (stripeEvent) => {
+  const customer = stripeEvent.data.object;
+  
+  logger.info('👤 [WEBHOOK] Customer created:', {
+    customerId: customer.id,
+    email: customer.email
+  });
+  
+  // If metadata includes appUserId, save Stripe customer ID to user doc
+  if (customer.metadata?.appUserId) {
+    const appUserId = customer.metadata.appUserId;
+    const userId = appUserId.split('/')[1];
+    
+    await db.collection('Users').doc(userId).update({
+      stripeCustomerId: customer.id,
+      updatedAt: Timestamp.now()
+    });
+    
+    // Sync payment methods
+    const { updateUserPaymentMethods } = require('./customerHelpers');
+    await updateUserPaymentMethods(appUserId, customer.id);
+  }
+  
+  return { processed: true, customerId: customer.id, status: 'customer_created' };
+};
+
+/**
+ * Handle customer updated
+ * @param {Object} stripeEvent - Stripe webhook event
+ * @returns {Promise<Object>} - Processing result
+ */
+const handleCustomerUpdated = async (stripeEvent) => {
+  const customer = stripeEvent.data.object;
+  
+  logger.info('👤 [WEBHOOK] Customer updated:', {
+    customerId: customer.id,
+    email: customer.email
+  });
+  
+  // If metadata includes appUserId, ensure Stripe customer ID is saved and sync payment methods
+  if (customer.metadata?.appUserId) {
+    const appUserId = customer.metadata.appUserId;
+    const userId = appUserId.split('/')[1];
+    
+    await db.collection('Users').doc(userId).update({
+      stripeCustomerId: customer.id,
+      updatedAt: Timestamp.now()
+    });
+    
+    // Sync payment methods
+    const { updateUserPaymentMethods } = require('./customerHelpers');
+    await updateUserPaymentMethods(appUserId, customer.id);
+  }
+  
+  return { processed: true, customerId: customer.id, status: 'customer_updated' };
+};
+
+/**
+ * Handle customer deleted
+ * @param {Object} stripeEvent - Stripe webhook event
+ * @returns {Promise<Object>} - Processing result
+ */
+const handleCustomerDeleted = async (stripeEvent) => {
+  const customer = stripeEvent.data.object;
+  
+  logger.info('👤 [WEBHOOK] Customer deleted:', {
+    customerId: customer.id
+  });
+  
+  // If metadata includes appUserId, mark Stripe linkage as removed
+  if (customer.metadata?.appUserId) {
+    const appUserId = customer.metadata.appUserId;
+    const userId = appUserId.split('/')[1];
+    
+    await db.collection('Users').doc(userId).update({
+      stripeCustomerId: null,
+      updatedAt: Timestamp.now()
+    });
+    
+    // Clear cached payment methods
+    await db.collection('Users').doc(userId).collection('PaymentMethods').get().then(snapshot => {
+      const batch = db.batch();
+      snapshot.docs.forEach(doc => batch.delete(doc.ref));
+      return batch.commit();
+    });
+  }
+  
+  return { processed: true, customerId: customer.id, status: 'customer_deleted' };
+};
+
+/**
+ * Handle payment method attached
+ * @param {Object} stripeEvent - Stripe webhook event
+ * @returns {Promise<Object>} - Processing result
+ */
+const handlePaymentMethodAttached = async (stripeEvent) => {
+  const paymentMethod = stripeEvent.data.object;
+  
+  logger.info('💳 [WEBHOOK] Payment method attached:', {
+    paymentMethodId: paymentMethod.id,
+    customerId: paymentMethod.customer
+  });
+  
+  // Sync payment methods for the customer
+  const { updateUserPaymentMethods } = require('./customerHelpers');
+  await updateUserPaymentMethods(`Users/${paymentMethod.customer}`, paymentMethod.customer);
+  
+  return { processed: true, paymentMethodId: paymentMethod.id, status: 'payment_method_attached' };
+};
+
+/**
+ * Handle payment method detached
+ * @param {Object} stripeEvent - Stripe webhook event
+ * @returns {Promise<Object>} - Processing result
+ */
+const handlePaymentMethodDetached = async (stripeEvent) => {
+  const paymentMethod = stripeEvent.data.object;
+  
+  logger.info('💳 [WEBHOOK] Payment method detached:', {
+    paymentMethodId: paymentMethod.id,
+    customerId: paymentMethod.customer
+  });
+  
+  // Sync payment methods for the customer
+  const { updateUserPaymentMethods } = require('./customerHelpers');
+  await updateUserPaymentMethods(`Users/${paymentMethod.customer}`, paymentMethod.customer);
+  
+  return { processed: true, paymentMethodId: paymentMethod.id, status: 'payment_method_detached' };
+};
+
 module.exports = {
   verifyWebhookSignature,
   processStripeWebhook,
   handlePaymentSuccess,
   handlePaymentFailure,
   handlePaymentCanceled,
+  handleChargeSucceeded,
+  handleChargeFailed,
+  handleChargeRefunded,
   handleDisputeCreated,
-  handleInvoicePaymentSuccess,
-  handleInvoicePaymentFailure,
+  handleCustomerCreated,
+  handleCustomerUpdated,
+  handleCustomerDeleted,
+  handlePaymentMethodAttached,
+  handlePaymentMethodDetached,
   handleCheckoutSessionCompleted,
   handleCheckoutSessionExpired
 };
