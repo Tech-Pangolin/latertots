@@ -1,4 +1,4 @@
-import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, setDoc, deleteDoc, Timestamp, onSnapshot } from "@firebase/firestore";
+import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, setDoc, deleteDoc, Timestamp, onSnapshot, writeBatch } from "@firebase/firestore";
 import { db } from "../config/firestore";
 import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
@@ -758,5 +758,109 @@ export class FirebaseDbService {
       await new Promise(r => setTimeout(r, 1000 * i));
     }
     throw new Error('User document not found after maximum retries.');
+  };
+
+
+  /**
+   * Gets a form draft for a user
+   * 
+   * @param {string} userId - The user ID
+   * @returns {Promise<Object|null>} - The form draft or null if not found
+   */
+  getFormDraft = async (userId) => {
+    this.validateAuth();
+    try {
+      const draftRef = doc(db, 'FormDrafts', userId);
+      const draftDoc = await getDoc(draftRef);
+      
+      if (draftDoc.exists()) {
+        return { id: draftDoc.id, ...draftDoc.data() };
+      }
+      return null;
+    } catch (error) {
+      logger.error("Error getting form draft:", error);
+      throw error;
+    }
+  };
+
+
+  /**
+   * Creates multiple reservations in a batch with formDraftId
+   * 
+   * @param {string} userId - The user ID
+   * @param {Array} reservationsInput - Array of reservation data
+   * @param {string} formDraftId - The form draft ID to associate with reservations
+   * @returns {Promise<Array>} - Array of document references for created reservations
+   */
+  createReservationsBatch = async (userId, reservationsInput, formDraftId) => {
+    this.validateAuth();
+    try {
+      const batch = writeBatch(db);
+      const reservationRefs = [];
+      
+      for (const reservationData of reservationsInput) {
+        const reservationRef = doc(collection(db, 'Reservations'));
+        
+        // Build the reservation data with required fields
+        const userRef = doc(collection(db, 'Users'), userId);
+        const childRef = doc(collection(db, 'Children'), reservationData.extendedProps.childId);
+        
+        const fullReservationData = {
+          archived: false,
+          status: 'pending',
+          start: Timestamp.fromDate(new Date(reservationData.start)),
+          end: Timestamp.fromDate(new Date(reservationData.end)),
+          title: reservationData.title,
+          extendedProps: {
+            status: 'pending',
+            childId: reservationData.extendedProps.childId
+          },
+          userId: userId,
+          User: userRef,
+          Child: childRef,
+          groupActivity: reservationData.groupActivity,
+          stripePayments: {
+            minimum: null,
+            remainder: null,
+            full: null
+          },
+          formDraftId: formDraftId // Associate with form draft
+        };
+        
+        // Validate the data
+        const validatedData = await ReservationSchema.validateAsync(fullReservationData, { abortEarly: false });
+        if (validatedData.error) {
+          throw new Error(`Validation error: ${validatedData.error.message}`);
+        }
+        
+        batch.set(reservationRef, validatedData);
+        reservationRefs.push(reservationRef);
+      }
+      
+      await batch.commit();
+      logger.info(`Created ${reservationRefs.length} reservations in batch`);
+      return reservationRefs;
+    } catch (error) {
+      logger.error("Error creating reservations batch:", error);
+      throw error;
+    }
+  };
+
+  /**
+   * Deletes a reservation by ID
+   * 
+   * @param {string} reservationId - The reservation ID to delete
+   * @returns {Promise<void>} - A promise that resolves when the reservation is deleted
+   */
+  deleteReservation = async (reservationId) => {
+    this.validateAuth();
+    try {
+      const reservationRef = doc(db, 'Reservations', reservationId);
+      await deleteDoc(reservationRef);
+      logger.info(`Reservation ${reservationId} deleted successfully`);
+    } catch (error) {
+      logger.error("Error deleting reservation:", error);
+      throw error;
+    }
   };
 }

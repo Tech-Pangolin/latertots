@@ -7,8 +7,9 @@ import TableRow from '@mui/material/TableRow';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
+import { DEPOSIT_TYPES } from '../../Helpers/constants';
 
-const PaymentModal = ({ showPaymentDialog, newEvents, hourlyRate, grandTotalTime, grandTotalBill, onCancel, onProceed }) => {
+const PaymentModal = ({ showPaymentDialog, newEvents, hourlyRate, grandTotalTime, grandTotalBill, onCancel, onProceed, isProcessingPayment }) => {
     return (
         <Dialog open={showPaymentDialog} onClose={onCancel} aria-labelledby="payment-dialog-title" fullWidth>
             <DialogTitle id="payment-dialog-title">Payment Summary</DialogTitle>
@@ -41,9 +42,30 @@ const PaymentModal = ({ showPaymentDialog, newEvents, hourlyRate, grandTotalTime
                 </Table>
                 <p className='mt-5'>Please proceed to payment with Stripe to confirm your reservations.</p>
             </DialogContent>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
-                <button onClick={onCancel} className='btn btn-secondary' style={{ marginRight: '8px' }}>Cancel</button>
-                <button onClick={onProceed} className='btn btn-success' style={{ backgroundColor: '#4caf50', color: 'white' }}>Pay with Stripe</button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px', gap: '8px' }}>
+                <button 
+                    onClick={onCancel} 
+                    className='btn btn-secondary'
+                    disabled={isProcessingPayment}
+                >
+                    Cancel
+                </button>
+                <button 
+                    onClick={() => onProceed(DEPOSIT_TYPES.MINIMUM)} 
+                    className='btn btn-secondary' 
+                    style={{ backgroundColor: '#6c757d', color: 'white' }}
+                    disabled={isProcessingPayment}
+                >
+                    {isProcessingPayment ? 'Processing...' : 'Pay Minimum Deposit'}
+                </button>
+                <button 
+                    onClick={() => onProceed(DEPOSIT_TYPES.FULL)} 
+                    className='btn btn-success' 
+                    style={{ backgroundColor: '#4caf50', color: 'white' }}
+                    disabled={isProcessingPayment}
+                >
+                    {isProcessingPayment ? 'Processing...' : 'Pay Full Amount'}
+                </button>
             </div>
         </Dialog>
     );

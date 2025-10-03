@@ -81,6 +81,14 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
       // data already transformed
       return res;
     }
+    
+    // Hide orphaned PENDING reservations that have formDraftId but no payment info
+    if (res.status === 'pending' && 
+        res.formDraftId && 
+        (!res.stripePayments?.minimum && !res.stripePayments?.full)) {
+      return null; // Don't show orphaned reservations
+    }
+    
     return {
       id: res.id,
       status: res.extendedProps.status,

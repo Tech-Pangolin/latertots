@@ -84,90 +84,11 @@ const getReservationStatus = async (reservationId) => {
   }
 };
 
-/**
- * Sync reservation status with invoice status
- * @param {string} reservationId - Reservation ID
- * @param {string} invoiceStatus - Invoice status
- * @returns {Promise<Object>} - Sync result
- */
-const syncReservationWithInvoice = async (reservationId, invoiceStatus) => {
-  try {
-    let newReservationStatus;
-    
-    switch (invoiceStatus) {
-      case 'paid':
-        newReservationStatus = RESERVATION_STATUS.COMPLETED;
-        break;
-      case 'unpaid':
-      case 'late':
-        newReservationStatus = RESERVATION_STATUS.PROCESSING;
-        break;
-      case 'cancelled':
-        newReservationStatus = RESERVATION_STATUS.CANCELLED;
-        break;
-      default:
-        logger.warn('⚠️ [STATUS] Unknown invoice status for sync:', {
-          reservationId,
-          invoiceStatus
-        });
-        return { success: false, reason: 'unknown_invoice_status' };
-    }
-    
-    return await updateReservationStatus(reservationId, newReservationStatus);
-  } catch (error) {
-    logger.error('❌ [STATUS] Failed to sync reservation with invoice:', {
-      reservationId,
-      invoiceStatus,
-      error: error.message
-    });
-    throw error;
-  }
-};
-
-/**
- * Get reservation by invoice ID
- * @param {string} invoiceId - Invoice ID
- * @returns {Promise<Object>} - Reservation data
- */
-const getReservationByInvoice = async (invoiceId) => {
-  try {
-    const invoiceDoc = await db.collection('Invoices').doc(invoiceId).get();
-    
-    if (!invoiceDoc.exists) {
-      throw new Error(`Invoice ${invoiceId} not found`);
-    }
-    
-    const invoice = invoiceDoc.data();
-    const reservationId = invoice.reservationId;
-    
-    if (!reservationId) {
-      throw new Error(`No reservation linked to invoice ${invoiceId}`);
-    }
-    
-    const reservationDoc = await db.collection('Reservations').doc(reservationId).get();
-    
-    if (!reservationDoc.exists) {
-      throw new Error(`Reservation ${reservationId} not found`);
-    }
-    
-    return {
-      id: reservationDoc.id,
-      ...reservationDoc.data()
-    };
-  } catch (error) {
-    logger.error('❌ [STATUS] Failed to get reservation by invoice:', {
-      invoiceId,
-      error: error.message
-    });
-    throw error;
-  }
-};
+// Legacy invoice functions removed
 
 module.exports = {
   updateReservationStatus,
   markReservationCompleted,
   markReservationCancelled,
-  getReservationStatus,
-  syncReservationWithInvoice,
-  getReservationByInvoice
+  getReservationStatus
 };
