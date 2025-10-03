@@ -17,13 +17,10 @@ const { createReservationCancellationNotification } = require('./notifications/t
 const { createUserAccountProblemNotification } = require('./notifications/triggers/userAccountNotifications');
 const { cleanupExpiredNotifications } = require('./notifications/cleanup');
 
-// Billing functions
-const { dailyBillingJob } = require('./billing/dailyBillingJob');
+// Billing functions removed - using checkout session flow
 
 // Payment functions
 const { stripeWebhook } = require('./payments/webhooks/stripeWebhook');
-const { processScheduledPayments } = require('./payments/scheduled/paymentProcessing');
-const { processRefund } = require('./payments/refunds/refundProcessing');
 const { createCheckoutSession } = require('./payments/checkout/createCheckoutSession');
 const { cleanupFailedPayments } = require('./payments/cleanup/cleanupFailedPayments');
 
@@ -46,10 +43,8 @@ exports.createReservationRequestNotification = createReservationRequestNotificat
 exports.createReservationCancellationNotification = createReservationCancellationNotification;
 exports.createUserAccountProblemNotification = createUserAccountProblemNotification;
 exports.cleanupExpiredNotifications = cleanupExpiredNotifications;
-exports.dailyBillingJob = dailyBillingJob;
+// dailyBillingJob removed - using checkout session flow
 exports.stripeWebhook = stripeWebhook;
-exports.processScheduledPayments = processScheduledPayments;
-exports.processRefund = processRefund;
 exports.createCheckoutSession = createCheckoutSession;
 exports.cleanupFailedPayments = cleanupFailedPayments;
 exports.sendContactEmail = sendContactEmail;

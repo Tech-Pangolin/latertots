@@ -13,35 +13,7 @@ const RESERVATION_STATUS = {
   CANCELLED: 'cancelled'
 };
 
-const INVOICE_STATUS = {
-  UNPAID: 'unpaid',
-  PAID: 'paid',
-  LATE: 'late',
-  CANCELLED: 'cancelled'
-};
-
-// Payment processing configuration
-const PAYMENT_CONFIG = {
-  MAX_RETRY_ATTEMPTS: 3,              // Maximum retry attempts per payment
-  RETRY_INTERVAL_HOURS: 24,           // Hours between retry attempts
-  PAYMENT_PROCESSING_SCHEDULE: '0 9,15,21 * * *'  // 9 AM, 3 PM, 9 PM daily
-};
-
-// Payment activity types
-const PAYMENT_ACTIVITY_TYPES = {
-  PAYMENT_ATTEMPT: 'PAYMENT_ATTEMPT',
-  RETRY: 'RETRY',
-  REFUND: 'REFUND',
-  DISPUTE: 'DISPUTE'
-};
-
-// Payment activity statuses
-const PAYMENT_ACTIVITY_STATUS = {
-  PENDING: 'PENDING',
-  SUCCESS: 'SUCCESS',
-  FAILED: 'FAILED',
-  CANCELLED: 'CANCELLED'
-};
+// Legacy invoice and payment activity constants removed
 
 // default logging configuration
 const LOG_LEVEL = 'INFO';
@@ -99,10 +71,6 @@ const LINE_ITEM_TAGS = {
 
 module.exports = {
   RESERVATION_STATUS,
-  INVOICE_STATUS,
-  PAYMENT_CONFIG,
-  PAYMENT_ACTIVITY_TYPES,
-  PAYMENT_ACTIVITY_STATUS,
   LOG_LEVEL,
   STRIPE,
   // NEW exports

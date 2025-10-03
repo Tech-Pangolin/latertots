@@ -20,7 +20,7 @@
 const admin = require('firebase-admin');
 const { getFirestore, Timestamp, FieldValue } = require('firebase-admin/firestore');
 const logger = require('firebase-functions/logger');
-const { PAYMENT_ACTIVITY_TYPES, PAYMENT_ACTIVITY_STATUS } = require('../../constants');
+// Legacy constants removed - using StripeEvents only
 
 const db = getFirestore();
 
@@ -155,62 +155,23 @@ const processStripeWebhook = async (stripeEvent) => {
 };
 
 /**
- * Handle successful payment
+ * Handle successful payment (legacy - logging only)
  * @param {Object} stripeEvent - Stripe webhook event
  * @returns {Promise<Object>} - Processing result
  */
 const handlePaymentSuccess = async (stripeEvent) => {
   const paymentIntentId = stripeEvent.data.object.id;
   
-  // Find the invoice with this payment intent
-  const paymentActivities = await db
-    .collectionGroup('PaymentActivities')
-    .where('stripePaymentIntentId', '==', paymentIntentId)
-    .get();
-  
-  if (paymentActivities.empty) {
-    logger.warn('⚠️ [WEBHOOK] No payment activity found for successful payment:', {
-      paymentIntentId
-    });
-    return { processed: false, reason: 'no_payment_activity_found' };
-  }
-  
-  const paymentActivity = paymentActivities.docs[0];
-  const invoiceId = paymentActivity.ref.parent.parent.id;
-  
-  // Update payment activity status
-  await paymentActivity.ref.update({
-    status: PAYMENT_ACTIVITY_STATUS.SUCCESS,
-    updatedAt: Timestamp.now()
-  });
-  
-  // Update invoice status
-  await db.collection('Invoices').doc(invoiceId).update({
-    status: 'paid',
-    updatedAt: Timestamp.now()
-  });
-  
-  // Update reservation status
-  const invoiceDoc = await db.collection('Invoices').doc(invoiceId).get();
-  const invoice = invoiceDoc.data();
-  if (invoice.reservationId) {
-    await db.collection('Reservations').doc(invoice.reservationId).update({
-      status: 'completed',
-      updatedAt: Timestamp.now()
-    });
-  }
-  
-  logger.info('✅ [WEBHOOK] Payment succeeded:', {
-    invoiceId,
+  logger.info('✅ [WEBHOOK] Payment succeeded (legacy):', {
     paymentIntentId,
     amount: stripeEvent.data.object.amount
   });
   
-  return { processed: true, invoiceId, status: 'paid' };
+  return { processed: true, status: 'payment_succeeded_legacy' };
 };
 
 /**
- * Handle failed payment
+ * Handle failed payment (legacy - logging only)
  * @param {Object} stripeEvent - Stripe webhook event
  * @returns {Promise<Object>} - Processing result
  */
@@ -218,74 +179,27 @@ const handlePaymentFailure = async (stripeEvent) => {
   const paymentIntentId = stripeEvent.data.object.id;
   const failureReason = stripeEvent.data.object.last_payment_error?.message || 'Unknown error';
   
-  // Find the invoice with this payment intent
-  const paymentActivities = await db
-    .collectionGroup('PaymentActivities')
-    .where('stripePaymentIntentId', '==', paymentIntentId)
-    .get();
-  
-  if (paymentActivities.empty) {
-    logger.warn('⚠️ [WEBHOOK] No payment activity found for failed payment:', {
-      paymentIntentId
-    });
-    return { processed: false, reason: 'no_payment_activity_found' };
-  }
-  
-  const paymentActivity = paymentActivities.docs[0];
-  const invoiceId = paymentActivity.ref.parent.parent.id;
-  
-  // Update payment activity status
-  await paymentActivity.ref.update({
-    status: PAYMENT_ACTIVITY_STATUS.FAILED,
-    failureReason: failureReason,
-    updatedAt: Timestamp.now()
-  });
-  
-  logger.info('❌ [WEBHOOK] Payment failed:', {
-    invoiceId,
+  logger.info('❌ [WEBHOOK] Payment failed (legacy):', {
     paymentIntentId,
     failureReason
   });
   
-  return { processed: true, invoiceId, status: 'failed', failureReason };
+  return { processed: true, status: 'payment_failed_legacy', failureReason };
 };
 
 /**
- * Handle canceled payment
+ * Handle canceled payment (legacy - logging only)
  * @param {Object} stripeEvent - Stripe webhook event
  * @returns {Promise<Object>} - Processing result
  */
 const handlePaymentCanceled = async (stripeEvent) => {
   const paymentIntentId = stripeEvent.data.object.id;
   
-  // Find the invoice with this payment intent
-  const paymentActivities = await db
-    .collectionGroup('PaymentActivities')
-    .where('stripePaymentIntentId', '==', paymentIntentId)
-    .get();
-  
-  if (paymentActivities.empty) {
-    logger.warn('⚠️ [WEBHOOK] No payment activity found for canceled payment:', {
-      paymentIntentId
-    });
-    return { processed: false, reason: 'no_payment_activity_found' };
-  }
-  
-  const paymentActivity = paymentActivities.docs[0];
-  const invoiceId = paymentActivity.ref.parent.parent.id;
-  
-  // Update payment activity status
-  await paymentActivity.ref.update({
-    status: PAYMENT_ACTIVITY_STATUS.CANCELLED,
-    updatedAt: Timestamp.now()
-  });
-  
-  logger.info('🚫 [WEBHOOK] Payment canceled:', {
-    invoiceId,
+  logger.info('🚫 [WEBHOOK] Payment canceled (legacy):', {
     paymentIntentId
   });
   
-  return { processed: true, invoiceId, status: 'canceled' };
+  return { processed: true, status: 'payment_canceled_legacy' };
 };
 
 /**
@@ -431,84 +345,7 @@ const handleCheckoutSessionExpired = async (stripeEvent) => {
   }
 };
 
-/**
- * Create invoice from checkout session
- * @param {Object} session - Stripe checkout session
- * @param {Array} reservations - Reservation data
- * @param {string} paymentType - Payment type (minimum/full)
- * @returns {Promise<Object>} - Created invoice reference
- */
-const createInvoiceFromCheckout = async (session, reservations, paymentType) => {
-  const { PAYMENT_TYPES, LINE_ITEM_TAGS, PAYMENT_PRICING } = require('../../constants');
-  const lineItems = [];
-  
-  if (paymentType === PAYMENT_TYPES.MINIMUM) {
-    const minimumRateCents = PAYMENT_PRICING.HOURLY_RATE_CENTS * PAYMENT_PRICING.MINIMUM_HOURS;
-    
-    reservations.forEach(reservation => {
-      // Base minimum deposit
-      lineItems.push({
-        tag: LINE_ITEM_TAGS.MINIMUM_DEPOSIT,
-        service: 'Child-Care Minimum Deposit',
-        durationHours: PAYMENT_PRICING.MINIMUM_HOURS,
-        rateCentsPerHour: PAYMENT_PRICING.HOURLY_RATE_CENTS,
-        subtotalCents: minimumRateCents
-      });
-      
-      // Add group activity fee if applicable
-      if (reservation.groupActivity) {
-        lineItems.push({
-          tag: LINE_ITEM_TAGS.GROUP_ACTIVITY,
-          service: 'Group Activity Participation',
-          durationHours: 1,
-          rateCentsPerHour: PAYMENT_PRICING.GROUP_ACTIVITY_FEE_CENTS,
-          subtotalCents: PAYMENT_PRICING.GROUP_ACTIVITY_FEE_CENTS
-        });
-      }
-    });
-  } else {
-    reservations.forEach(reservation => {
-      const baseAmount = Math.round(PAYMENT_PRICING.HOURLY_RATE_CENTS * reservation.durationHours);
-      
-      // Base child care charge
-      lineItems.push({
-        tag: LINE_ITEM_TAGS.BASE,
-        service: 'Child-Care',
-        durationHours: reservation.durationHours,
-        rateCentsPerHour: PAYMENT_PRICING.HOURLY_RATE_CENTS,
-        subtotalCents: baseAmount
-      });
-      
-      // Add group activity fee if applicable
-      if (reservation.groupActivity) {
-        lineItems.push({
-          tag: LINE_ITEM_TAGS.GROUP_ACTIVITY,
-          service: 'Group Activity Participation',
-          durationHours: 1,
-          rateCentsPerHour: PAYMENT_PRICING.GROUP_ACTIVITY_FEE_CENTS,
-          subtotalCents: PAYMENT_PRICING.GROUP_ACTIVITY_FEE_CENTS
-        });
-      }
-    });
-  }
-  
-  const invoiceData = {
-    invoiceId: `INV-${Date.now()}`,
-    stripeSessionId: session.id,
-    stripeCustomerId: session.customer,
-    reservations: reservations,
-    lineItems: lineItems,
-    subtotalCents: session.amount_subtotal,
-    taxCents: session.total_details?.amount_tax || 0,
-    totalCents: session.amount_total,
-    status: 'paid',
-    paymentType: paymentType,
-    createdAt: Timestamp.now()
-  };
-  
-  const invoiceRef = await db.collection('Invoices').add(invoiceData);
-  return invoiceRef;
-};
+// Legacy invoice creation function removed
 
 /**
  * Create reservations in Firestore from checkout session
@@ -555,23 +392,7 @@ const handleChargeSucceeded = async (stripeEvent) => {
     currency: charge.currency
   });
   
-  // If metadata includes appUserId, create PaymentActivities entry for observability
-  if (charge.metadata?.appUserId) {
-    const appUserId = charge.metadata.appUserId;
-    const userId = appUserId.split('/')[1];
-    
-    // Create PaymentActivities entry for observability only
-    await db.collection('Users').doc(userId).collection('PaymentActivities').add({
-      type: PAYMENT_ACTIVITY_TYPES.PAYMENT_ATTEMPT,
-      status: PAYMENT_ACTIVITY_STATUS.SUCCESS,
-      stripeChargeId: charge.id,
-      stripeCustomerId: charge.customer,
-      amount: charge.amount,
-      currency: charge.currency,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
-    });
-  }
+  // Legacy observability removed - using StripeEvents only
   
   return { processed: true, chargeId: charge.id, status: 'charge_succeeded' };
 };
@@ -594,24 +415,7 @@ const handleChargeFailed = async (stripeEvent) => {
     failureMessage
   });
   
-  // If metadata includes appUserId, create PaymentActivities entry for observability
-  if (charge.metadata?.appUserId) {
-    const appUserId = charge.metadata.appUserId;
-    const userId = appUserId.split('/')[1];
-    
-    // Create PaymentActivities entry for observability only
-    await db.collection('Users').doc(userId).collection('PaymentActivities').add({
-      type: PAYMENT_ACTIVITY_TYPES.PAYMENT_ATTEMPT,
-      status: PAYMENT_ACTIVITY_STATUS.FAILED,
-      stripeChargeId: charge.id,
-      stripeCustomerId: charge.customer,
-      amount: charge.amount,
-      failureCode,
-      failureMessage,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
-    });
-  }
+  // Legacy observability removed - using StripeEvents only
   
   return { processed: true, chargeId: charge.id, status: 'charge_failed', failureCode, failureMessage };
 };
@@ -631,23 +435,7 @@ const handleChargeRefunded = async (stripeEvent) => {
     refunded: charge.refunded
   });
   
-  // If metadata includes appUserId, create PaymentActivities entry for observability
-  if (charge.metadata?.appUserId) {
-    const appUserId = charge.metadata.appUserId;
-    const userId = appUserId.split('/')[1];
-    
-    // Create PaymentActivities entry for observability only
-    await db.collection('Users').doc(userId).collection('PaymentActivities').add({
-      type: PAYMENT_ACTIVITY_TYPES.REFUND,
-      status: PAYMENT_ACTIVITY_STATUS.SUCCESS,
-      stripeChargeId: charge.id,
-      stripeCustomerId: charge.customer,
-      amount: charge.amount,
-      refunded: charge.refunded,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
-    });
-  }
+  // Legacy observability removed - using StripeEvents only
   
   return { processed: true, chargeId: charge.id, status: 'charge_refunded' };
 };
