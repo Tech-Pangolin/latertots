@@ -175,9 +175,6 @@ const UnifiedReservationModal = ({
     }
   };
 
-  const deleteFormDraft = async () => {
-    await dbService.deleteFormDraft(currentUser.uid);
-  };
 
   // Form submission
   const handleFormSubmit = async (e) => {

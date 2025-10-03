@@ -213,9 +213,9 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
 
     await batch.commit();
 
-    // Delete the form draft
-    const formDraftRef = db.collection('FormDrafts').doc(userId);
-    await formDraftRef.delete();
+    // Clean up the user's form draft using centralized cleanup
+    const { performCleanup } = require('../../cleanup/cleanupFailedReservations');
+    await performCleanup({ specificDraftId: userId, userId });
 
     // Update user's saved payment methods if any
     if (session.payment_method) {
