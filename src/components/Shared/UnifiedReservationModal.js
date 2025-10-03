@@ -25,39 +25,48 @@ import PaymentFailedStep from './ReservationSteps/PaymentFailedStep';
 
 const UnifiedReservationModal = ({ 
   modalOpenState = false, 
-  setModalOpenState, 
+  closeTheModal, 
   children, 
   scheduleChildSitterPage_queryKey,
-  initialStep = 'form'
+  initialContext = null
 }) => {
   const queryClient = useQueryClient();
   const { currentUser, dbService } = useAuth();
   const hourlyRate = 25; // TODO: Make this configurable
 
-  // Unified state management
-  const [state, setState] = useState({
-    currentStep: initialStep,
-    formData: {
-      selectedChild: [],
-      date: `${getCurrentDate()}`,
-      start: `${getCurrentTime()}`,
-      end: `${getCurrentTime()}`,
-      groupActivity: false
-    },
-    reservations: [],
-    paymentData: {
-      totalBill: 0,
-      totalTime: 0,
-      paymentType: null
-    },
-    errors: {
-      start: '',
-      end: '',
-      date: '',
-      selectedChild: ''
-    },
-    isProcessing: false,
-    error: null
+  // Unified state management - initialize based on initialContext
+  const [state, setState] = useState(() => {
+    const baseState = {
+      formData: {
+        selectedChild: [],
+        date: `${getCurrentDate()}`,
+        start: `${getCurrentTime()}`,
+        end: `${getCurrentTime()}`,
+        groupActivity: false
+      },
+      reservations: [],
+      paymentData: {
+        totalBill: 0,
+        totalTime: 0,
+        paymentType: null
+      },
+      errors: {
+        start: '',
+        end: '',
+        date: '',
+        selectedChild: ''
+      },
+      isProcessing: false,
+      error: null
+    };
+
+    if (initialContext === 'payment_success') {
+      return { ...baseState, currentStep: 'payment_success' };
+    } else if (initialContext === 'payment_failed') {
+      return { ...baseState, currentStep: 'payment_failed' };
+    } else {
+      return { ...baseState, currentStep: 'form' };
+    }
   });
 
   const updateState = useCallback((updates) => {
@@ -91,12 +100,24 @@ const UnifiedReservationModal = ({
     return errors;
   }, (errors) => updateState({ errors }), 500);
 
-  // Load form draft only when returning from payment failure
+  // Handle initial context and load form draft when needed
   useEffect(() => {
-    if (modalOpenState && initialStep === 'payment_failed') {
-      loadFormDraft();
+    if (initialContext === 'payment_success') {
+      // Backend webhook handles form draft deletion
+      // Just show success step
+      updateState({ currentStep: 'payment_success' });
+    } else if (initialContext === 'payment_failed') {
+      // Form draft should already be loaded by useEffect when initialStep === 'payment_failed'
+      updateState({
+        currentStep: 'payment_failed',
+        reservations: [] // Clear any existing reservations
+      });
+      // Load form draft for payment failure recovery
+      if (modalOpenState) {
+        loadFormDraft();
+      }
     }
-  }, [modalOpenState, initialStep]);
+  }, [initialContext, modalOpenState]);
 
   const loadFormDraft = async () => {
     try {
@@ -252,21 +273,6 @@ const UnifiedReservationModal = ({
     }
   };
 
-  // Handle payment success
-  const handlePaymentSuccess = async () => {
-    // Backend webhook handles form draft deletion
-    // Just show success step
-    updateState({ currentStep: 'payment_success' });
-  };
-
-  // Handle payment failure
-  const handlePaymentFailure = async () => {
-    // Form draft should already be loaded by useEffect when initialStep === 'payment_failed'
-    updateState({
-      currentStep: 'payment_failed',
-      reservations: [] // Clear any existing reservations
-    });
-  };
 
   // Handle retry
   const handleRetry = () => {
@@ -275,19 +281,15 @@ const UnifiedReservationModal = ({
 
   // Handle cancel
   const handleCancel = async () => {
-    console.log('🔄 [handleCancel] Starting cancel process');
+    closeTheModal();
+
     try {
-      console.log('🔄 [handleCancel] Calling cleanup function via Firebase SDK...');
-      // Call cleanup function to remove any orphaned reservations using Firebase SDK
       const cleanupFunction = httpsCallable(functions, 'cleanupFailedReservationsManual');
-      const result = await cleanupFunction();
-      console.log('✅ [handleCancel] Cleanup function completed:', result.data);
+      await cleanupFunction();
     } catch (error) {
-      console.error('❌ [handleCancel] Firebase SDK call failed:', error);
-      // Continue with cancel even if cleanup fails
+      console.warn('[e93944e9] An error occurred');
     }
     
-    console.log('🔄 [handleCancel] Resetting form state');
     updateState({
       currentStep: 'form',
       formData: {
@@ -300,7 +302,6 @@ const UnifiedReservationModal = ({
       reservations: [],
       error: null
     });
-    console.log('✅ [handleCancel] Cancel process completed');
   };
 
   // Handle close
@@ -317,7 +318,7 @@ const UnifiedReservationModal = ({
       reservations: [],
       error: null
     });
-    setModalOpenState(false);
+    closeTheModal();
   };
 
   // Render current step
@@ -376,14 +377,6 @@ const UnifiedReservationModal = ({
     }
   };
 
-  // Handle initial step based on URL parameters
-  useEffect(() => {
-    if (initialStep === 'payment_success') {
-      handlePaymentSuccess();
-    } else if (initialStep === 'payment_failed') {
-      handlePaymentFailure();
-    }
-  }, [initialStep]);
 
   return (
     <Dialog open={modalOpenState} aria-labelledby="form-dialog-title" maxWidth="md" fullWidth>

@@ -24,7 +24,13 @@ const ScheduleChildSitterPage = () => {
   const [isLoadingChildren, setIsLoadingChildren] = useState(true);
   const { currentUser, dbService } = useAuth();
   const [modalOpenState, setModalOpenState] = useState(false);
-  const [initialStep, setInitialStep] = useState('form');
+  const [initialContext, setInitialContext] = useState(null);
+
+  // Handle modal close with context reset
+  const closeTheModal = () => {
+    setModalOpenState(false);
+    setInitialContext(null); // Reset to default for future opens
+  };
   const navigate = useNavigate();
   const { data: events = [], setMonthYear } = useReservationsByMonthDayRQ()
   
@@ -34,12 +40,12 @@ const ScheduleChildSitterPage = () => {
     const paymentStatus = urlParams.get('payment');
     
     if (paymentStatus === 'success') {
-      setInitialStep('payment_success');
+      setInitialContext('payment_success');
       setModalOpenState(true);
       // Clean up URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (paymentStatus === 'failed') {
-      setInitialStep('payment_failed');
+      setInitialContext('payment_failed');
       setModalOpenState(true);
       // Clean up URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -286,10 +292,10 @@ const ScheduleChildSitterPage = () => {
       <Grid item xs={1} />
       <UnifiedReservationModal
         modalOpenState={modalOpenState}
-        setModalOpenState={setModalOpenState}
+        closeTheModal={closeTheModal}
         children={children}
         scheduleChildSitterPage_queryKey={['calendarReservationsByMonth', selectedDate.month - 1, selectedDate.year]}
-        initialStep={initialStep}
+        initialContext={initialContext}
       />
     </Grid>
   );
