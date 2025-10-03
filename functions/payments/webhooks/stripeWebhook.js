@@ -10,7 +10,7 @@ exports.stripeWebhook = onRequest(
   async (req, res) => {
     const { stripeSecretKey, stripeWebhookSecret } = require('../../config');
 
-    logger.info('🔔 [fxn:stripeWebhook]: Stripe webhook received', {
+    logger.debug('🔔 [fxn:stripeWebhook]: Stripe webhook received', {
       timestamp: new Date().toISOString(),
       method: req.method,
       url: req.url

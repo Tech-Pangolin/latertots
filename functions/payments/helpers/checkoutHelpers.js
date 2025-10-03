@@ -80,7 +80,7 @@ const calculateReservationPricing = (reservations, paymentType) => {
     });
   }
   
-  logger.info('💰 [CHECKOUT] Calculated pricing:', {
+  logger.debug('💰 [calculateReservationPricing] Calculated pricing:', {
     paymentType,
     reservationCount: reservations.length,
     lineItemCount: lineItems.length,
@@ -118,7 +118,7 @@ const createStripeCheckoutSession = async (options) => {
       allow_promotion_codes: CHECKOUT_CONFIG.ALLOW_PROMOTION_CODES
     });
     
-    logger.info('✅ [CHECKOUT] Created Stripe checkout session:', {
+    logger.info('✅ [createStripeCheckoutSession] Created Stripe checkout session:', {
       sessionId: session.id,
       customerId: options.customer,
       paymentType: options.metadata[STRIPE_METADATA_KEYS.PAYMENT_TYPE]
@@ -126,7 +126,7 @@ const createStripeCheckoutSession = async (options) => {
     
     return session;
   } catch (error) {
-    logger.error('❌ [CHECKOUT] Failed to create checkout session:', {
+    logger.error('❌ [createStripeCheckoutSession] Failed to create checkout session:', {
       error: error.message,
       customerId: options.customer
     });

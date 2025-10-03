@@ -37,7 +37,7 @@ exports.createCheckoutSession = onRequest(
         throw new Error('Latertots User ID is required');
       }
       
-      logger.info('🚀 [CHECKOUT] Creating checkout session:', {
+      logger.debug('🚀 [createCheckoutSession] Creating checkout session:', {
         latertotsUserId,
         paymentType,
         reservationCount: reservations.length,
@@ -53,7 +53,7 @@ exports.createCheckoutSession = onRequest(
         stripeSecretKey.value()
       );
 
-      logger.info('Reservations:', reservations);
+      logger.debug('💰 [createCheckoutSession] Reservations:', reservations);
       
       // Create Checkout Session
       const session = await createStripeCheckoutSession({
@@ -69,7 +69,7 @@ exports.createCheckoutSession = onRequest(
         secretKey: stripeSecretKey.value()
       });
       
-      logger.info('✅ [CHECKOUT] Checkout session created successfully:', {
+      logger.info('✅ [createCheckoutSession] Checkout session created successfully:', {
         sessionId: session.id,
         latertotsUserId: stripelatertotsUserId,
         paymentType
@@ -82,7 +82,7 @@ exports.createCheckoutSession = onRequest(
       });
       
     } catch (error) {
-      logger.error('❌ [CHECKOUT] Failed to create checkout session:', {
+      logger.error('❌ [createCheckoutSession] Failed to create checkout session:', {
         error: error.message,
         latertotsUserId: request.body?.latertotsUserId,
         paymentType: request.body?.paymentType

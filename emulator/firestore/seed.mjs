@@ -165,7 +165,9 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     const reservationData = {
       "User": parent.ref,
       "Child": childRef,
-      "allDay": false,
+      // Persist required and optional fields per ReservationSchema
+      "formDraftId": faker.string.uuid(),
+      "groupActivity": flipCoin(),
       "archived": false,
       "status": _.sample([RESERVATION_STATUS.PROCESSING, _.sample(Object.values(RESERVATION_STATUS))]),
       "stripePayments": {

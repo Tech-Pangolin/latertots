@@ -36,7 +36,7 @@ const verifyWebhookSignature = (payload, signature, secretKey, webhookSecret) =>
   try {
     // Initialize Stripe with the real secret key
     const stripe = require('stripe')(secretKey);
-    
+
     // Only the webhook secret is needed for signature verification
     const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
     return event;
@@ -60,15 +60,15 @@ const processStripeWebhook = async (stripeEvent) => {
       .collection('StripeEvents')
       .where('stripeEventId', '==', stripeEvent.id)
       .get();
-    
+
     if (!existingEvent.empty) {
-      logger.info('🔄 [WEBHOOK] Event already processed:', {
+      logger.debug('🔄 [processStripeWebhook] Event already processed:', {
         stripeEventId: stripeEvent.id,
         eventType: stripeEvent.type
       });
       return { processed: true, reason: 'already_processed' };
     }
-    
+
     // Store the Stripe event
     await db.collection('StripeEvents').add({
       stripeEventId: stripeEvent.id,
@@ -82,29 +82,26 @@ const processStripeWebhook = async (stripeEvent) => {
       data: stripeEvent,
       createdAt: Timestamp.now()
     });
-    
+
     // Process based on event type
     let result = { processed: false };
-    
+
     switch (stripeEvent.type) {
+      // Events that are logged but not processed - stored in StripeEvents collection only
       case 'payment_intent.succeeded':
-        result = await handlePaymentSuccess(stripeEvent);
-        break;
       case 'payment_intent.payment_failed':
-        result = await handlePaymentFailure(stripeEvent);
-        break;
       case 'payment_intent.canceled':
-        result = await handlePaymentCanceled(stripeEvent);
-        break;
       case 'charge.succeeded':
-        result = await handleChargeSucceeded(stripeEvent);
-        break;
       case 'charge.failed':
-        result = await handleChargeFailed(stripeEvent);
-        break;
       case 'charge.refunded':
-        result = await handleChargeRefunded(stripeEvent);
+        logger.debug('📝 [processStripeWebhook] Event logged (no processing):', {
+          eventType: stripeEvent.type,
+          stripeEventId: stripeEvent.id
+        });
+        result = { processed: true, reason: 'logged_only' };
         break;
+
+      // Events with active business logic
       case 'charge.dispute.created':
         result = await handleDisputeCreated(stripeEvent);
         break;
@@ -129,23 +126,24 @@ const processStripeWebhook = async (stripeEvent) => {
       case 'checkout.session.expired':
         result = await handleCheckoutSessionExpired(stripeEvent);
         break;
+
       default:
-        logger.info('ℹ️ [WEBHOOK] Unhandled event type:', {
+        logger.debug('ℹ️ [processStripeWebhook] Unhandled event type:', {
           eventType: stripeEvent.type,
           stripeEventId: stripeEvent.id
         });
         result = { processed: true, reason: 'unhandled_event_type' };
     }
-    
-    logger.info('✅ [WEBHOOK] Processed Stripe event:', {
+
+    logger.debug('✅ [processStripeWebhook] Processed Stripe event:', {
       stripeEventId: stripeEvent.id,
       eventType: stripeEvent.type,
       result
     });
-    
+
     return result;
   } catch (error) {
-    logger.error('❌ [WEBHOOK] Failed to process Stripe event:', {
+    logger.error('❌ [processStripeWebhook] Failed to process Stripe event:', {
       stripeEventId: stripeEvent.id,
       eventType: stripeEvent.type,
       error: error.message
@@ -154,53 +152,6 @@ const processStripeWebhook = async (stripeEvent) => {
   }
 };
 
-/**
- * Handle successful payment (legacy - logging only)
- * @param {Object} stripeEvent - Stripe webhook event
- * @returns {Promise<Object>} - Processing result
- */
-const handlePaymentSuccess = async (stripeEvent) => {
-  const paymentIntentId = stripeEvent.data.object.id;
-  
-  logger.info('✅ [WEBHOOK] Payment succeeded (legacy):', {
-    paymentIntentId,
-    amount: stripeEvent.data.object.amount
-  });
-  
-  return { processed: true, status: 'payment_succeeded_legacy' };
-};
-
-/**
- * Handle failed payment (legacy - logging only)
- * @param {Object} stripeEvent - Stripe webhook event
- * @returns {Promise<Object>} - Processing result
- */
-const handlePaymentFailure = async (stripeEvent) => {
-  const paymentIntentId = stripeEvent.data.object.id;
-  const failureReason = stripeEvent.data.object.last_payment_error?.message || 'Unknown error';
-  
-  logger.info('❌ [WEBHOOK] Payment failed (legacy):', {
-    paymentIntentId,
-    failureReason
-  });
-  
-  return { processed: true, status: 'payment_failed_legacy', failureReason };
-};
-
-/**
- * Handle canceled payment (legacy - logging only)
- * @param {Object} stripeEvent - Stripe webhook event
- * @returns {Promise<Object>} - Processing result
- */
-const handlePaymentCanceled = async (stripeEvent) => {
-  const paymentIntentId = stripeEvent.data.object.id;
-  
-  logger.info('🚫 [WEBHOOK] Payment canceled (legacy):', {
-    paymentIntentId
-  });
-  
-  return { processed: true, status: 'payment_canceled_legacy' };
-};
 
 /**
  * Handle dispute created
@@ -210,12 +161,12 @@ const handlePaymentCanceled = async (stripeEvent) => {
 const handleDisputeCreated = async (stripeEvent) => {
   const disputeId = stripeEvent.data.object.id;
   const chargeId = stripeEvent.data.object.charge;
-  
-  logger.info('⚖️ [WEBHOOK] Dispute created:', {
+
+  logger.info('⚖️ [handleDisputeCreated] Dispute created:', {
     disputeId,
     chargeId
   });
-  
+
   // TODO: Implement dispute handling logic
   return { processed: true, disputeId, status: 'dispute_created' };
 };
@@ -228,35 +179,29 @@ const handleDisputeCreated = async (stripeEvent) => {
  */
 const handleCheckoutSessionCompleted = async (stripeEvent) => {
   const session = stripeEvent.data.object;
-  
+
   try {
-    logger.info('✅ [WEBHOOK] Checkout session completed:', {
-      sessionId: session.id,
-      customerId: session.customer,
-      amountTotal: session.amount_total
-    });
-    
     // Parse reservation data from metadata
     const reservations = JSON.parse(session.metadata.reservationIds || '[]');
     const paymentType = session.metadata.paymentType;
     const appUserId = session.metadata.appUserId;
-    
+
     // Extract user ID from appUserId (format: "Users/{userId}")
     const userId = appUserId.split('/')[1];
-    
+
     // Update reservations with payment information
     const batch = db.batch();
     for (const reservationPath of reservations) {
       const reservationId = reservationPath.split('/')[1];
       const reservationRef = db.collection('Reservations').doc(reservationId);
-      
+
       // Update stripePayments based on payment type
       const stripePayments = {
         minimum: paymentType === 'minimum' ? session.payment_intent : null,
         remainder: paymentType === 'minimum' ? null : null,
         full: paymentType === 'full' ? session.payment_intent : null
       };
-      
+
       batch.update(reservationRef, {
         stripePayments,
         status: 'confirmed', // Update status from PENDING to CONFIRMED
@@ -265,30 +210,32 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
         updatedAt: Timestamp.now()
       });
     }
-    
+
     await batch.commit();
-    
+
     // Delete the form draft
     const formDraftRef = db.collection('FormDrafts').doc(userId);
     await formDraftRef.delete();
-    
+
     // Update user's saved payment methods if any
     if (session.payment_method) {
       const { updateUserPaymentMethods } = require('./customerHelpers');
       await updateUserPaymentMethods(appUserId, session.payment_method);
     }
-    
-    logger.info('✅ [WEBHOOK] Checkout session processing completed:', {
+
+    logger.info('✅ [handleCheckoutSessionExpired] Checkout session processing completed:', {
       sessionId: session.id,
       userId,
       reservationCount: reservations.length,
-      paymentType
+      paymentType,
+      customerId: session.customer,
+      amountTotal: session.amount_total
     });
-    
+
     return { processed: true, userId, reservationCount: reservations.length, status: 'checkout_completed' };
-    
+
   } catch (error) {
-    logger.error('❌ [WEBHOOK] Failed to process checkout session completion:', {
+    logger.error('❌ [handleCheckoutSessionExpired] Failed to process checkout session completion:', {
       sessionId: session.id,
       error: error.message
     });
@@ -303,49 +250,42 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
  */
 const handleCheckoutSessionExpired = async (stripeEvent) => {
   const session = stripeEvent.data.object;
-  
+
   try {
-    logger.info('⏰ [WEBHOOK] Checkout session expired:', {
-      sessionId: session.id,
-      customerId: session.customer
-    });
-    
     // Extract user ID from session metadata
     const appUserId = session.metadata?.appUserId;
     if (appUserId) {
       const userId = appUserId.split('/')[1]; // Extract from "Users/{userId}" format
-      
+
       // Clean up the user's form draft and associated reservations
       const { performCleanup } = require('../../cleanup/cleanupFailedReservations');
-      const cleanupResult = await performCleanup({ 
+      const cleanupResult = await performCleanup({
         specificDraftId: userId,
-        userId: userId 
+        userId: userId
       });
-      
-      logger.info('🧹 [WEBHOOK] Cleaned up expired checkout session:', {
+
+      logger.info('⏰ [handleCheckoutSessionExpired] Cleaned up expired checkout session:', {
         sessionId: session.id,
         userId,
         cleanupResult
       });
     } else {
-      logger.warn('⚠️ [WEBHOOK] No appUserId found in expired session metadata:', {
+      logger.warn('⚠️ [handleCheckoutSessionExpired] No appUserId found in expired session metadata:', {
         sessionId: session.id,
         metadata: session.metadata
       });
     }
-    
+
     return { processed: true, status: 'checkout_expired' };
-    
+
   } catch (error) {
-    logger.error('❌ [WEBHOOK] Failed to process expired checkout session:', {
+    logger.error('❌ [handleCheckoutSessionExpired] Failed to process expired checkout session:', {
       sessionId: session.id,
       error: error.message
     });
     throw error;
   }
 };
-
-// Legacy invoice creation function removed
 
 /**
  * Create reservations in Firestore from checkout session
@@ -356,7 +296,7 @@ const handleCheckoutSessionExpired = async (stripeEvent) => {
  */
 const createReservationsFromCheckout = async (reservations, stripeCustomerId, appUserId) => {
   const batch = db.batch();
-  
+
   reservations.forEach(reservation => {
     const reservationRef = db.collection('Reservations').doc(reservation.id);
     batch.set(reservationRef, {
@@ -368,77 +308,15 @@ const createReservationsFromCheckout = async (reservations, stripeCustomerId, ap
       updatedAt: Timestamp.now()
     });
   });
-  
+
   await batch.commit();
-  
+
   logger.info('✅ [WEBHOOK] Created reservations from checkout:', {
     reservationCount: reservations.length,
     stripeCustomerId
   });
 };
 
-/**
- * Handle charge succeeded
- * @param {Object} stripeEvent - Stripe webhook event
- * @returns {Promise<Object>} - Processing result
- */
-const handleChargeSucceeded = async (stripeEvent) => {
-  const charge = stripeEvent.data.object;
-  
-  logger.info('✅ [WEBHOOK] Charge succeeded:', {
-    chargeId: charge.id,
-    customerId: charge.customer,
-    amount: charge.amount,
-    currency: charge.currency
-  });
-  
-  // Legacy observability removed - using StripeEvents only
-  
-  return { processed: true, chargeId: charge.id, status: 'charge_succeeded' };
-};
-
-/**
- * Handle charge failed
- * @param {Object} stripeEvent - Stripe webhook event
- * @returns {Promise<Object>} - Processing result
- */
-const handleChargeFailed = async (stripeEvent) => {
-  const charge = stripeEvent.data.object;
-  const failureCode = charge.failure_code;
-  const failureMessage = charge.failure_message;
-  
-  logger.info('❌ [WEBHOOK] Charge failed:', {
-    chargeId: charge.id,
-    customerId: charge.customer,
-    amount: charge.amount,
-    failureCode,
-    failureMessage
-  });
-  
-  // Legacy observability removed - using StripeEvents only
-  
-  return { processed: true, chargeId: charge.id, status: 'charge_failed', failureCode, failureMessage };
-};
-
-/**
- * Handle charge refunded
- * @param {Object} stripeEvent - Stripe webhook event
- * @returns {Promise<Object>} - Processing result
- */
-const handleChargeRefunded = async (stripeEvent) => {
-  const charge = stripeEvent.data.object;
-  
-  logger.info('💰 [WEBHOOK] Charge refunded:', {
-    chargeId: charge.id,
-    customerId: charge.customer,
-    amount: charge.amount,
-    refunded: charge.refunded
-  });
-  
-  // Legacy observability removed - using StripeEvents only
-  
-  return { processed: true, chargeId: charge.id, status: 'charge_refunded' };
-};
 
 /**
  * Handle customer created
@@ -447,27 +325,47 @@ const handleChargeRefunded = async (stripeEvent) => {
  */
 const handleCustomerCreated = async (stripeEvent) => {
   const customer = stripeEvent.data.object;
-  
-  logger.info('👤 [WEBHOOK] Customer created:', {
-    customerId: customer.id,
-    email: customer.email
-  });
-  
+
+
   // If metadata includes appUserId, save Stripe customer ID to user doc
   if (customer.metadata?.appUserId) {
     const appUserId = customer.metadata.appUserId;
-    const userId = appUserId.split('/')[1];
-    
+
+    // Handle both formats: "Users/abc123" or just "abc123"
+    let userId;
+    if (appUserId.includes('Users/')) {
+      // Full path format: "Users/abc123" -> extract "abc123"
+      userId = appUserId.split('/')[1];
+    } else {
+      // Just UID format: "abc123" -> use as-is
+      userId = appUserId;
+    }
+
+    // Validate we have a valid userId
+    if (!userId || userId.trim() === '') {
+      logger.error('❌ [handleCustomerCreated] Invalid appUserId format:', {
+        appUserId,
+        customerId: customer.id
+      });
+      return { processed: false, error: 'Invalid appUserId format' };
+    }
+
     await db.collection('Users').doc(userId).update({
       stripeCustomerId: customer.id,
       updatedAt: Timestamp.now()
     });
-    
-    // Sync payment methods
+
+    // Sync payment methods - pass userId, not appUserId
     const { updateUserPaymentMethods } = require('./customerHelpers');
-    await updateUserPaymentMethods(appUserId, customer.id);
+    await updateUserPaymentMethods(userId, customer.id);
   }
-  
+
+  logger.info('👤 [handleCustomerCreated] Customer created:', {
+    customerId: customer.id,
+    email: customer.email
+  });
+
+
   return { processed: true, customerId: customer.id, status: 'customer_created' };
 };
 
@@ -478,27 +376,27 @@ const handleCustomerCreated = async (stripeEvent) => {
  */
 const handleCustomerUpdated = async (stripeEvent) => {
   const customer = stripeEvent.data.object;
-  
-  logger.info('👤 [WEBHOOK] Customer updated:', {
-    customerId: customer.id,
-    email: customer.email
-  });
-  
+
   // If metadata includes appUserId, ensure Stripe customer ID is saved and sync payment methods
   if (customer.metadata?.appUserId) {
     const appUserId = customer.metadata.appUserId;
     const userId = appUserId.split('/')[1];
-    
+
     await db.collection('Users').doc(userId).update({
       stripeCustomerId: customer.id,
       updatedAt: Timestamp.now()
     });
-    
+
     // Sync payment methods
     const { updateUserPaymentMethods } = require('./customerHelpers');
     await updateUserPaymentMethods(appUserId, customer.id);
   }
-  
+
+  logger.info('👤 [handleCustomerUpdated] Customer updated:', {
+    customerId: customer.id,
+    email: customer.email
+  });
+
   return { processed: true, customerId: customer.id, status: 'customer_updated' };
 };
 
@@ -509,21 +407,17 @@ const handleCustomerUpdated = async (stripeEvent) => {
  */
 const handleCustomerDeleted = async (stripeEvent) => {
   const customer = stripeEvent.data.object;
-  
-  logger.info('👤 [WEBHOOK] Customer deleted:', {
-    customerId: customer.id
-  });
-  
+
   // If metadata includes appUserId, mark Stripe linkage as removed
   if (customer.metadata?.appUserId) {
     const appUserId = customer.metadata.appUserId;
     const userId = appUserId.split('/')[1];
-    
+
     await db.collection('Users').doc(userId).update({
       stripeCustomerId: null,
       updatedAt: Timestamp.now()
     });
-    
+
     // Clear cached payment methods
     await db.collection('Users').doc(userId).collection('PaymentMethods').get().then(snapshot => {
       const batch = db.batch();
@@ -531,7 +425,11 @@ const handleCustomerDeleted = async (stripeEvent) => {
       return batch.commit();
     });
   }
-  
+ 
+  logger.info('👤 [handleCustomerDeleted] Customer deleted:', {
+    customerId: customer.id
+  });
+
   return { processed: true, customerId: customer.id, status: 'customer_deleted' };
 };
 
@@ -542,17 +440,43 @@ const handleCustomerDeleted = async (stripeEvent) => {
  */
 const handlePaymentMethodAttached = async (stripeEvent) => {
   const paymentMethod = stripeEvent.data.object;
-  
-  logger.info('💳 [WEBHOOK] Payment method attached:', {
-    paymentMethodId: paymentMethod.id,
-    customerId: paymentMethod.customer
-  });
-  
-  // Sync payment methods for the customer
-  const { updateUserPaymentMethods } = require('./customerHelpers');
-  await updateUserPaymentMethods(`Users/${paymentMethod.customer}`, paymentMethod.customer);
-  
-  return { processed: true, paymentMethodId: paymentMethod.id, status: 'payment_method_attached' };
+
+  try {
+    // Find the user by Stripe customer ID
+    const usersQuery = await db.collection('Users')
+      .where('stripeCustomerId', '==', paymentMethod.customer)
+      .limit(1)
+      .get();
+
+    if (usersQuery.empty) {
+      logger.warn('⚠️ [WEBHOOK] No user found for Stripe customer:', {
+        customerId: paymentMethod.customer,
+        paymentMethodId: paymentMethod.id
+      });
+      return { processed: false, reason: 'user_not_found' };
+    }
+
+    const userDoc = usersQuery.docs[0];
+    const userId = userDoc.id;
+
+    // Sync payment methods for the user
+    const { updateUserPaymentMethods } = require('./customerHelpers');
+    await updateUserPaymentMethods(userId, paymentMethod.id);
+
+    logger.info('💳 [handlePaymentMethodAttached] Payment method attached:', {
+      paymentMethodId: paymentMethod.id,
+      customerId: paymentMethod.customer
+    });
+
+    return { processed: true, paymentMethodId: paymentMethod.id, userId, status: 'payment_method_attached' };
+  } catch (error) {
+    logger.error('❌ [handlePaymentMethodAttached] Failed to handle payment method attached:', {
+      paymentMethodId: paymentMethod.id,
+      customerId: paymentMethod.customer,
+      error: error.message
+    });
+    throw error;
+  }
 };
 
 /**
@@ -562,28 +486,48 @@ const handlePaymentMethodAttached = async (stripeEvent) => {
  */
 const handlePaymentMethodDetached = async (stripeEvent) => {
   const paymentMethod = stripeEvent.data.object;
-  
-  logger.info('💳 [WEBHOOK] Payment method detached:', {
-    paymentMethodId: paymentMethod.id,
-    customerId: paymentMethod.customer
-  });
-  
-  // Sync payment methods for the customer
-  const { updateUserPaymentMethods } = require('./customerHelpers');
-  await updateUserPaymentMethods(`Users/${paymentMethod.customer}`, paymentMethod.customer);
-  
-  return { processed: true, paymentMethodId: paymentMethod.id, status: 'payment_method_detached' };
+
+  try {
+    // Find the user by Stripe customer ID
+    const usersQuery = await db.collection('Users')
+      .where('stripeCustomerId', '==', paymentMethod.customer)
+      .limit(1)
+      .get();
+
+    if (usersQuery.empty) {
+      logger.warn('⚠️ [handlePaymentMethodDetached] No user found for Stripe customer:', {
+        customerId: paymentMethod.customer,
+        paymentMethodId: paymentMethod.id
+      });
+      return { processed: false, reason: 'user_not_found' };
+    }
+
+    const userDoc = usersQuery.docs[0];
+    const userId = userDoc.id;
+
+    // Sync payment methods for the user
+    const { updateUserPaymentMethods } = require('./customerHelpers');
+    await updateUserPaymentMethods(userId, paymentMethod.id);
+
+    logger.info('💳 [handlePaymentMethodDetached] Payment method detached:', {
+      paymentMethodId: paymentMethod.id,
+      customerId: paymentMethod.customer
+    });
+
+    return { processed: true, paymentMethodId: paymentMethod.id, userId, status: 'payment_method_detached' };
+  } catch (error) {
+    logger.error('❌ [WEBHOOK] Failed to handle payment method detached:', {
+      paymentMethodId: paymentMethod.id,
+      customerId: paymentMethod.customer,
+      error: error.message
+    });
+    throw error;
+  }
 };
 
 module.exports = {
   verifyWebhookSignature,
   processStripeWebhook,
-  handlePaymentSuccess,
-  handlePaymentFailure,
-  handlePaymentCanceled,
-  handleChargeSucceeded,
-  handleChargeFailed,
-  handleChargeRefunded,
   handleDisputeCreated,
   handleCustomerCreated,
   handleCustomerUpdated,

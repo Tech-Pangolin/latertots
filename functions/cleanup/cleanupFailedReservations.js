@@ -12,7 +12,7 @@ const db = getFirestore();
  */
 async function performCleanup(options = {}) {
   const { specificDraftId = null, userId = null } = options;
-  logger.info('🧹 [performCleanup]: Starting cleanup of failed reservations and expired form drafts', { specificDraftId, userId });
+  logger.debug('🧹 [performCleanup]: Starting cleanup of failed reservations and expired form drafts', { specificDraftId, userId });
   
   try {
     const now = new Date();
@@ -33,7 +33,7 @@ async function performCleanup(options = {}) {
       draftsToProcess = expiredDrafts.docs;
     }
     
-    logger.info(`🧹 [performCleanup]: Found ${draftsToProcess.length} ${specificDraftId ? 'specific' : 'expired'} form drafts`);
+    logger.debug(`🧹 [performCleanup]: Found ${draftsToProcess.length} ${specificDraftId ? 'specific' : 'expired'} form drafts`);
     
     let failedOrOrphanedReservationsCount = 0;
     let removedDraftsCount = 0;
@@ -90,9 +90,7 @@ exports.cleanupFailedReservations = onSchedule({
     return result;
   } catch (error) {
     logger.error('🧹 [cleanupFailedReservations]: Error in scheduled cleanup:', error);
-    throw new Error(`🧹 [cleanupFailedReservations]: Cleanup failed: ${error.message}`);
   }
-  return await performCleanup();
 });
 
 /**
@@ -104,7 +102,6 @@ exports.cleanupFailedReservationsManual = onCall(async (request) => {
     return result;
   } catch (error) {
     logger.error('🧹 [cleanupFailedReservationsManual]: Error in manual cleanup:', error);
-    throw new Error(`🧹 [cleanupFailedReservationsManual]: Cleanup failed: ${error.message}`);
   }
 });
 
