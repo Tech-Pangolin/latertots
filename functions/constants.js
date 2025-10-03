@@ -24,7 +24,7 @@ const STRIPE = {
 
 // NEW: Payment pricing configuration
 const PAYMENT_PRICING = {
-  HOURLY_RATE_CENTS: 2000,           // $20/hour in cents
+  HOURLY_RATE_CENTS: 2500,           // $20/hour in cents
   MINIMUM_HOURS: 2,                   // 2-hour minimum per reservation
   LATE_FEE_THRESHOLD_HOURS: 4,        // Late fee applies after 4 hours
   LATE_FEE_CENTS: 500,                // $5 late fee

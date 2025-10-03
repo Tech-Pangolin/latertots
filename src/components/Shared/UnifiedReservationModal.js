@@ -126,7 +126,12 @@ const UnifiedReservationModal = ({
         updateState({
           currentStep: 'payment_failed', // Always show payment failed step when loading draft
           formData: draft.formData,
-          reservations: draft.reservations || []
+          reservations: draft.paymentStepData?.reservations || [],
+          paymentData: {
+            totalBill: draft.paymentStepData?.totalBill || 0,
+            totalTime: draft.paymentStepData?.totalTime || 0,
+            paymentType: null
+          }
         });
       }
     } catch (error) {
@@ -138,11 +143,16 @@ const UnifiedReservationModal = ({
     }
   };
 
-  const saveFormDraft = async (formData, reservations) => {
+  const saveFormDraft = async (formData, reservations, paymentStepData) => {
     const draft = {
       archived: false,
       formData,
       reservations: reservations.map(ref => ({ id: ref.id, path: ref.path })),
+      paymentStepData: {
+        reservations: paymentStepData.reservations, // The processed reservation objects for PaymentStep
+        totalBill: paymentStepData.totalBill,
+        totalTime: paymentStepData.totalTime
+      },
       status: 'draft',
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 60_000), // 1 minute
@@ -233,8 +243,12 @@ const UnifiedReservationModal = ({
       );
       console.info('[handlePaymentSubmit] Reservation refs:', reservationRefs);
       
-      // Save form draft
-      await saveFormDraft(state.formData, reservationRefs);
+      // Save form draft with payment step data
+      await saveFormDraft(state.formData, reservationRefs, {
+        reservations: state.reservations,
+        totalBill: state.paymentData.totalBill,
+        totalTime: state.paymentData.totalTime
+      });
       console.info('[handlePaymentSubmit] Form draft saved');
       // Create checkout session
       const stripePayload = {
@@ -277,6 +291,11 @@ const UnifiedReservationModal = ({
   // Handle retry
   const handleRetry = () => {
     updateState({ currentStep: 'payment' });
+  };
+
+  // Handle edit details
+  const handleEditDetails = () => {
+    updateState({ currentStep: 'form' });
   };
 
   // Handle cancel
@@ -343,6 +362,7 @@ const UnifiedReservationModal = ({
             grandTotalTime={state.paymentData.totalTime}
             grandTotalBill={state.paymentData.totalBill}
             onPaymentTypeSelect={handlePaymentSubmit}
+            onEditDetails={handleEditDetails}
             isProcessingPayment={state.isProcessing}
             error={state.error}
           />

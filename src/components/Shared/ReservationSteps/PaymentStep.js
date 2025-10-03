@@ -16,6 +16,7 @@ const PaymentStep = ({
   grandTotalTime, 
   grandTotalBill, 
   onPaymentTypeSelect, 
+  onEditDetails,
   isProcessingPayment,
   error 
 }) => {
@@ -58,22 +59,32 @@ const PaymentStep = ({
       
       <p className='mt-5'>Please proceed to payment with Stripe to confirm your reservations.</p>
       
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px', gap: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', gap: '8px' }}>
         <Button 
-          onClick={() => onPaymentTypeSelect(DEPOSIT_TYPES.MINIMUM)} 
+          onClick={onEditDetails}
           variant="outlined"
-          disabled={isProcessingPayment}
+          color="secondary"
         >
-          {isProcessingPayment ? 'Processing...' : 'Pay Minimum Deposit'}
+          Edit Reservation Details
         </Button>
-        <Button 
-          onClick={() => onPaymentTypeSelect(DEPOSIT_TYPES.FULL)} 
-          variant="contained"
-          color="success"
-          disabled={isProcessingPayment}
-        >
-          {isProcessingPayment ? 'Processing...' : 'Pay Full Amount'}
-        </Button>
+        
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button 
+            onClick={() => onPaymentTypeSelect(DEPOSIT_TYPES.MINIMUM)} 
+            variant="outlined"
+            disabled={isProcessingPayment}
+          >
+            {isProcessingPayment ? 'Processing...' : 'Pay Minimum Deposit'}
+          </Button>
+          <Button 
+            onClick={() => onPaymentTypeSelect(DEPOSIT_TYPES.FULL)} 
+            variant="contained"
+            color="success"
+            disabled={isProcessingPayment}
+          >
+            {isProcessingPayment ? 'Processing...' : 'Pay Full Amount'}
+          </Button>
+        </div>
       </div>
     </div>
   );
