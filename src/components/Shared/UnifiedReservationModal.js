@@ -13,8 +13,9 @@ import { calculateTimeDifference } from '../../Helpers/datetime';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../AuthProvider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { MIN_RESERVATION_DURATION_MS, RESERVATION_STATUS } from '../../Helpers/constants';
+import { MIN_RESERVATION_DURATION_MS, RESERVATION_STATUS, SERVICE_PRICE_LOOKUP_UIDS } from '../../Helpers/constants';
 import useDebouncedValidateField from '../../Hooks/useDebouncedValidateField';
+import { useServicePricesRQ } from '../../Hooks/query-related/useServicePricesRQ';
 
 // Step components
 import FormStep from './ReservationSteps/FormStep';
@@ -32,7 +33,11 @@ const UnifiedReservationModal = ({
 }) => {
   const queryClient = useQueryClient();
   const { currentUser, dbService } = useAuth();
-  const hourlyRate = 25; // TODO: Make this configurable
+  const { getServicePrice, isLoading: pricesLoading } = useServicePricesRQ();
+  
+  // Get dynamic pricing from service prices
+  const hourlyRate = getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_FIRST_CHILD_HOURLY)?.pricePerUnitInCents / 100 || 0;
+  const additionalChildHourlyRate = getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_ADDITIONAL_CHILD_HOURLY)?.pricePerUnitInCents / 100 || 0;
 
   // Unified state management - initialize based on initialContext
   const [state, setState] = useState(() => {
@@ -186,7 +191,6 @@ const UnifiedReservationModal = ({
         title: child.name,
         start: new Date(state.formData.date + 'T' + state.formData.start).toISOString(),
         end: new Date(state.formData.date + 'T' + state.formData.end).toISOString(),
-        billingLocked: false,
         groupActivity: state.formData.groupActivity,
         extendedProps: {
           status: 'pending',
@@ -212,7 +216,10 @@ const UnifiedReservationModal = ({
     }
 
     const totalTime = newEvents.reduce((sum, event) => sum + parseFloat(event.totalTime), 0);
-    const totalBill = newEvents.reduce((sum, event) => sum + (event.totalTime * hourlyRate), 0);
+    const totalBill = newEvents.reduce((sum, event, index) => {
+      const rate = index === 0 ? hourlyRate : additionalChildHourlyRate;
+      return sum + (event.totalTime * rate);
+    }, 0);
 
     updateState({
       currentStep: 'payment',
@@ -356,6 +363,7 @@ const UnifiedReservationModal = ({
           <PaymentStep
             reservations={state.reservations}
             hourlyRate={hourlyRate}
+            additionalChildHourlyRate={additionalChildHourlyRate}
             grandTotalTime={state.paymentData.totalTime}
             grandTotalBill={state.paymentData.totalBill}
             onPaymentTypeSelect={handlePaymentSubmit}
@@ -405,7 +413,11 @@ const UnifiedReservationModal = ({
         {state.currentStep === 'payment_failed' && 'Payment Failed'}
       </DialogTitle>
       <DialogContent>
-        {renderStep()}
+        {pricesLoading ? (
+          <div>Loading pricing information...</div>
+        ) : (
+          renderStep()
+        )}
       </DialogContent>
       <DialogActions>
         {state.currentStep === 'form' && (
