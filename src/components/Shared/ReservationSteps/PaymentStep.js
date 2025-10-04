@@ -56,6 +56,7 @@ const PaymentStep = ({
                     • Activity fees are charged in addition to the base play fee<br/>
                     • Not all activities are priced hourly, some are flat rates<br/>
                     • Activity fees are charged by usage, rather than the maximum time of the activity, and are calculated at time of pickup<br/>
+                    • Activities are scheduled by day and are age-restricted. So not every activity may be available to every child on your reservation<br/>
                     • See "View Activity Prices" for current rates
                   </div>
                 }
