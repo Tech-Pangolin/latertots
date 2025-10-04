@@ -49,7 +49,8 @@ const syncAllStripeProducts = async (secretKey) => {
           stripeId: product.id,
           description: product.description || '',
           name: product.name,
-          pricePerUnitInCents: pricePerUnitInCents
+          pricePerUnitInCents: pricePerUnitInCents,
+          metadata: product.metadata,
         };
         
         servicePrices.push(servicePrice);

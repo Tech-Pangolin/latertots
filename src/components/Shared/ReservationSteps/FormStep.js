@@ -70,7 +70,7 @@ const FormStep = ({
             name="groupActivity"
           />
         }
-        label="Participate in group activity"
+        label="Show me group activities if available during my child's reservation. (Additional fees apply)"
       />
       
       <TextField
