@@ -23,6 +23,7 @@ const { cleanupExpiredNotifications } = require('./notifications/cleanup');
 const { stripeWebhook } = require('./payments/webhooks/stripeWebhook');
 const { createCheckoutSession } = require('./payments/checkout/createCheckoutSession');
 const { cleanupFailedPayments } = require('./payments/cleanup/cleanupFailedPayments');
+const { dailyProductSync, syncProductsManual } = require('./payments/helpers/productHelpers');
 
 // Email functions
 const { sendContactEmail } = require('./email/contactEmail');
@@ -47,6 +48,8 @@ exports.cleanupExpiredNotifications = cleanupExpiredNotifications;
 exports.stripeWebhook = stripeWebhook;
 exports.createCheckoutSession = createCheckoutSession;
 exports.cleanupFailedPayments = cleanupFailedPayments;
+exports.dailyProductSync = dailyProductSync;
+exports.syncProductsManual = syncProductsManual;
 exports.sendContactEmail = sendContactEmail;
 exports.upsertFormDraft = upsertFormDraft;
 exports.cleanupFailedReservations = cleanupFailedReservations;

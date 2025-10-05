@@ -24,12 +24,12 @@ const STRIPE = {
 
 // NEW: Payment pricing configuration
 const PAYMENT_PRICING = {
-  HOURLY_RATE_CENTS: 2500,           // $20/hour in cents
+  // DEPRECATED: HOURLY_RATE_CENTS - Now using dynamic rates from frontend payload
   MINIMUM_HOURS: 2,                   // 2-hour minimum per reservation
   LATE_FEE_THRESHOLD_HOURS: 4,        // Late fee applies after 4 hours
-  LATE_FEE_CENTS: 500,                // $5 late fee
-  MAX_BILLABLE_HOURS: 8,              // Maximum 8 hours per reservation
-  GROUP_ACTIVITY_FEE_CENTS: 500      // $5 group activity fee
+  // DEPRECATED: LATE_FEE_CENTS - Late fee workflow changed, will use dynamic pricing
+  MAX_BILLABLE_HOURS: 4,              // Maximum 4 hours per reservation (updated from 8)
+  GROUP_ACTIVITY_FEE_CENTS: 0         // $0 group activity fee - documents consent only
 };
 
 // NEW: Payment types for new system

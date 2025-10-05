@@ -13,8 +13,8 @@ import { calculateTimeDifference } from '../../Helpers/datetime';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../AuthProvider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { MIN_RESERVATION_DURATION_MS, RESERVATION_STATUS } from '../../Helpers/constants';
-import useDebouncedValidateField from '../../Hooks/useDebouncedValidateField';
+import { RESERVATION_STATUS, SERVICE_PRICE_LOOKUP_UIDS } from '../../Helpers/constants';
+import { useServicePricesRQ } from '../../Hooks/query-related/useServicePricesRQ';
 
 // Step components
 import FormStep from './ReservationSteps/FormStep';
@@ -32,7 +32,11 @@ const UnifiedReservationModal = ({
 }) => {
   const queryClient = useQueryClient();
   const { currentUser, dbService } = useAuth();
-  const hourlyRate = 25; // TODO: Make this configurable
+  const { getServicePrice, isLoading: pricesLoading } = useServicePricesRQ();
+  
+  // Get dynamic pricing from service prices
+  const hourlyRate = getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_FIRST_CHILD_HOURLY)?.pricePerUnitInCents / 100 || 25;
+  const additionalChildHourlyRate = getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_ADDITIONAL_CHILD_HOURLY)?.pricePerUnitInCents / 100 || 7;
 
   // Unified state management - initialize based on initialContext
   const [state, setState] = useState(() => {
@@ -50,14 +54,9 @@ const UnifiedReservationModal = ({
         totalTime: 0,
         paymentType: null
       },
-      errors: {
-        start: '',
-        end: '',
-        date: '',
-        selectedChild: ''
-      },
       isProcessing: false,
-      error: null
+      error: null,
+      isFormValid: false
     };
 
     if (initialContext === 'payment_success') {
@@ -73,32 +72,11 @@ const UnifiedReservationModal = ({
     setState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Form validation
-  const debouncedValidateFieldFxn = useDebouncedValidateField((data, field) => {
-    const errors = {};
-    if (!data.selectedChild?.length) {
-      errors.selectedChild = 'At least one child must be selected.';
-    }
-    const start = new Date(`${data.date}T${data.start}`);
-    const now = new Date();
-    if (field === 'start' && start <= now) {
-      errors.start = 'Dropoff time must be in the future.';
-    }
-    if (field === 'end') {
-      const end = new Date(`${data.date}T${data.end}`);
-      if (end - start < MIN_RESERVATION_DURATION_MS) {
-        errors.end = 'Pickup time must be at least 2 hours after dropoff time.';
-      }
-    }
-    if (field === 'date') {
-      const selectedDate = new Date(`${data.date}T00:00:00`);
-      const today = new Date(new Date().toISOString().split('T')[0] + 'T00:00:00');
-      if (selectedDate < today) {
-        errors.date = 'Date must be today or in the future.';
-      }
-    }
-    return errors;
-  }, (errors) => updateState({ errors }), 500);
+  // Add validation callback
+  const handleValidationChange = useCallback((isValid) => {
+    updateState({ isFormValid: isValid });
+  }, [updateState]);
+
 
   // Handle initial context and load form draft when needed
   useEffect(() => {
@@ -176,23 +154,39 @@ const UnifiedReservationModal = ({
   };
 
 
+  // Group activity change handler - simplified to update reservation directly
+  const handleGroupActivityChange = (stableId, isSelected) => {
+    setState(prev => ({
+      ...prev,
+      // Update the actual reservation's groupActivity field directly
+      reservations: prev.reservations.map(reservation => 
+        reservation.stableId === stableId 
+          ? { ...reservation, groupActivity: isSelected }
+          : reservation
+      )
+    }));
+  };
+
   // Form submission
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
+  const handleFormSubmit = async (formData) => {
+    // Safety check to ensure selectedChild is defined and is an array
+    if (!formData.selectedChild || !Array.isArray(formData.selectedChild)) {
+      console.error('selectedChild is not defined or not an array:', formData.selectedChild);
+      return;
+    }
     
-    const newEvents = state.formData.selectedChild.map(child => {
+    const newEvents = formData.selectedChild.map((child, index) => {
       return {
-        id: uuidv4().replace(/-/g, ''),
+        stableId: `${child.id}-${index}`, // Create stable identifier
         title: child.name,
-        start: new Date(state.formData.date + 'T' + state.formData.start).toISOString(),
-        end: new Date(state.formData.date + 'T' + state.formData.end).toISOString(),
-        billingLocked: false,
-        groupActivity: state.formData.groupActivity,
+        start: new Date(formData.date + 'T' + formData.start).toISOString(),
+        end: new Date(formData.date + 'T' + formData.end).toISOString(),
+        groupActivity: formData.groupActivity,
         extendedProps: {
           status: 'pending',
           childId: child.id
         },
-        totalTime: calculateTimeDifference(state.formData.start, state.formData.end)
+        totalTime: calculateTimeDifference(formData.start, formData.end)
       };
     });
 
@@ -212,7 +206,10 @@ const UnifiedReservationModal = ({
     }
 
     const totalTime = newEvents.reduce((sum, event) => sum + parseFloat(event.totalTime), 0);
-    const totalBill = newEvents.reduce((sum, event) => sum + (event.totalTime * hourlyRate), 0);
+    const totalBill = newEvents.reduce((sum, event, index) => {
+      const rate = index === 0 ? hourlyRate : additionalChildHourlyRate;
+      return sum + (event.totalTime * rate);
+    }, 0);
 
     updateState({
       currentStep: 'payment',
@@ -229,8 +226,6 @@ const UnifiedReservationModal = ({
       isProcessing: true,
       error: null 
     });
-    console.info('[handlePaymentSubmit] Payment type:', paymentType);
-    
     try {
       // Create optimistic reservations
       const reservationRefs = await dbService.createReservationsBatch(
@@ -238,23 +233,39 @@ const UnifiedReservationModal = ({
         state.reservations, 
         currentUser.uid // formDraftId
       );
-      console.info('[handlePaymentSubmit] Reservation refs:', reservationRefs);
       
+      // Update reservations with document UIDs for PaymentStep
+      const reservationsWithUids = state.reservations.map((reservation, index) => ({
+        ...reservation,
+        documentId: reservationRefs[index].id
+      }));
+
+      // Update state with reservations that have document UIDs
+      updateState({ reservations: reservationsWithUids });
+
       // Save form draft with payment step data
       await saveFormDraft(state.formData, reservationRefs, {
         reservations: state.reservations,
         totalBill: state.paymentData.totalBill,
         totalTime: state.paymentData.totalTime
       });
-      console.info('[handlePaymentSubmit] Form draft saved');
+      
       // Create checkout session
       const stripePayload = {
-        reservations: reservationRefs.map((ref, index) => ({
-          reservationId: ref.id,
-          childName: state.reservations[index].title,
-          durationHours: state.reservations[index].totalTime,
-          groupActivity: state.reservations[index].groupActivity
-        })),
+        reservations: reservationRefs.map((ref, index) => {
+          const reservation = state.reservations[index];
+          
+          // Calculate the rate for this reservation (first child gets standard rate, others get additional rate)
+          const hourlyRateCents = index === 0 ? (hourlyRate * 100) : (additionalChildHourlyRate * 100);
+          
+          return {
+            reservationId: ref.id,
+            childName: reservation.title,
+            durationHours: reservation.totalTime,
+            hourlyRateCents: hourlyRateCents, // Dynamic pricing from frontend service prices
+            groupActivity: reservation.groupActivity // Direct usage - no override logic needed
+          };
+        }),
         paymentType,
         latertotsUserId: currentUser.uid,
         successUrl: `${window.location.origin}/schedule?payment=success`,
@@ -266,7 +277,6 @@ const UnifiedReservationModal = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(stripePayload),
       });
-      console.info('[handlePaymentSubmit] Checkout session created');
       const session = await response.json();
       
       if (session.success) {
@@ -340,24 +350,25 @@ const UnifiedReservationModal = ({
   // Render current step
   const renderStep = () => {
     switch (state.currentStep) {
-      case 'form':
-        return (
-          <FormStep
-            formData={state.formData}
-            setFormData={(formData) => updateState({ formData })}
-            errors={state.errors}
-            children={children}
-            onFieldChange={debouncedValidateFieldFxn}
-            onValidation={() => {}}
-          />
-        );
+        case 'form':
+          return (
+            <FormStep
+              formData={state.formData}
+              setFormData={(formData) => updateState({ formData })}
+              children={children}
+              onSubmit={handleFormSubmit}
+              onValidationChange={handleValidationChange}
+            />
+          );
       case 'payment':
         return (
           <PaymentStep
             reservations={state.reservations}
             hourlyRate={hourlyRate}
+            additionalChildHourlyRate={additionalChildHourlyRate}
             grandTotalTime={state.paymentData.totalTime}
             grandTotalBill={state.paymentData.totalBill}
+            onGroupActivityChange={handleGroupActivityChange}
             onPaymentTypeSelect={handlePaymentSubmit}
             onEditDetails={handleEditDetails}
             isProcessingPayment={state.isProcessing}
@@ -385,10 +396,9 @@ const UnifiedReservationModal = ({
           <FormStep
             formData={state.formData}
             setFormData={(formData) => updateState({ formData })}
-            errors={state.errors}
             children={children}
-            onFieldChange={debouncedValidateFieldFxn}
-            onValidation={() => {}}
+            onSubmit={handleFormSubmit}
+            onValidationChange={handleValidationChange}
           />
         );
     }
@@ -405,7 +415,11 @@ const UnifiedReservationModal = ({
         {state.currentStep === 'payment_failed' && 'Payment Failed'}
       </DialogTitle>
       <DialogContent>
-        {renderStep()}
+        {pricesLoading ? (
+          <div>Loading pricing information...</div>
+        ) : (
+          renderStep()
+        )}
       </DialogContent>
       <DialogActions>
         {state.currentStep === 'form' && (
@@ -413,7 +427,12 @@ const UnifiedReservationModal = ({
             <Button onClick={handleClose} color="primary">
               Cancel
             </Button>
-            <Button onClick={handleFormSubmit} color="primary" variant="contained">
+            <Button 
+              onClick={() => handleFormSubmit(state.formData)} 
+              color="primary" 
+              variant="contained"
+              disabled={!state.isFormValid}
+            >
               Continue to Payment
             </Button>
           </>
