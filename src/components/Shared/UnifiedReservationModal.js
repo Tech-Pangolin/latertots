@@ -62,7 +62,8 @@ const UnifiedReservationModal = ({
         selectedChild: ''
       },
       isProcessing: false,
-      error: null
+      error: null,
+      groupActivitySelections: {}
     };
 
     if (initialContext === 'payment_success') {
@@ -181,13 +182,33 @@ const UnifiedReservationModal = ({
   };
 
 
+  // Group activity change handler
+  const handleGroupActivityChange = (stableId, isSelected) => {
+    const reservation = state.reservations.find(r => r.stableId === stableId);
+    const childName = reservation ? reservation.title : 'Unknown';
+    
+    console.log('🎯 [GROUP ACTIVITY DEBUG] handleGroupActivityChange called:', { 
+      stableId, 
+      childName,
+      isSelected 
+    });
+    
+    setState(prev => ({
+      ...prev,
+      groupActivitySelections: {
+        ...prev.groupActivitySelections,
+        [stableId]: isSelected
+      }
+    }));
+  };
+
   // Form submission
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     
-    const newEvents = state.formData.selectedChild.map(child => {
+    const newEvents = state.formData.selectedChild.map((child, index) => {
       return {
-        id: uuidv4().replace(/-/g, ''),
+        stableId: `${child.id}-${index}`, // Create stable identifier
         title: child.name,
         start: new Date(state.formData.date + 'T' + state.formData.start).toISOString(),
         end: new Date(state.formData.date + 'T' + state.formData.end).toISOString(),
@@ -247,6 +268,24 @@ const UnifiedReservationModal = ({
       );
       console.info('[handlePaymentSubmit] Reservation refs:', reservationRefs);
       
+      // Update reservations with document UIDs for PaymentStep
+      const reservationsWithUids = state.reservations.map((reservation, index) => ({
+        ...reservation,
+        documentId: reservationRefs[index].id
+      }));
+
+      console.log('🔗 [RESERVATION UID DEBUG] Updated reservations with document UIDs:', {
+        originalReservations: state.reservations,
+        reservationRefs: reservationRefs.map(ref => ({ id: ref.id })),
+        reservationsWithUids: reservationsWithUids.map(r => ({ 
+          title: r.title, 
+          documentId: r.documentId 
+        }))
+      });
+
+      // Update state with reservations that have document UIDs
+      updateState({ reservations: reservationsWithUids });
+
       // Save form draft with payment step data
       await saveFormDraft(state.formData, reservationRefs, {
         reservations: state.reservations,
@@ -256,12 +295,38 @@ const UnifiedReservationModal = ({
       console.info('[handlePaymentSubmit] Form draft saved');
       // Create checkout session
       const stripePayload = {
-        reservations: reservationRefs.map((ref, index) => ({
-          reservationId: ref.id,
-          childName: state.reservations[index].title,
-          durationHours: state.reservations[index].totalTime,
-          groupActivity: state.reservations[index].groupActivity
-        })),
+        reservations: reservationRefs.map((ref, index) => {
+          const reservation = state.reservations[index];
+          // Use group activity selection override if available, otherwise use form default
+          const finalGroupActivity = state.groupActivitySelections[reservation.stableId] !== undefined 
+            ? state.groupActivitySelections[reservation.stableId] 
+            : reservation.groupActivity;
+          
+          // Calculate the rate for this reservation (first child gets standard rate, others get additional rate)
+          const hourlyRateCents = index === 0 ? (hourlyRate * 100) : (additionalChildHourlyRate * 100);
+          
+          console.log('🎯 [STRIPE PAYLOAD DEBUG] Reservation pricing:', {
+            childName: reservation.title,
+            stableId: reservation.stableId,
+            index: index,
+            hourlyRate: hourlyRate,
+            additionalChildHourlyRate: additionalChildHourlyRate,
+            hourlyRateCents: hourlyRateCents,
+            durationHours: reservation.totalTime,
+            formDefault: reservation.groupActivity,
+            hasOverride: state.groupActivitySelections.hasOwnProperty(reservation.stableId),
+            overrideValue: state.groupActivitySelections[reservation.stableId],
+            finalGroupActivity
+          });
+          
+          return {
+            reservationId: ref.id,
+            childName: reservation.title,
+            durationHours: reservation.totalTime,
+            hourlyRateCents: hourlyRateCents, // Dynamic pricing from frontend service prices
+            groupActivity: finalGroupActivity
+          };
+        }),
         paymentType,
         latertotsUserId: currentUser.uid,
         successUrl: `${window.location.origin}/schedule?payment=success`,
@@ -366,6 +431,8 @@ const UnifiedReservationModal = ({
             additionalChildHourlyRate={additionalChildHourlyRate}
             grandTotalTime={state.paymentData.totalTime}
             grandTotalBill={state.paymentData.totalBill}
+            groupActivitySelections={state.groupActivitySelections}
+            onGroupActivityChange={handleGroupActivityChange}
             onPaymentTypeSelect={handlePaymentSubmit}
             onEditDetails={handleEditDetails}
             isProcessingPayment={state.isProcessing}

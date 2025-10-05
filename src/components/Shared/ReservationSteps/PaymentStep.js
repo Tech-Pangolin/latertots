@@ -11,7 +11,8 @@ import {
   FormControlLabel,
   Box,
   Tooltip,
-  IconButton
+  IconButton,
+  Checkbox
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { DEPOSIT_TYPES, SERVICE_PRICE_LOOKUP_UIDS } from '../../../Helpers/constants';
@@ -21,6 +22,8 @@ const PaymentStep = ({
   reservations, 
   hourlyRate, 
   additionalChildHourlyRate,
+  groupActivitySelections,
+  onGroupActivityChange,
   grandTotalTime, 
   grandTotalBill, 
   onPaymentTypeSelect, 
@@ -30,6 +33,20 @@ const PaymentStep = ({
 }) => {
   const { getServicePrice, isLoading: pricesLoading } = useServicePricesRQ();
   const [showActivityPrices, setShowActivityPrices] = useState(false);
+  
+  // DEBUG: Log PaymentStep props
+  // Update the debugging to show stable IDs:
+  console.log('🎯 [PAYMENT STEP DEBUG] PaymentStep rendered with:', {
+    reservations: reservations.map(r => ({ 
+      title: r.title, 
+      groupActivity: r.groupActivity,
+      stableId: r.stableId 
+    })),
+    groupActivitySelections,
+    hourlyRate,
+    additionalChildHourlyRate,
+    grandTotalBill
+  });
   return (
     <div>
       {error && (
@@ -73,13 +90,43 @@ const PaymentStep = ({
         <TableBody>
           {reservations.map((entry, index) => {
             const rate = index === 0 ? hourlyRate : additionalChildHourlyRate;
+            // Update the debugging to show stable IDs:
+            console.log('💰 [PRICING DEBUG] Reservation pricing:', { 
+              entry,
+              stableId: entry.stableId,
+              childName: entry.title 
+            });
+            
+            // Get the current selection state - prioritize override, then form default
+            const hasOverride = groupActivitySelections && groupActivitySelections.hasOwnProperty(entry.stableId);
+            const isGroupActivitySelected = hasOverride 
+              ? groupActivitySelections[entry.stableId] 
+              : entry.groupActivity;
+            
             return (
-              <TableRow key={entry.id}>
+              <TableRow key={entry.stableId}>
                 <TableCell>{entry.title}</TableCell>
                 <TableCell>{entry.totalTime}</TableCell>
                 <TableCell>${rate.toFixed(2)}</TableCell>
                 <TableCell>${(entry.totalTime * rate).toFixed(2)}</TableCell>
-                <TableCell>{entry.groupActivity ? 'Yes' : 'No'}</TableCell>
+                <TableCell>
+                  <Checkbox
+                    checked={isGroupActivitySelected}
+                    onChange={(event) => {
+                      console.log('🎯 [CHECKBOX DEBUG] Checkbox onChange triggered:', { 
+                        childName: entry.title,
+                        stableId: entry.stableId,
+                        checked: event.target.checked,
+                        currentState: groupActivitySelections ? groupActivitySelections[entry.stableId] : undefined,
+                        formDefault: entry.groupActivity,
+                        hasOverride: groupActivitySelections && groupActivitySelections.hasOwnProperty(entry.stableId),
+                        allSelections: groupActivitySelections
+                      });
+                      onGroupActivityChange(entry.stableId, event.target.checked);
+                    }}
+                    color="primary"
+                  />
+                </TableCell>
               </TableRow>
             );
           })}
