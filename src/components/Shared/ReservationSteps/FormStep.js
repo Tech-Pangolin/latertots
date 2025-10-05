@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   TextField, 
   MenuItem, 
@@ -16,7 +16,8 @@ const FormStep = ({
   formData, 
   setFormData, 
   children, 
-  onSubmit
+  onSubmit,
+  onValidationChange
 }) => {
   const [errors, setErrors] = useState({});
   const childrenOptions = children.map(child => 
@@ -52,8 +53,13 @@ const FormStep = ({
     if (field === 'end' || field === 'all') {
       const start = new Date(`${data.date}T${data.start}`);
       const end = new Date(`${data.date}T${data.end}`);
-      if (end - start < MIN_RESERVATION_DURATION_MS) {
+      const durationMs = end - start;
+      const maxDurationMs = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+      
+      if (durationMs < MIN_RESERVATION_DURATION_MS) {
         newErrors.end = 'Pickup time must be at least 2 hours after dropoff time.';
+      } else if (durationMs > maxDurationMs) {
+        newErrors.end = 'Pickup time cannot be more than 4 hours after dropoff time.';
       }
     }
     
@@ -67,10 +73,32 @@ const FormStep = ({
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         const newErrors = validateField(data, field);
-        setErrors(prev => ({ ...prev, ...newErrors }));
+        setErrors(prev => {
+          const updated = { ...prev };
+          // Clear the field's error if it's now valid
+          if (!newErrors[field]) {
+            delete updated[field];
+          }
+          // Add new errors
+          Object.assign(updated, newErrors);
+          return updated;
+        });
       }, 500);
     };
   })(), [validateField]);
+
+  // Check if form is valid (for button state)
+  const isFormValid = useCallback(() => {
+    const allErrors = validateField(formData, 'all');
+    return Object.keys(allErrors).length === 0;
+  }, [formData, validateField]);
+
+  // Notify parent of validation state changes
+  useEffect(() => {
+    if (onValidationChange) {
+      onValidationChange(isFormValid());
+    }
+  }, [isFormValid, onValidationChange]);
 
   const handleChange = (e) => {
     const { name, type, checked, value } = e.target;
@@ -95,7 +123,12 @@ const FormStep = ({
     
     // Clear errors and submit
     setErrors({});
-    onSubmit(formData);
+    // Ensure selectedChild is an array before submitting
+    const safeFormData = {
+      ...formData,
+      selectedChild: formData.selectedChild || []
+    };
+    onSubmit(safeFormData);
   };
 
   return (

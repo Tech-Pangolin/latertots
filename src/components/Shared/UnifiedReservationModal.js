@@ -55,7 +55,8 @@ const UnifiedReservationModal = ({
         paymentType: null
       },
       isProcessing: false,
-      error: null
+      error: null,
+      isFormValid: false
     };
 
     if (initialContext === 'payment_success') {
@@ -70,6 +71,11 @@ const UnifiedReservationModal = ({
   const updateState = useCallback((updates) => {
     setState(prev => ({ ...prev, ...updates }));
   }, []);
+
+  // Add validation callback
+  const handleValidationChange = useCallback((isValid) => {
+    updateState({ isFormValid: isValid });
+  }, [updateState]);
 
 
   // Handle initial context and load form draft when needed
@@ -163,6 +169,12 @@ const UnifiedReservationModal = ({
 
   // Form submission
   const handleFormSubmit = async (formData) => {
+    // Safety check to ensure selectedChild is defined and is an array
+    if (!formData.selectedChild || !Array.isArray(formData.selectedChild)) {
+      console.error('selectedChild is not defined or not an array:', formData.selectedChild);
+      return;
+    }
+    
     const newEvents = formData.selectedChild.map((child, index) => {
       return {
         stableId: `${child.id}-${index}`, // Create stable identifier
@@ -345,6 +357,7 @@ const UnifiedReservationModal = ({
               setFormData={(formData) => updateState({ formData })}
               children={children}
               onSubmit={handleFormSubmit}
+              onValidationChange={handleValidationChange}
             />
           );
       case 'payment':
@@ -385,6 +398,7 @@ const UnifiedReservationModal = ({
             setFormData={(formData) => updateState({ formData })}
             children={children}
             onSubmit={handleFormSubmit}
+            onValidationChange={handleValidationChange}
           />
         );
     }
@@ -413,7 +427,12 @@ const UnifiedReservationModal = ({
             <Button onClick={handleClose} color="primary">
               Cancel
             </Button>
-            <Button onClick={handleFormSubmit} color="primary" variant="contained">
+            <Button 
+              onClick={() => handleFormSubmit(state.formData)} 
+              color="primary" 
+              variant="contained"
+              disabled={!state.isFormValid}
+            >
               Continue to Payment
             </Button>
           </>
