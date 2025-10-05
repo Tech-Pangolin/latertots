@@ -35,8 +35,8 @@ const UnifiedReservationModal = ({
   const { getServicePrice, isLoading: pricesLoading } = useServicePricesRQ();
   
   // Get dynamic pricing from service prices
-  const hourlyRate = getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_FIRST_CHILD_HOURLY)?.pricePerUnitInCents / 100 || 0;
-  const additionalChildHourlyRate = getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_ADDITIONAL_CHILD_HOURLY)?.pricePerUnitInCents / 100 || 0;
+  const hourlyRate = getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_FIRST_CHILD_HOURLY)?.pricePerUnitInCents / 100 || 25;
+  const additionalChildHourlyRate = getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_ADDITIONAL_CHILD_HOURLY)?.pricePerUnitInCents / 100 || 7;
 
   // Unified state management - initialize based on initialContext
   const [state, setState] = useState(() => {

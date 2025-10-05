@@ -137,7 +137,7 @@ const PaymentStep = ({
               <TableCell align="center">{getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.TOTIVITY_NIGHT_IN_FIRST_CHILD_FLAT)?.metadata?.daysOfWeek || 'TBD'}</TableCell>
               <TableCell align="center">${getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.TOTIVITY_NIGHT_IN_FIRST_CHILD_FLAT)?.pricePerUnitInCents / 100 || 'TBD'}</TableCell>
               <TableCell align="center">${getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.TOTIVITY_NIGHT_IN_ADDITIONAL_CHILD_FLAT)?.pricePerUnitInCents / 100 || 'TBD'}</TableCell>
-              <TableCell align="right">2hr</TableCell>
+              <TableCell align="right">4hr</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>Tot-Ally Fun Saturdays!</TableCell>
@@ -163,7 +163,7 @@ const PaymentStep = ({
             <TableRow>
               <TableCell>Tot & Me</TableCell>
               <TableCell align="center">{getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.TOTIVITY_TOT_AND_ME_FLAT)?.metadata?.daysOfWeek || 'TBD'}</TableCell>
-              <TableCell align="center">${getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.TOTIVITY_TOT_AND_ME_FLAT)?.pricePerUnitInCents / 100 || 'TBD'}/hr</TableCell>
+              <TableCell align="center">${getServicePrice(SERVICE_PRICE_LOOKUP_UIDS.TOTIVITY_TOT_AND_ME_FLAT)?.pricePerUnitInCents / 100 || 'TBD'}</TableCell>
               <TableCell align="center">same</TableCell>
               <TableCell align="right">2hr</TableCell>
             </TableRow>
