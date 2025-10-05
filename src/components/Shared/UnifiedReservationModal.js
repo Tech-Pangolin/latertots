@@ -13,8 +13,7 @@ import { calculateTimeDifference } from '../../Helpers/datetime';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../AuthProvider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { MIN_RESERVATION_DURATION_MS, RESERVATION_STATUS, SERVICE_PRICE_LOOKUP_UIDS } from '../../Helpers/constants';
-import useDebouncedValidateField from '../../Hooks/useDebouncedValidateField';
+import { RESERVATION_STATUS, SERVICE_PRICE_LOOKUP_UIDS } from '../../Helpers/constants';
 import { useServicePricesRQ } from '../../Hooks/query-related/useServicePricesRQ';
 
 // Step components
@@ -55,15 +54,8 @@ const UnifiedReservationModal = ({
         totalTime: 0,
         paymentType: null
       },
-      errors: {
-        start: '',
-        end: '',
-        date: '',
-        selectedChild: ''
-      },
       isProcessing: false,
-      error: null,
-      groupActivitySelections: {}
+      error: null
     };
 
     if (initialContext === 'payment_success') {
@@ -79,32 +71,6 @@ const UnifiedReservationModal = ({
     setState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Form validation
-  const debouncedValidateFieldFxn = useDebouncedValidateField((data, field) => {
-    const errors = {};
-    if (!data.selectedChild?.length) {
-      errors.selectedChild = 'At least one child must be selected.';
-    }
-    const start = new Date(`${data.date}T${data.start}`);
-    const now = new Date();
-    if (field === 'start' && start <= now) {
-      errors.start = 'Dropoff time must be in the future.';
-    }
-    if (field === 'end') {
-      const end = new Date(`${data.date}T${data.end}`);
-      if (end - start < MIN_RESERVATION_DURATION_MS) {
-        errors.end = 'Pickup time must be at least 2 hours after dropoff time.';
-      }
-    }
-    if (field === 'date') {
-      const selectedDate = new Date(`${data.date}T00:00:00`);
-      const today = new Date(new Date().toISOString().split('T')[0] + 'T00:00:00');
-      if (selectedDate < today) {
-        errors.date = 'Date must be today or in the future.';
-      }
-    }
-    return errors;
-  }, (errors) => updateState({ errors }), 500);
 
   // Handle initial context and load form draft when needed
   useEffect(() => {
@@ -182,42 +148,33 @@ const UnifiedReservationModal = ({
   };
 
 
-  // Group activity change handler
+  // Group activity change handler - simplified to update reservation directly
   const handleGroupActivityChange = (stableId, isSelected) => {
-    const reservation = state.reservations.find(r => r.stableId === stableId);
-    const childName = reservation ? reservation.title : 'Unknown';
-    
-    console.log('🎯 [GROUP ACTIVITY DEBUG] handleGroupActivityChange called:', { 
-      stableId, 
-      childName,
-      isSelected 
-    });
-    
     setState(prev => ({
       ...prev,
-      groupActivitySelections: {
-        ...prev.groupActivitySelections,
-        [stableId]: isSelected
-      }
+      // Update the actual reservation's groupActivity field directly
+      reservations: prev.reservations.map(reservation => 
+        reservation.stableId === stableId 
+          ? { ...reservation, groupActivity: isSelected }
+          : reservation
+      )
     }));
   };
 
   // Form submission
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    
-    const newEvents = state.formData.selectedChild.map((child, index) => {
+  const handleFormSubmit = async (formData) => {
+    const newEvents = formData.selectedChild.map((child, index) => {
       return {
         stableId: `${child.id}-${index}`, // Create stable identifier
         title: child.name,
-        start: new Date(state.formData.date + 'T' + state.formData.start).toISOString(),
-        end: new Date(state.formData.date + 'T' + state.formData.end).toISOString(),
-        groupActivity: state.formData.groupActivity,
+        start: new Date(formData.date + 'T' + formData.start).toISOString(),
+        end: new Date(formData.date + 'T' + formData.end).toISOString(),
+        groupActivity: formData.groupActivity,
         extendedProps: {
           status: 'pending',
           childId: child.id
         },
-        totalTime: calculateTimeDifference(state.formData.start, state.formData.end)
+        totalTime: calculateTimeDifference(formData.start, formData.end)
       };
     });
 
@@ -257,8 +214,6 @@ const UnifiedReservationModal = ({
       isProcessing: true,
       error: null 
     });
-    console.info('[handlePaymentSubmit] Payment type:', paymentType);
-    
     try {
       // Create optimistic reservations
       const reservationRefs = await dbService.createReservationsBatch(
@@ -266,22 +221,12 @@ const UnifiedReservationModal = ({
         state.reservations, 
         currentUser.uid // formDraftId
       );
-      console.info('[handlePaymentSubmit] Reservation refs:', reservationRefs);
       
       // Update reservations with document UIDs for PaymentStep
       const reservationsWithUids = state.reservations.map((reservation, index) => ({
         ...reservation,
         documentId: reservationRefs[index].id
       }));
-
-      console.log('🔗 [RESERVATION UID DEBUG] Updated reservations with document UIDs:', {
-        originalReservations: state.reservations,
-        reservationRefs: reservationRefs.map(ref => ({ id: ref.id })),
-        reservationsWithUids: reservationsWithUids.map(r => ({ 
-          title: r.title, 
-          documentId: r.documentId 
-        }))
-      });
 
       // Update state with reservations that have document UIDs
       updateState({ reservations: reservationsWithUids });
@@ -292,39 +237,21 @@ const UnifiedReservationModal = ({
         totalBill: state.paymentData.totalBill,
         totalTime: state.paymentData.totalTime
       });
-      console.info('[handlePaymentSubmit] Form draft saved');
+      
       // Create checkout session
       const stripePayload = {
         reservations: reservationRefs.map((ref, index) => {
           const reservation = state.reservations[index];
-          // Use group activity selection override if available, otherwise use form default
-          const finalGroupActivity = state.groupActivitySelections[reservation.stableId] !== undefined 
-            ? state.groupActivitySelections[reservation.stableId] 
-            : reservation.groupActivity;
           
           // Calculate the rate for this reservation (first child gets standard rate, others get additional rate)
           const hourlyRateCents = index === 0 ? (hourlyRate * 100) : (additionalChildHourlyRate * 100);
-          
-          console.log('🎯 [STRIPE PAYLOAD DEBUG] Reservation pricing:', {
-            childName: reservation.title,
-            stableId: reservation.stableId,
-            index: index,
-            hourlyRate: hourlyRate,
-            additionalChildHourlyRate: additionalChildHourlyRate,
-            hourlyRateCents: hourlyRateCents,
-            durationHours: reservation.totalTime,
-            formDefault: reservation.groupActivity,
-            hasOverride: state.groupActivitySelections.hasOwnProperty(reservation.stableId),
-            overrideValue: state.groupActivitySelections[reservation.stableId],
-            finalGroupActivity
-          });
           
           return {
             reservationId: ref.id,
             childName: reservation.title,
             durationHours: reservation.totalTime,
             hourlyRateCents: hourlyRateCents, // Dynamic pricing from frontend service prices
-            groupActivity: finalGroupActivity
+            groupActivity: reservation.groupActivity // Direct usage - no override logic needed
           };
         }),
         paymentType,
@@ -338,7 +265,6 @@ const UnifiedReservationModal = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(stripePayload),
       });
-      console.info('[handlePaymentSubmit] Checkout session created');
       const session = await response.json();
       
       if (session.success) {
@@ -412,17 +338,15 @@ const UnifiedReservationModal = ({
   // Render current step
   const renderStep = () => {
     switch (state.currentStep) {
-      case 'form':
-        return (
-          <FormStep
-            formData={state.formData}
-            setFormData={(formData) => updateState({ formData })}
-            errors={state.errors}
-            children={children}
-            onFieldChange={debouncedValidateFieldFxn}
-            onValidation={() => {}}
-          />
-        );
+        case 'form':
+          return (
+            <FormStep
+              formData={state.formData}
+              setFormData={(formData) => updateState({ formData })}
+              children={children}
+              onSubmit={handleFormSubmit}
+            />
+          );
       case 'payment':
         return (
           <PaymentStep
@@ -431,7 +355,6 @@ const UnifiedReservationModal = ({
             additionalChildHourlyRate={additionalChildHourlyRate}
             grandTotalTime={state.paymentData.totalTime}
             grandTotalBill={state.paymentData.totalBill}
-            groupActivitySelections={state.groupActivitySelections}
             onGroupActivityChange={handleGroupActivityChange}
             onPaymentTypeSelect={handlePaymentSubmit}
             onEditDetails={handleEditDetails}
@@ -460,10 +383,8 @@ const UnifiedReservationModal = ({
           <FormStep
             formData={state.formData}
             setFormData={(formData) => updateState({ formData })}
-            errors={state.errors}
             children={children}
-            onFieldChange={debouncedValidateFieldFxn}
-            onValidation={() => {}}
+            onSubmit={handleFormSubmit}
           />
         );
     }
