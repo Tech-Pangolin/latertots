@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
+import Avatar from '@mui/material/Avatar';
 import { logger } from '../../Helpers/logger';
 
 const HeaderBar = () => {
@@ -36,6 +37,7 @@ const HeaderBar = () => {
 
 
   }
+  console.log(currentUser)
 
   const dropdownActiveTeam = () => {
     const path = location.pathname;
@@ -108,9 +110,9 @@ const HeaderBar = () => {
               <li className='nav-item dropdown'>
                 <a id="dropin-link" className={`nav-link dropdown-toggle dropin-link scrollto ${location.pathname === '/events' ? 'active' : ''}`} onClick={() => expandChildren('dropin')} href="/events">Drop-In Fun</a>
                 <ul className={`dropdown-menu ${showDropIn ? 'd-block' : ''}`}>
-                  <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Events</a></li>
+                  <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/events' ? 'active' : ''}`} href="/events">Play</a></li>
                   <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/totivities' ? 'active' : ''}`} href="/totivities">Tot-tivities</a></li>
-                  <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/party">Party & Play</a></li>
+                  <li><a id="" className={`nav-link dropdown-item scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/party">Party</a></li>
                 </ul>
               </li>
               <li><a id="deals-link" className={`nav-link deals-link scrollto ${location.pathname === '/deals' ? 'active' : ''}`} href="/deals">Tot Deals</a></li>
@@ -130,7 +132,7 @@ const HeaderBar = () => {
             {currentUser && (
               <li><a id="logout-link" className="nav-link scrollto logout-link" style={{ cursor: 'pointer' }} onClick={logout}>Logout</a></li>
             )}
-
+            {currentUser && <a href="/profile"><Avatar sx={{ margin:"10px"}} alt="Remy Sharp" src={currentUser.PhotoURL} /></a>}
           </ul>
           <i className="bi bi-list mobile-nav-toggle" onClick={handleMobileMenu}></i>
         </nav>

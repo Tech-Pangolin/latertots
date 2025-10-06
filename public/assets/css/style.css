@@ -2500,3 +2500,26 @@ blockquote p {
   flex: 1;
   text-align: center;
 }
+
+.event-highlights {
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 16px;
+  width: 190px;
+  height: 40px;
+  background-color: #41A8C5;
+  position: relative;
+  bottom: 60px;
+}
+
+.pink {
+  color: #E61378;
+}
+
+.blue {
+  color: #0066FF;
+}
+
+.purple {
+  color: #DC85FF;
+}
