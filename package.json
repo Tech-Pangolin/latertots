@@ -41,7 +41,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "start:emulator": "concurrently --prefix-colors \"bgBlue.bold,bgGreen.bold\" --names \"EMULATOR,REACT\" \"firebase emulators:start --config emulator/firebase.json --project latertots-a6694\" \"REACT_APP_USE_EMULATOR=true react-scripts start\"",
+    "start:emulator:react": "REACT_APP_USE_EMULATOR=true react-scripts start",
     "start:emulator:seed": "npm run emulator:seed && npm run start:emulator",
     "build": "react-scripts build",
     "test": "react-scripts test",

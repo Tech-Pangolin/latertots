@@ -16,6 +16,7 @@ export const COLLECTIONS = Object.freeze({
   NOTIFICATIONS: 'Notifications',
   INVOICES: 'Invoices',
   BILLING_ADJUSTMENTS: 'BillingAdjustments',
+  SERVICE_PRICES: 'ServicePrices',
 })
 
 export const MIN_RESERVATION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
@@ -46,6 +47,11 @@ export const RESERVATION_STATUS = Object.freeze({
   LATE: 'late',
   REFUNDED: 'refunded',       // Payment was received but later refunded
   COMPED: 'comped',           // Payment was waived, no fees apply
+})
+
+export const DEPOSIT_TYPES = Object.freeze({
+  MINIMUM: 'minimum',         // Pay 2-hour minimum upfront
+  FULL: 'full'               // Pay full amount upfront
 })
 
 export const GENDERS = Object.freeze({
@@ -142,6 +148,25 @@ export const ERROR_MESSAGES = Object.freeze({
   SYSTEM_SUBMISSION_ERROR: 'An error occurred while processing your submission.',
 })
 
+export const SERVICE_PRICE_LOOKUP_UIDS = Object.freeze({
+  TOTIVITY_NIGHT_IN_ADDITIONAL_CHILD_FLAT: 'prod_TAc8LkawAJmG3b',
+  TOTIVITY_NIGHT_IN_FIRST_CHILD_FLAT: 'prod_TAbA653bZmWGWo',
+  LATE_FEE_HOURLY: 'prod_TAc2CxkqCnOXRd',
+  STANDARD_FEE_FIRST_CHILD_HOURLY: 'prod_TAb5YS29FcZ4N4',
+  STANDARD_FEE_ADDITIONAL_CHILD_HOURLY: 'prod_TAbNO8kRNTWYDy',
+  DEALS_SATURDAY_WORKSHOPS_MONTHLY: 'prod_TAbgVKaXG3OWst',
+  DEALS_WEEKDAY_WORKSHOPS_MONTHLY: 'prod_TAbbYn4KgpqMXn',
+  DEALS_BIG_SAVER: 'prod_TAbTS3BnkYIUqe',
+  DEALS_LITTLE_SAVER: 'prod_TAbSlZJgrVKdnW',
+  DEALS_PARTY_ULTIMATE: 'prod_TAbKQEZC23Jieb',
+  DEALS_PARTY_CELEBRATION: 'prod_TAbJYrUDzvEAKM',
+  DEALS_PARTY_EXPRESS: 'prod_TAbILXTre9dqi9',
+  TOTIVITY_FUN_SATURDAY_HOURLY: 'prod_TAbHOJsTmasu0q',
+  TOTIVITY_PRE_K_HOURLY: 'prod_TAbG1y3F5tNhnK',
+  TOTIVITY_EXPLORERS_HOURLY: 'prod_TAbFDQSJWCsOC3',
+  TOTIVITY_TOT_AND_ME_FLAT: 'prod_TAbCsynUPM6BBP',
+})
+
 // CommonJS compatibility for Cloud Functions (only in Node.js environment)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -150,6 +175,7 @@ if (typeof module !== 'undefined' && module.exports) {
     BUSINESS_HRS,
     ROLES,
     RESERVATION_STATUS,
+    DEPOSIT_TYPES,
     GENDERS,
     CONTACT_RELATIONS,
     MIN_AGE_FOR_CHILD_YEARS,
@@ -163,6 +189,7 @@ if (typeof module !== 'undefined' && module.exports) {
     CREDIT_SOURCES,
     ALERT_TYPES,
     IMAGE_UPLOAD,
-    ERROR_MESSAGES
+    ERROR_MESSAGES,
+    SERVICE_PRICE_LOOKUP_UIDS
   };
 } 

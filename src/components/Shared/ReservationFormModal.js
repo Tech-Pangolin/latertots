@@ -5,7 +5,7 @@ import { calculateTimeDifference } from '../../Helpers/datetime';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../AuthProvider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
+import { MIN_RESERVATION_DURATION_MS, DEPOSIT_TYPES, RESERVATION_STATUS } from '../../Helpers/constants';
 import useDebouncedValidateField from '../../Hooks/useDebouncedValidateField';
 import PaymentModal from './PaymentModal';
 
@@ -21,6 +21,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
   const [newEvents, setNewEvents] = useState([]); // Store new events for payment dialog
   const [reservationsToPay, setReservationsToPay] = useState([]); // Store reservations to pay after payment
   const [paymentError, setPaymentError] = useState(false); // Store any payment errors
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false); // Prevent double-clicks
   const [errors, setErrors] = useState({
     start: '',
     end: '',
@@ -94,51 +95,84 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     setGrandTotalTime(0);
   }
 
-  const handleSubmitPayment = async() => {
-    console.log(reservationsToPay, currentUser)
-    // Process payment logic here (e.g., integrate with Stripe)
-    const paymentObj = {
-      userId: currentUser.uid,
-      lineItems: reservationsToPay.map(({ id, totalTime }) => ({
-        childId: id,
-        duration: totalTime,
-        rate: hourlyRate
-      }))
-    }
-    // Placeholder: example structure of sending payment data to backend
-    // Replace with actual payment processing logic
-    // const stripe = window.Stripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
-    console.log('Processing payment with the following details:', paymentObj);
+  const handleSubmitPayment = async(paymentType) => {
+    if (isProcessingPayment) return; // Prevent double-clicks
+    
+    setIsProcessingPayment(true);
+    setPaymentError(false);
+    
     try {
-      const response = await fetch('/create-checkout-session', {
+      console.log('Creating reservations with PENDING status...', reservationsToPay, currentUser);
+      
+      // Step 1: Create reservations with PENDING status
+      const pendingReservations = [];
+      for (const reservation of reservationsToPay) {
+        const reservationId = uuidv4().replace(/-/g, '');
+        const pendingReservation = {
+          id: reservationId,
+          title: reservation.title,
+          start: reservation.start,
+          end: reservation.end,
+          allDay: reservation.allDay,
+          groupActivity: reservation.groupActivity,
+          status: RESERVATION_STATUS.PENDING,
+          stripePayments: {
+            minimum: null,
+            remainder: null,
+            full: null
+          },
+          extendedProps: {
+            status: RESERVATION_STATUS.PENDING,
+            childId: reservation.extendedProps.childId
+          }
+        };
+        
+        // Create reservation in database
+        await dbService.createReservationDocument(currentUser.uid, pendingReservation);
+        pendingReservations.push(pendingReservation);
+      }
+      
+      console.log('Reservations created, proceeding with payment...');
+      
+      // Step 2: Create checkout session with reservation IDs
+      const stripeReservationPaymentAttemptPayload = {
+        reservations: pendingReservations.map(({id, groupActivity, title}) => ({
+          reservationId: id,
+          childName: title,
+          durationHours: reservationsToPay.find(r => r.title === title).totalTime,
+          groupActivity
+        })),
+        paymentType: paymentType,
+        latertotsUserId: currentUser.uid
+      };
+      
+      console.log('Sending payment request:', stripeReservationPaymentAttemptPayload);
+      
+      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/latertots-a6694/us-central1/createCheckoutSession`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(paymentObj),
+        body: JSON.stringify(stripeReservationPaymentAttemptPayload),
       });
+      
       const session = await response.json();
-      const stripe = {redirectToCheckout: async ({sessionId}) => {return {error: null}}}; // TODO: Replace with actual Stripe initialization
-  
-      const result = await stripe.redirectToCheckout({
-        sessionId: session.id,
-      });
-
-      if (result.error) {
-        setPaymentError(result.error.message);
-      } else {
-        newEvents.forEach((validatedEvent) => {
-          saveNewEventMutation.mutate({ loggedInUserId: currentUser.uid, newEvent: validatedEvent });
-        });
-        handleClosePaymentModal();
+      
+      if (!session.success) {
+        throw new Error(session.error || 'Failed to create checkout session');
       }
+      
+      console.log('Checkout session created, redirecting to Stripe...');
+      
+      // Step 3: Simple redirect to Stripe checkout
+      window.location.href = session.url;
+      
     } catch (error) {
-      console.log(error)
+      console.error('Payment processing error:', error);
       setPaymentError(error.message);
-      handleClosePaymentModal();
+    } finally {
+      setIsProcessingPayment(false);
     }
-
-
   }
 
 
@@ -147,7 +181,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     e.preventDefault();
     const newEvents = formData.selectedChild.map(child => {
       return {
-        id: uuidv4(),
+        id: uuidv4().replace(/-/g, ''),
         title: child.name,
         start: new Date(formData.date + 'T' + formData.start).toISOString(),
         end: new Date(formData.date + 'T' + formData.end).toISOString(),
@@ -277,7 +311,16 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
           </Button>
         </DialogActions>
       </Dialog>
-      <PaymentModal onCancel={handleClosePaymentModal} onProceed={handleSubmitPayment} showPaymentDialog={showPaymentDialog} newEvents={reservationsToPay} hourlyRate={hourlyRate} grandTotalTime={grandTotalTime} grandTotalBill={grandTotalBill} />
+      <PaymentModal 
+        onCancel={handleClosePaymentModal} 
+        onProceed={handleSubmitPayment} 
+        showPaymentDialog={showPaymentDialog} 
+        newEvents={reservationsToPay} 
+        hourlyRate={hourlyRate} 
+        grandTotalTime={grandTotalTime} 
+        grandTotalBill={grandTotalBill}
+        isProcessingPayment={isProcessingPayment}
+      />
 
     </>
   );

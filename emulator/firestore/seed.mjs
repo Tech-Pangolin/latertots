@@ -14,7 +14,7 @@ config();
 // Helpers
 
 // not quite 50/50
-const flipCoin = () => _.random(10) < 6
+const flipCoin = () => _.random(10) < 10
 
 // Validation helper for reservations
 const validateReservationData = (data) => {
@@ -165,10 +165,16 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     const reservationData = {
       "User": parent.ref,
       "Child": childRef,
-      "allDay": false,
+      // Persist required and optional fields per ReservationSchema
+      "formDraftId": faker.string.uuid(),
+      "groupActivity": flipCoin(),
       "archived": false,
       "status": _.sample([RESERVATION_STATUS.PROCESSING, _.sample(Object.values(RESERVATION_STATUS))]),
-      "invoice": null,
+      "stripePayments": {
+        "minimum": null,
+        "remainder": null,
+        "full": null
+      },
       "title": childData.Name,
       "userId": parent.id,
       "start": Timestamp.fromDate(start),
@@ -186,17 +192,6 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
     } catch (error) {
       console.error(`❌ [emulator/firestore/seed]: Failed to create reservation ${x}:`, error.message);
       issues++;
-    }
-  }
-
-  // if invoices exist, mark some of them as paid or late
-  const invoicesSnap = await db.collection(COLLECTIONS.INVOICES).get();
-  if (invoicesSnap.docs.length > 0) {
-    const invoices = invoicesSnap.docs;
-    const randomInvoices = _.sampleSize(invoices, _.random(Math.floor(invoices.length / 3), invoices.length));
-    console.log(`🎪 [emulator/firestore/seed]: Randomizing status of ${randomInvoices.length} invoices`);
-    for (const invoice of randomInvoices) {
-      await invoice.ref.update({ status: _.sample(Object.values(INVOICE_STATUS)) });
     }
   }
 
