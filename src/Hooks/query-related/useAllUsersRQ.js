@@ -12,6 +12,9 @@ export function useAllUsersRQ() {
   const { dbService, currentUser } = useAuth();
   const queryKey = ['adminAllUsers'];
 
+  // Add admin role validation
+  const isAdmin = currentUser?.Role === 'admin';
+
 
   // First, build the query
   // Remember that multiple constraints will require an index in Firestore
@@ -27,20 +30,24 @@ export function useAllUsersRQ() {
   const queryResult = useQuery({
     queryKey,
     queryFn: async () => {
-      const result = await dbService.fetchDocs(allUsersQuery, false);
+      // Validate admin role before fetching
+      if (!isAdmin) {
+        throw new Error("Unauthorized access. Admin role required.");
+      }
+      const result = await dbService.fetchDocs(allUsersQuery);
       return result;
     },
     onError: (error) => {
       console.error("❌ HOOK: Error fetching users data", error);
     },
-    enabled: !!dbService && !!currentUser, 
+    enabled: !!dbService && !!currentUser && isAdmin, // Only enable for admin users
     initialData: []
   })
 
 
   // Lastly, set up a real-time listener for changes
   useEffect(() => {
-    if (!dbService) return;
+    if (!dbService || !isAdmin) return; // Only set up subscription for admin users
     
     let isSubscribed = true; // Flag to prevent updates after cleanup
     
@@ -56,16 +63,18 @@ export function useAllUsersRQ() {
       if (!_.isEqual(currentData, fresh)) {
         queryClient.setQueryData(queryKey, fresh);
       }
-    }, false); 
+    }); 
     };
     
     setupSubscription();
     
     return () => {
       isSubscribed = false; 
-      if (unsubscribe) unsubscribe();
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
     };
-  }, [dbService, queryClient]); // Removed queryKey from dependencies to prevent re-subscription. These values are stable.
+  }, [dbService, queryClient, isAdmin]); // Add isAdmin to dependencies
 
   return queryResult;
 }

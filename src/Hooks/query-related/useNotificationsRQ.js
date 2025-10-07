@@ -34,7 +34,7 @@ export function useNotificationsRQ() {
   
   const queryResult = useQuery({
     queryKey,
-    queryFn: () => dbService.fetchDocs(notificationsQuery, isAdmin),
+    queryFn: () => dbService.fetchDocs(notificationsQuery),
     onError: (error) => {
       logger.error("Error fetching notifications:", error);
     },
@@ -47,16 +47,25 @@ export function useNotificationsRQ() {
     if (!currentUser) return;
     
     let unsubscribe;
+    let isSubscribed = true;
+    
     const setupSubscription = async () => {
-      unsubscribe = await dbService.subscribeDocs(notificationsQuery, fresh => {
-        queryClient.setQueryData(queryKey, fresh);
-      }, isAdmin);
+      if (isSubscribed) {
+        unsubscribe = await dbService.subscribeDocs(notificationsQuery, fresh => {
+          if (isSubscribed) {
+            queryClient.setQueryData(queryKey, fresh);
+          }
+        });
+      }
     };
     
     setupSubscription();
     
     return () => {
-      if (unsubscribe) unsubscribe();
+      isSubscribed = false;
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
     };
   }, [notificationsQuery, queryClient, queryKey, currentUser, isAdmin]);
   

@@ -146,6 +146,7 @@ export const ERROR_MESSAGES = Object.freeze({
   SYSTEM_VALIDATION_FAILURE: 'A problem was detected with your submission.',
   SYSTEM_PROCESSING_ERROR: 'Something went wrong processing your request.',
   SYSTEM_SUBMISSION_ERROR: 'An error occurred while processing your submission.',
+  UNAUTHORIZED_ACCESS: 'Unauthorized access.',
 })
 
 export const SERVICE_PRICE_LOOKUP_UIDS = Object.freeze({

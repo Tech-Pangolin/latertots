@@ -41,15 +41,24 @@ export function useContactsRQ(forceUserMode = false) {
     if (!myContacts && !isAdmin) return; // If the user has no contacts and is not admin, do not set up a listener
 
     let unsub;
+    let isSubscribed = true;
+    
     const setupSubscription = async () => {
-      unsub = await dbService.subscribeDocs(isAdmin ? allContacts : myContacts, fresh => {
-        queryClient.setQueryData(queryKey, fresh);
-      });
+      if (isSubscribed) {
+        unsub = await dbService.subscribeDocs(isAdmin ? allContacts : myContacts, fresh => {
+          if (isSubscribed) {
+            queryClient.setQueryData(queryKey, fresh);
+          }
+        });
+      }
     };
     
     setupSubscription();
     return () => {
-      if (unsub) unsub();
+      isSubscribed = false;
+      if (unsub && typeof unsub === 'function') {
+        unsub();
+      }
     };
   }, [allContacts, dbService, queryKey, queryClient])
 

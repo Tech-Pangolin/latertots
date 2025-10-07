@@ -58,16 +58,25 @@ export function useServicePricesRQ() {
     if (!currentUser) return;
     
     let unsubscribe;
+    let isSubscribed = true;
+    
     const setupSubscription = async () => {
-      unsubscribe = await dbService.subscribeDocs(servicePricesQuery, fresh => {
-        queryClient.setQueryData(queryKey, fresh);
-      });
+      if (isSubscribed) {
+        unsubscribe = await dbService.subscribeDocs(servicePricesQuery, fresh => {
+          if (isSubscribed) {
+            queryClient.setQueryData(queryKey, fresh);
+          }
+        });
+      }
     };
     
     setupSubscription();
     
     return () => {
-      if (unsubscribe) unsubscribe();
+      isSubscribed = false;
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
     };
   }, [queryClient,  dbService]);
   
