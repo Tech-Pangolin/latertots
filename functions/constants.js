@@ -10,7 +10,9 @@
 const RESERVATION_STATUS = {
   PROCESSING: 'processing',
   COMPLETED: 'completed',
-  CANCELLED: 'cancelled'
+  CANCELLED: 'cancelled',
+  DROPPED_OFF: 'dropped-off',
+  PICKED_UP: 'picked-up'
 };
 
 // Legacy invoice and payment activity constants removed

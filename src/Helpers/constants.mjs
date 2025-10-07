@@ -36,6 +36,8 @@ export const ROLES = Object.freeze({
 export const RESERVATION_STATUS = Object.freeze({
   PENDING: 'pending',         // Represents a reservation that is awaiting confirmation by the admin
   CONFIRMED: 'confirmed',     // Represents time between reservation confirmation and service rendered
+  DROPPED_OFF: 'dropped-off', // Child has arrived for service
+  PICKED_UP: 'picked-up',     // Child has left, service completed
   CANCELLED: 'cancelled',     // Represents a reservation that does not require payment
   NO_SHOW: 'no-show',         // Represents a reservation that was not attended. Fees may apply.
 
