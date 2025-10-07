@@ -12,12 +12,15 @@ import { useContactsRQ } from '../../Hooks/query-related/useContactsRQ';
 import { useAlerts } from '../../Hooks/useAlerts';
 import ChangePasswordForm from '../ChangePasswordForm';
 import { set } from 'lodash';
+import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
+import { useMemo } from 'react';
 
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
   const { data: children = [] } = useChildrenRQ(true); // Force user mode to show only user's own children
   const { data: contacts = [] } = useContactsRQ(true); // Force user mode to show only user's own contacts
+  const { data: reservations = [] } = useReservationsByMonthDayRQ();
   const location = useLocation();
   const { alerts, addAlert, removeAlert } = useAlerts();
 
@@ -25,6 +28,26 @@ const UserProfile = () => {
   const [openContactsModal, setOpenContactsModal] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const [editingChild, setEditingChild] = useState(null);
+
+  // Payment data processing
+  const pendingCheckoutSession = useMemo(() => {
+    return reservations.find(res => 
+      res.status === 'picked-up' && 
+      res.dropOffPickUp?.finalCheckoutUrl
+    );
+  }, [reservations]);
+
+  const paymentHistory = useMemo(() => {
+    return reservations
+      .filter(res => res.status === 'paid' && res.stripePayments?.full)
+      .map(res => ({
+        serviceDate: res.start,
+        childName: res.title,
+        amount: res.dropOffPickUp?.finalAmount || 0,
+        paymentDate: res.updatedAt
+      }))
+      .sort((a, b) => new Date(b.serviceDate) - new Date(a.serviceDate));
+  }, [reservations]);
 
   // Handle tab switching from navigation state
   useEffect(() => {
@@ -241,7 +264,50 @@ const UserProfile = () => {
                   <div className="col-12"><h4 className="mt-2">Payment Information</h4></div>
                 </div>
                 <h5 className="mt-5">Payment</h5>
-
+                
+                {/* Pending Payment Alert */}
+                {pendingCheckoutSession && (
+                  <div className="alert alert-warning d-flex align-items-center" role="alert">
+                    <i className="bi bi-exclamation-triangle-fill me-3" style={{ fontSize: '2rem' }}></i>
+                    <div className="flex-grow-1">
+                      <h6 className="mb-1">Payment Due</h6>
+                      <p className="mb-2">Complete payment for your child's recent service.</p>
+                      <a 
+                        href={pendingCheckoutSession.dropOffPickUp.finalCheckoutUrl} 
+                        className="btn btn-warning"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Complete Payment - ${(pendingCheckoutSession.dropOffPickUp.finalAmount / 100).toFixed(2)}
+                      </a>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Payment History */}
+                <h6 className="mt-4">Payment History</h6>
+                {paymentHistory.length > 0 ? (
+                  <div className="list-group">
+                    {paymentHistory.map((payment, index) => (
+                      <div key={index} className="list-group-item">
+                        <div className="d-flex w-100 justify-content-between">
+                          <h6 className="mb-1">
+                            {new Date(payment.serviceDate).toLocaleDateString()}
+                          </h6>
+                          <small className="text-success fw-bold">
+                            ${(payment.amount / 100).toFixed(2)}
+                          </small>
+                        </div>
+                        <p className="mb-1">{payment.childName}</p>
+                        <small className="text-muted">
+                          Paid: {new Date(payment.paymentDate).toLocaleDateString()}
+                        </small>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted">No payment history yet.</p>
+                )}
               </div>
             </div>
             <div className={`tab-pane fade ${activeTab === 'security' ? 'show active' : ''}`} id="security-tab-pane" role="tabpanel" aria-labelledby="security-tab" tabIndex="0">
