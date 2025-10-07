@@ -623,6 +623,189 @@ export class FirebaseDbService {
   }
 
   // TODO: Add validation to ensure that non-admin users can only change their own reservations
+
+  /**
+   * Drop off a child for service
+   * @param {string} reservationId - The ID of the reservation document to update
+   * @param {Array} servicesProvided - Array of services provided during drop-off
+   * @returns {Promise<void>} - A promise that resolves when the document is successfully updated
+   */
+  dropOffChild = async (reservationId, servicesProvided = []) => {
+    this.validateAuth('admin');
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      const now = Timestamp.now();
+      
+      await updateDoc(reservationRef, {
+        status: 'dropped-off',
+        'extendedProps.status': 'dropped-off',
+        'dropOffPickUp.droppedOffAt': now,
+        'dropOffPickUp.actualStartTime': now,
+        'dropOffPickUp.servicesProvided': servicesProvided,
+        updatedAt: now
+      });
+      
+      logger.info('Child dropped off successfully:', { reservationId });
+    } catch (error) {
+      logger.error('Error dropping off child:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Pick up a child and calculate final payment
+   * @param {string} reservationId - The ID of the reservation document to update
+   * @returns {Promise<Object>} - A promise that resolves with checkout session or no payment required
+   */
+  pickUpChild = async (reservationId) => {
+    this.validateAuth('admin');
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      const reservationDoc = await getDoc(reservationRef);
+      const reservationData = reservationDoc.data();
+      const now = Timestamp.now();
+      
+      // Calculate final amount based on actual time and group activity overlap
+      const { finalAmount, groupActivityOverlapCharge } = await this.calculateFinalCheckoutAmount(reservationData);
+      
+      // Update reservation with pick-up time
+      await updateDoc(reservationRef, {
+        status: 'picked-up',
+        'extendedProps.status': 'picked-up',
+        'dropOffPickUp.pickedUpAt': now,
+        'dropOffPickUp.actualEndTime': now,
+        'dropOffPickUp.finalAmount': finalAmount,
+        updatedAt: now
+      });
+      
+      // Create checkout session for remainder payment
+      if (finalAmount > 0) {
+        const checkoutSession = await this.createFinalCheckoutSession(reservationId, reservationData, finalAmount);
+        return checkoutSession;
+      }
+      
+      return { success: true, noPaymentRequired: true };
+    } catch (error) {
+      logger.error('Error picking up child:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Calculate final checkout amount based on actual service time
+   * @param {Object} reservationData - The reservation data
+   * @returns {Promise<Object>} - Final amount and group activity overlap charge
+   */
+  calculateFinalCheckoutAmount = async (reservationData) => {
+    // 1. Calculate total actual hours
+    const actualStart = reservationData.dropOffPickUp?.actualStartTime;
+    if (!actualStart) {
+      throw new Error('Child has not been dropped off yet');
+    }
+    const now = Timestamp.now();
+    const actualHours = (now.toMillis() - actualStart.toMillis()) / (1000 * 60 * 60);
+    
+    // 2. Get service price rates
+    const servicePricesQuery = query(collection(db, 'ServicePrices'));
+    const pricesSnapshot = await getDocs(servicePricesQuery);
+    const prices = {};
+    pricesSnapshot.forEach(doc => prices[doc.data().stripeId] = doc.data());
+    
+    const hourlyRate = prices['prod_TAb5YS29FcZ4N4']?.pricePerUnitInCents || 2500;
+    
+    // 3. Calculate base cost for actual hours
+    let totalCost = actualHours * hourlyRate;
+    
+    // 4. Calculate group activity overlap charge if applicable
+    let groupActivityOverlapCharge = 0;
+    if (reservationData.groupActivity) {
+      // Calculate overlap with group activity time (needs helper function to check actual schedule)
+      const overlapHours = await this.calculateGroupActivityOverlap(actualStart, now);
+      groupActivityOverlapCharge = overlapHours * hourlyRate; // Additional charge for overlap
+      totalCost += groupActivityOverlapCharge;
+    }
+    
+    // 5. Subtract amount already paid (minimum or full deposit)
+    const amountPaid = this.getAmountPaidFromStripePayments(reservationData.stripePayments);
+    const finalAmount = Math.max(0, totalCost - amountPaid);
+    
+    return { finalAmount, groupActivityOverlapCharge };
+  };
+
+  /**
+   * Create final checkout session for remainder payment
+   * @param {string} reservationId - The reservation ID
+   * @param {Object} reservationData - The reservation data
+   * @param {number} finalAmount - The final amount in cents
+   * @returns {Promise<Object>} - Checkout session result
+   */
+  createFinalCheckoutSession = async (reservationId, reservationData, finalAmount) => {
+    try {
+      // Call existing createCheckoutSession cloud function
+      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/latertots-a6694/us-central1/createCheckoutSession`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reservations: [{
+            reservationId: reservationId,
+            childName: reservationData.title,
+            durationHours: finalAmount / 2500, // Convert cents back to hours for display
+            hourlyRateCents: 2500,
+            groupActivity: false
+          }],
+          paymentType: 'full',
+          latertotsUserId: reservationData.userId,
+          successUrl: `${window.location.origin}/profile?payment=success&tab=payment`,
+          cancelUrl: `${window.location.origin}/profile?payment=failed&tab=payment`
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update reservation with checkout URL
+        const reservationRef = doc(collection(db, "Reservations"), reservationId);
+        await updateDoc(reservationRef, {
+          'dropOffPickUp.finalCheckoutSessionId': result.sessionId,
+          'dropOffPickUp.finalCheckoutUrl': result.url
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      logger.error('Error creating final checkout session:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Calculate group activity overlap hours (placeholder implementation)
+   * @param {Timestamp} actualStart - Actual start time
+   * @param {Timestamp} actualEnd - Actual end time
+   * @returns {Promise<number>} - Overlap hours
+   */
+  calculateGroupActivityOverlap = async (actualStart, actualEnd) => {
+    // TODO: Implement actual group activity schedule checking
+    // For now, return 0 as placeholder
+    return 0;
+  };
+
+  /**
+   * Get amount paid from stripe payments
+   * @param {Object} stripePayments - The stripe payments object
+   * @returns {number} - Amount paid in cents
+   */
+  getAmountPaidFromStripePayments = (stripePayments) => {
+    // This is a placeholder - would need to query Stripe for actual amounts
+    // For now, assume minimum payment was made if minimum exists
+    if (stripePayments?.minimum) {
+      return 5000; // 2 hours * $25/hour = $50 = 5000 cents
+    }
+    if (stripePayments?.full) {
+      return 10000; // Assume full payment was made
+    }
+    return 0;
+  };
   changeReservationTime = async (reservationId, newStart, newEnd) => {
     await this.validateAuth();
     try {
