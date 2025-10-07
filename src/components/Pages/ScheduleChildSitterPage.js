@@ -9,6 +9,7 @@ import { useAuth } from '../AuthProvider';
 import { checkAgainstBusinessHours, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import UnifiedReservationModal from '../Shared/UnifiedReservationModal';
 import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
+import { getProfileIncompleteMessage } from '../../Helpers/util';
 import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LOG_LEVELS, logger, setLogLevel } from '../../Helpers/logger';
@@ -65,22 +66,42 @@ const ScheduleChildSitterPage = () => {
     });
   }, [currentUser.email, dbService]);
 
-  // Redirect to profile if no children are registered (except for admin users)
+  // Redirect to profile if no children are registered OR profile is incomplete
   useEffect(() => {
-    if (!isLoadingChildren && children.length === 0 && currentUser.Role !== 'admin' && dbService) {
-      navigate('/profile', {
-        state: {
-          alerts: [{
-            id: Date.now().toString(),
-            type: 'warning',
-            message: 'Please register at least one child before scheduling appointments.',
-            autoDismissDelayMillis: null
-          }],
-          switchToTab: 'children'
-        }
-      });
+    if (!isLoadingChildren && currentUser.Role !== 'admin' && dbService) {
+      // Check for missing children
+      if (children.length === 0) {
+        navigate('/profile', {
+          state: {
+            alerts: [{
+              id: Date.now().toString(),
+              type: 'warning',
+              message: 'Please register at least one child before scheduling appointments.',
+              autoDismissDelayMillis: null
+            }],
+            switchToTab: 'children'
+          }
+        });
+        return;
+      }
+      
+      // Check for incomplete profile
+      const profileWarning = getProfileIncompleteMessage(currentUser);
+      if (profileWarning) {
+        navigate('/profile', {
+          state: {
+            alerts: [{
+              id: Date.now().toString(),
+              type: 'warning',
+              message: profileWarning,
+              autoDismissDelayMillis: null
+            }],
+            switchToTab: 'home' // User Info tab
+          }
+        });
+      }
     }
-  }, [isLoadingChildren, children, currentUser.Role, navigate, dbService]);
+  }, [isLoadingChildren, children, currentUser, navigate, dbService]);
 
   useEffect(() => {
     logger.info('Events:', events);
@@ -217,9 +238,27 @@ const ScheduleChildSitterPage = () => {
   const customButtonsConfig = useMemo(() => ({
     newReservationForm: {
       text: 'New Reservation',
-      click: () => setModalOpenState(true)
+      click: () => {
+        const profileWarning = getProfileIncompleteMessage(currentUser);
+        if (profileWarning) {
+          alert(profileWarning); // Simple alert for immediate feedback
+          navigate('/profile', {
+            state: {
+              alerts: [{
+                id: Date.now().toString(),
+                type: 'warning',
+                message: profileWarning,
+                autoDismissDelayMillis: null
+              }],
+              switchToTab: 'home'
+            }
+          });
+          return;
+        }
+        setModalOpenState(true);
+      }
     }
-  }), []);
+  }), [currentUser, navigate]);
 
   // Calculate min and max times based on business hours (1 hour before/after)
   const timeBounds = useMemo(() => {
@@ -247,7 +286,30 @@ const ScheduleChildSitterPage = () => {
       <Grid item xs={10} className="main" style={{ marginTop: '15px', marginBottom: '15px' }}>
         <div className='d-block d-md-none'>
           <h2 className='mb-3'>Schedule Child Sitter</h2>
-          <button onClick={() => setModalOpenState(true)} className="btn btn-secondary">New Reservation</button>
+          <button 
+            onClick={() => {
+              const profileWarning = getProfileIncompleteMessage(currentUser);
+              if (profileWarning) {
+                alert(profileWarning);
+                navigate('/profile', {
+                  state: {
+                    alerts: [{
+                      id: Date.now().toString(),
+                      type: 'warning',
+                      message: profileWarning,
+                      autoDismissDelayMillis: null
+                    }],
+                    switchToTab: 'home'
+                  }
+                });
+                return;
+              }
+              setModalOpenState(true);
+            }} 
+            className="btn btn-secondary"
+          >
+            New Reservation
+          </button>
           <h5 className='mt-4'>Current Reservations</h5>
           {events.length === 0 && <p>No reservations scheduled.</p>}
           {events.length > 0 && events.map(event => (

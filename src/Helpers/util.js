@@ -52,4 +52,29 @@ export const debounce = (fn, delay) => {
   };
 };
 
+/**
+ * Checks if user profile is complete and returns a warning message if not.
+ * 
+ * @param {Object} userData - The user data object from Firestore
+ * @returns {string|null} Warning message if profile is incomplete, null if complete
+ */
+export const getProfileIncompleteMessage = (userData) => {
+  const requiredFields = ['Name', 'StreetAddress', 'City', 'State', 'Zip'];
+  const missingFields = requiredFields.filter(field => !userData[field]?.trim());
+  
+  if (missingFields.length === 0) return null;
+  
+  const fieldLabels = {
+    'Name': 'Full name',
+    'StreetAddress': 'Street address', 
+    'City': 'City',
+    'State': 'State',
+    'Zip': 'ZIP code'
+  };
+  
+  const missingLabels = missingFields.map(field => fieldLabels[field]);
+  
+  return `Cannot begin reservation with incomplete profile. Please complete: ${missingLabels.join(', ')}`;
+};
+
 
