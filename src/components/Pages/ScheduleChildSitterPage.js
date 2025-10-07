@@ -124,7 +124,7 @@ const ScheduleChildSitterPage = () => {
     onError: (err) => console.error("Error changing reservation time: ", err)
   })
 
-  const handleEventResize = useCallback((resizeInfo) => {
+  const handleEventResize = useCallback(async (resizeInfo) => {
     const { event } = resizeInfo;
 
     // Calculate the new duration in hours
@@ -136,7 +136,7 @@ const ScheduleChildSitterPage = () => {
     }
 
     // Check if event is during too many other reservations
-    const overlap = dbService.checkReservationOverlapLimit(event, events);
+    const overlap = await dbService.checkReservationOverlapLimit(event, events);
     if (!overlap.allow) {
       resizeInfo.revert();
       alert(overlap.message);
@@ -147,7 +147,7 @@ const ScheduleChildSitterPage = () => {
   }, [events, dbService, reservationTimeChangeMutation]);
 
 
-  const handleEventMove = useCallback((info) => {
+  const handleEventMove = useCallback(async (info) => {
     const { event } = info;
 
     if (!checkAgainstBusinessHours(event) || !checkFutureStartTime(event)) {
@@ -155,7 +155,7 @@ const ScheduleChildSitterPage = () => {
       return
     }
 
-    const overlap = dbService.checkReservationOverlapLimit(event, events);
+    const overlap = await dbService.checkReservationOverlapLimit(event, events);
     if (!overlap.allow) {
       info.revert();
       alert(overlap.message);

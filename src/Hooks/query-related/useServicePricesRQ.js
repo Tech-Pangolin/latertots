@@ -57,11 +57,18 @@ export function useServicePricesRQ() {
   useEffect(() => {
     if (!currentUser) return;
     
-    const unsubscribe = dbService.subscribeDocs(servicePricesQuery, fresh => {
-      queryClient.setQueryData(queryKey, fresh);
-    });
+    let unsubscribe;
+    const setupSubscription = async () => {
+      unsubscribe = await dbService.subscribeDocs(servicePricesQuery, fresh => {
+        queryClient.setQueryData(queryKey, fresh);
+      });
+    };
     
-    return () => unsubscribe();
+    setupSubscription();
+    
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [queryClient,  dbService]);
   
   return {

@@ -111,7 +111,7 @@ const ManageReservationsPage = ({ enableAggregates = false }) => {
     onError: (err) => console.error("Error changing reservation time: ", err)
   })
 
-  const handleEventResize = useCallback((resizeInfo) => {
+  const handleEventResize = useCallback(async (resizeInfo) => {
     const { event } = resizeInfo;
 
     // Calculate the new duration in hours
@@ -123,7 +123,7 @@ const ManageReservationsPage = ({ enableAggregates = false }) => {
     }
 
     // Check if event is during too many other reservations
-    const overlap = dbService.checkReservationOverlapLimit(event, events);
+    const overlap = await dbService.checkReservationOverlapLimit(event, events);
     if (!overlap.allow) {
       resizeInfo.revert();
       alert(overlap.message);
@@ -134,7 +134,7 @@ const ManageReservationsPage = ({ enableAggregates = false }) => {
   }, [events, dbService, reservationTimeChangeMutation]);
 
 
-  const handleEventMove = useCallback((info) => {
+  const handleEventMove = useCallback(async (info) => {
     const { event } = info;
 
     if (!checkAgainstBusinessHours(event) || !checkFutureStartTime(event)) {
@@ -142,7 +142,7 @@ const ManageReservationsPage = ({ enableAggregates = false }) => {
       return
     }
 
-    const overlap = dbService.checkReservationOverlapLimit(event, events);
+    const overlap = await dbService.checkReservationOverlapLimit(event, events);
     if (!overlap.allow) {
       info.revert();
       alert(overlap.message);

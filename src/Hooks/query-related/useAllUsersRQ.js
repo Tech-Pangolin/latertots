@@ -44,8 +44,10 @@ export function useAllUsersRQ() {
     
     let isSubscribed = true; // Flag to prevent updates after cleanup
     
-    const unsubscribe = dbService.subscribeDocs(allUsersQuery, fresh => {
-      if (!isSubscribed) return; // Prevent updates after cleanup
+    let unsubscribe;
+    const setupSubscription = async () => {
+      unsubscribe = await dbService.subscribeDocs(allUsersQuery, fresh => {
+        if (!isSubscribed) return; // Prevent updates after cleanup
       
       // Get current data to compare
       const currentData = queryClient.getQueryData(queryKey);
@@ -55,10 +57,13 @@ export function useAllUsersRQ() {
         queryClient.setQueryData(queryKey, fresh);
       }
     }, false); 
+    };
+    
+    setupSubscription();
     
     return () => {
       isSubscribed = false; 
-      unsubscribe();
+      if (unsubscribe) unsubscribe();
     };
   }, [dbService, queryClient]); // Removed queryKey from dependencies to prevent re-subscription. These values are stable.
 

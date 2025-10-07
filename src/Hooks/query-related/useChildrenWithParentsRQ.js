@@ -54,9 +54,11 @@ export function useChildrenWithParentsRQ() {
 
     // Optional: real-time updates for Users
     useEffect(() => {
-        const unsubscribe = dbService.subscribeDocs(
-            usersQuery,
-            async (freshUsers) => {
+    let unsubscribe;
+    const setupSubscription = async () => {
+      unsubscribe = await dbService.subscribeDocs(
+        usersQuery,
+        async (freshUsers) => {
                 try {
                     const results = [];
                     for (const userData of freshUsers) {
@@ -84,8 +86,13 @@ export function useChildrenWithParentsRQ() {
             },
             true
         );
-
-        return () => unsubscribe();
+    };
+    
+    setupSubscription();
+    
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
     }, [dbService, usersQuery, queryClient, queryKey]);
 
     return queryResult;

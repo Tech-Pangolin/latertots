@@ -29,13 +29,54 @@ export class FirebaseDbService {
     return null;
   }
 
-  validateAuth(requiredRole = null) {
+  async validateAuth(requiredRole = null) {
+    // Check if user is authenticated
     if (!this.userContext || !this.userContext.uid) {
       throw new Error("Authentication required.");
     }
 
-    if (requiredRole && this.userContext.Role !== requiredRole) {
-      throw new Error("Unauthorized access.");
+    // If no specific role is required, authentication is sufficient
+    if (!requiredRole) {
+      return;
+    }
+
+    try {
+      // Fetch all valid roles from the Roles collection
+      const rolesCollection = collection(db, 'Roles');
+      const rolesSnapshot = await getDocs(rolesCollection);
+      const validRoles = rolesSnapshot.docs
+        .filter(doc => !doc.data().archived) // Only include non-archived roles
+        .map(doc => doc.id); // Get the document IDs (role names)
+
+      // Validate that the required role exists in the database
+      if (!validRoles.includes(requiredRole)) {
+        throw new Error("Invalid role specified.");
+      }
+
+      // Check if user has the required role
+      const userRole = this.userContext.Role;
+      
+      // Handle case where user doesn't have a role assigned
+      if (!userRole) {
+        throw new Error("User role not assigned. Please contact support.");
+      }
+
+      // Compare roles (both should be strings at this point)
+      if (userRole !== requiredRole) {
+        throw new Error("Unauthorized access.");
+      }
+
+    } catch (error) {
+      // If it's already one of our custom errors, re-throw it
+      if (error.message.includes('Invalid role') || 
+          error.message.includes('User role not assigned') || 
+          error.message.includes('Unauthorized access')) {
+        throw error;
+      }
+      
+      // For Firestore errors, provide a more user-friendly message
+      logger.error("Error validating user role:", error);
+      throw new Error("Unable to validate user permissions. Please try again.");
     }
   }
 
@@ -57,9 +98,9 @@ export class FirebaseDbService {
    */
   async fetchDocs(ref, adminOnly = false) {
     if (adminOnly) {
-      this.validateAuth('admin');
+      await this.validateAuth('admin');
     } else {
-      this.validateAuth();
+      await this.validateAuth();
     }
     const data = await getDocs(ref).then(snapshot => this.#mapSnapshotToData(snapshot))
     return data;
@@ -74,11 +115,11 @@ export class FirebaseDbService {
    * @returns {function} - A function to unsubscribe from the real-time updates.
    * @throws {Error} - If the user is not authenticated or does not have the required role.
    */
-  subscribeDocs(ref, callback, adminOnly = false) {
+  async subscribeDocs(ref, callback, adminOnly = false) {
     if (adminOnly) {
-      this.validateAuth('admin');
+      await this.validateAuth('admin');
     } else {
-      this.validateAuth();
+      await this.validateAuth();
     }
     return onSnapshot(ref, (snapshot) => {
       try {
@@ -98,7 +139,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error creating the document.
    */
   async createChildDocument(childData) {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const docRef = await addDoc(collection(db, "Children"), childData);
       const userRef = doc(collection(db, "Users"), this.userContext.uid);
@@ -119,7 +160,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error creating the document.
    */
   createContactDocument = async (contactData) => {
-    this.validateAuth();
+    await this.validateAuth();
     contactData.archived = false;
     try {
       const docRef = await addDoc(collection(db, "Contacts"), contactData);
@@ -213,7 +254,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error querying the children.
    */
   fetchAllCurrentUsersChildren = async () => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const q = query(collection(db, "Users"), where("Email", "==", this.userContext.email), where("archived", "==", false));
       const querySnapshot = await getDocs(q);
@@ -254,7 +295,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error querying the users.
    */
   fetchAllCurrentUsers = async () => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const q = query(collection(db, "Users"), where("archived", "==", false));
       const querySnapshot = await getDocs(q);
@@ -278,7 +319,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error querying the contacts.
    */
   fetchAllCurrentUsersContacts = async (email) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const q = query(collection(db, "Users"), where("Email", "==", email), where("archived", "==", false));
       const querySnapshot = await getDocs(q);
@@ -313,7 +354,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error uploading the photo.
    */
   uploadPhoto = async (entityType, entityId, file) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       if (!(file instanceof File)) {
         throw new Error(`Invalid file type: ${typeof file}. Please provide a valid File object.`);
@@ -384,7 +425,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error fetching the reservations.
    */
   fetchUserReservations = async (userId) => {
-    this.validateAuth();
+    await this.validateAuth();
     // Handle case when user ID is not yet available
     if (!userId) {
       return [];
@@ -415,7 +456,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error fetching the reservations.
    */
   fetchAllReservationsByMonthDay = async (year, monthNumber, dayNumber = null) => {
-    this.validateAuth("admin");
+    await this.validateAuth("admin");
     // 'start' property is a Firestore Timestamp
     try {
       let q, dateStart, dateEnd;
@@ -460,8 +501,8 @@ export class FirebaseDbService {
    * @returns {string} [return.message] - An optional message if the reservation is not allowable.
    * @throws {Error} - If there is an error checking the reservation allowability.
    */
-  checkReservationOverlapLimit(newReservation, unsavedEvents = []) {
-    this.validateAuth();
+  async checkReservationOverlapLimit(newReservation, unsavedEvents = []) {
+    await this.validateAuth();
 
     let eventsOverlappingNewReservation = unsavedEvents.filter(event => {
       if (newReservation.id && event.id === newReservation.id) return false;
@@ -505,7 +546,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error creating the document.
    */
   createReservationDocument = async (userId, reservationData) => {
-    this.validateAuth();
+    await this.validateAuth();
     reservationData.archived = false;
     try {
       const { id, ...dataWithoutId } = reservationData; // Remove the ID from the data. It's auto-generated by Firestore
@@ -546,7 +587,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error updating the document.
    */
   updateReservationDocument = async (reservationData) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const { id, ...dataWithoutId } = reservationData; // Remove the ID from the data
 
@@ -571,7 +612,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error updating the document.
    * */
   changeReservationStatus = async (reservationId, newStatus) => {
-    this.validateAuth('admin');
+    await this.validateAuth('admin');
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       await updateDoc(reservationRef, { extendedProps: { status: newStatus } });
@@ -583,7 +624,7 @@ export class FirebaseDbService {
 
   // TODO: Add validation to ensure that non-admin users can only change their own reservations
   changeReservationTime = async (reservationId, newStart, newEnd) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       await updateDoc(reservationRef, {
@@ -605,7 +646,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error deleting the document.
    */
   deleteReservationDocument = async (reservationId) => {
-    this.validateAuth('admin');
+    await this.validateAuth('admin');
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       const reservationSnapshot = await getDoc(reservationRef);
@@ -634,7 +675,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error archiving the document.
    */
   archiveReservationDocument = async (reservationId) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       const reservationSnapshot = await getDoc(reservationRef);
@@ -746,7 +787,7 @@ export class FirebaseDbService {
    * @throws {Error} - Throws an error if the user document is not found after the maximum retries.
    */
   pollForUserDocument = async (db, userId, retries = 10) => {
-    this.validateAuth();
+    await this.validateAuth();
     let userDocRef;
     for (let i = 0; i < retries; i++) {
       userDocRef = doc(db, 'Users', userId);
@@ -768,7 +809,7 @@ export class FirebaseDbService {
    * @returns {Promise<Object|null>} - The form draft or null if not found
    */
   getFormDraft = async (userId) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const draftRef = doc(db, 'FormDrafts', userId);
       const draftDoc = await getDoc(draftRef);
@@ -793,7 +834,7 @@ export class FirebaseDbService {
    * @returns {Promise<Array>} - Array of document references for created reservations
    */
   createReservationsBatch = async (userId, reservationsInput, formDraftId) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const batch = writeBatch(db);
       const reservationRefs = [];
@@ -853,7 +894,7 @@ export class FirebaseDbService {
    * @returns {Promise<void>} - A promise that resolves when the reservation is deleted
    */
   deleteReservation = async (reservationId) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const reservationRef = doc(db, 'Reservations', reservationId);
       await deleteDoc(reservationRef);

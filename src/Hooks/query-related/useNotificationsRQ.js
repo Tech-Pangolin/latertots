@@ -46,11 +46,18 @@ export function useNotificationsRQ() {
   useEffect(() => {
     if (!currentUser) return;
     
-    const unsubscribe = dbService.subscribeDocs(notificationsQuery, fresh => {
-      queryClient.setQueryData(queryKey, fresh);
-    }, isAdmin);
+    let unsubscribe;
+    const setupSubscription = async () => {
+      unsubscribe = await dbService.subscribeDocs(notificationsQuery, fresh => {
+        queryClient.setQueryData(queryKey, fresh);
+      }, isAdmin);
+    };
     
-    return () => unsubscribe();
+    setupSubscription();
+    
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [notificationsQuery, queryClient, queryKey, currentUser, isAdmin]);
   
   // Dismiss notification mutation

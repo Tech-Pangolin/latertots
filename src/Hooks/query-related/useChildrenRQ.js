@@ -45,10 +45,17 @@ export function useChildrenRQ(forceUserMode = false) {
   // Third, set up a real-time listener for changes
   useEffect(() => {
     if (!myChildrenQuery && !isAdmin) return; // If the user has no children and is not admin, do not set up a listener
-    const unsubscribe = dbService.subscribeDocs(isAdmin ? allChildrenQuery : myChildrenQuery, fresh => {
-      queryClient.setQueryData(queryKey, fresh);
-    })
-    return () => unsubscribe();
+    let unsubscribe;
+    const setupSubscription = async () => {
+      unsubscribe = await dbService.subscribeDocs(isAdmin ? allChildrenQuery : myChildrenQuery, fresh => {
+        queryClient.setQueryData(queryKey, fresh);
+      });
+    };
+    
+    setupSubscription();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [dbService, queryClient, allChildrenQuery, myChildrenQuery, queryKey]);
 
   return queryResult;

@@ -205,7 +205,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
       return;
     }
 
-    const validOverlap = dbService.checkReservationOverlapLimit(newEvents);
+    const validOverlap = await dbService.checkReservationOverlapLimit(newEvents);
     if (!validOverlap) {
       alert('No more than 5 reservations can take place simultaneously. Please check available time slots and try again.');
       return;

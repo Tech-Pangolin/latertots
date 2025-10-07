@@ -40,10 +40,17 @@ export function useContactsRQ(forceUserMode = false) {
   useEffect(() => {
     if (!myContacts && !isAdmin) return; // If the user has no contacts and is not admin, do not set up a listener
 
-    const unsub = dbService.subscribeDocs(isAdmin ? allContacts : myContacts, fresh => {
-      queryClient.setQueryData(queryKey, fresh);
-    });
-    return () => unsub();
+    let unsub;
+    const setupSubscription = async () => {
+      unsub = await dbService.subscribeDocs(isAdmin ? allContacts : myContacts, fresh => {
+        queryClient.setQueryData(queryKey, fresh);
+      });
+    };
+    
+    setupSubscription();
+    return () => {
+      if (unsub) unsub();
+    };
   }, [allContacts, dbService, queryKey, queryClient])
 
   return queryResult;

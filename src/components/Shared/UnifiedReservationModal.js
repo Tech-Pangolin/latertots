@@ -199,7 +199,7 @@ const UnifiedReservationModal = ({
       return;
     }
 
-    const validOverlap = dbService.checkReservationOverlapLimit(newEvents);
+    const validOverlap = await dbService.checkReservationOverlapLimit(newEvents);
     if (!validOverlap) {
       updateState({ error: 'No more than 5 reservations can take place simultaneously. Please check available time slots and try again.' });
       return;

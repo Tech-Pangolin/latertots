@@ -122,9 +122,14 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
   useEffect(() => {
     if (!enabled) return;
     
-    const unsubscribe = dbService.subscribeDocs(reservationQuery, fresh => {
-      queryClient.setQueryData(queryKey, fresh.map(transformReservationData).filter(Boolean)); 
-    }, false);
+    let unsubscribe;
+    const setupSubscription = async () => {
+      unsubscribe = await dbService.subscribeDocs(reservationQuery, fresh => {
+        queryClient.setQueryData(queryKey, fresh.map(transformReservationData).filter(Boolean)); 
+      }, false);
+    };
+    
+    setupSubscription();
     return () => unsubscribe();
   }, [queryKey, reservationQuery, queryClient, enabled]);
 
