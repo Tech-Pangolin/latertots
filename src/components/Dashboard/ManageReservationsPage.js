@@ -250,12 +250,14 @@ const ManageReservationsPage = ({ enableAggregates = false }) => {
           open={dialogOpenState}
           onClose={handleDialogClose}
           value={dialogValue}
-          options={{
-            Confirm: 'confirmed',
-            Decline: 'declined',
-            Refund: 'refunded',
-            Complete: 'completed',
-          }}
+        options={{
+          Confirm: 'confirmed',
+          'Drop Off': 'dropped-off',
+          'Pick Up': 'picked-up',
+          Decline: 'declined',
+          Refund: 'refunded',
+          Complete: 'completed',
+        }}
           title="Update Reservation Status"
           reservationContext={dialogReservationContext}
         />

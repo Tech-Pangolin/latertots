@@ -2,6 +2,9 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useAllReservationsRQ } from "../../Hooks/query-related/useAllReservationsRQ";
 import { useReservationsByMonthDayRQ } from "../../Hooks/query-related/useReservationsByMonthDayRQ";
 import { useAdminPanelContext } from "./AdminPanelContext";
+import { useQueryClient } from '@tanstack/react-query';
+import { getReservationStatus } from '../../Helpers/util';
+import { useAuth } from '../AuthProvider';
 
 // Helper function to generate visible page numbers for pagination
 const generateVisiblePageNumbers = (currentPage, totalPages, maxVisiblePages = 5) => {
@@ -178,6 +181,73 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const queryClient = useQueryClient();
+  const { dbService } = useAuth();
+
+  const handleDropOff = async (reservationId) => {
+    try {
+      await dbService.dropOffChild(reservationId);
+      queryClient.invalidateQueries(['adminAllReservations']);
+    } catch (error) {
+      console.error('Error dropping off child:', error);
+      alert('Failed to drop off child: ' + error.message);
+    }
+  };
+
+  const handlePickUp = async (reservationId) => {
+    try {
+      const result = await dbService.pickUpChild(reservationId);
+      if (result.success) {
+        queryClient.invalidateQueries(['adminAllReservations']);
+        if (!result.noPaymentRequired) {
+          alert('Checkout session created. Parent can complete payment from their profile.');
+        }
+      }
+    } catch (error) {
+      console.error('Error picking up child:', error);
+      alert('Failed to pick up child: ' + error.message);
+    }
+  };
+
+  const renderActionButtons = (reservation) => {
+    const status = getReservationStatus(reservation);
+    switch (status) {
+      case 'confirmed':
+        return (
+          <button 
+            className="btn btn-success btn-sm"
+            onClick={() => handleDropOff(reservation.id)}
+          >
+            Drop Off
+          </button>
+        );
+      case 'dropped-off':
+        return (
+          <button 
+            className="btn btn-warning btn-sm"
+            onClick={() => handlePickUp(reservation.id)}
+          >
+            Pick Up
+          </button>
+        );
+      case 'picked-up':
+        return reservation.dropOffPickUp?.finalCheckoutUrl ? (
+          <a 
+            href={reservation.dropOffPickUp.finalCheckoutUrl}
+            className="btn btn-primary btn-sm"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Complete Payment
+          </a>
+        ) : (
+          <span className="badge bg-secondary">No Payment Required</span>
+        );
+      default:
+        return <span className="badge bg-secondary">{status}</span>;
+    }
+  };
+
   const formatTableRow = (reservation) => {
     return (
       <tr key={reservation.id}>
@@ -187,6 +257,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
         )}
         <td>{formatTime(reservation.start)} - {formatTime(reservation.end)}</td>
         <td>{getReservationStatus(reservation)}</td>
+        <td>{renderActionButtons(reservation)}</td>
         <td>{reservation.userId || '--'}</td>
       </tr>
     )
@@ -275,6 +346,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
                         >
                           Status {getSortIcon('status')}
                         </th>
+                        <th scope="col">Actions</th>
                         <th scope="col">User ID</th>
                       </tr>
                     </thead>
