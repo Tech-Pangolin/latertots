@@ -5,6 +5,8 @@ import { useAdminPanelContext } from "./AdminPanelContext";
 import { useQueryClient } from '@tanstack/react-query';
 import { getReservationStatus } from '../../Helpers/util';
 import { useAuth } from '../AuthProvider';
+import DropOffConfirmationModal from '../Shared/DropOffConfirmationModal';
+import PickUpConfirmationModal from '../Shared/PickUpConfirmationModal';
 
 // Helper function to generate visible page numbers for pagination
 const generateVisiblePageNumbers = (currentPage, totalPages, maxVisiblePages = 5) => {
@@ -184,28 +186,99 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
   const queryClient = useQueryClient();
   const { dbService } = useAuth();
 
-  const handleDropOff = async (reservationId) => {
+  // Modal state
+  const [dropOffModal, setDropOffModal] = useState({
+    show: false,
+    reservationData: null
+  });
+
+  const [pickUpModal, setPickUpModal] = useState({
+    show: false,
+    reservationId: null,
+    reservationData: null,
+    userData: null,
+    calculatedAmount: 0,
+    actualHours: 0
+  });
+
+  const handleDropOff = (reservation) => {
+    setDropOffModal({
+      show: true,
+      reservationData: reservation
+    });
+  };
+
+  const handleConfirmDropOff = async (dropOffTimestamp) => {
     try {
-      await dbService.dropOffChild(reservationId);
+      await dbService.dropOffChild(dropOffModal.reservationData.id, dropOffTimestamp);
       queryClient.invalidateQueries(['adminAllReservations']);
+      setDropOffModal({ show: false, reservationData: null });
     } catch (error) {
       console.error('Error dropping off child:', error);
-      alert('Failed to drop off child: ' + error.message);
+      throw error;
     }
   };
 
   const handlePickUp = async (reservationId) => {
     try {
-      const result = await dbService.pickUpChild(reservationId);
+      console.log('=== PICKUP DEBUGGING START ===');
+      console.log('Reservation ID:', reservationId);
+      
+      const reservationData = await dbService.getReservationData(reservationId);
+      console.log('Reservation data:', reservationData);
+      console.log('Actual start time:', reservationData.dropOffPickUp?.actualStartTime);
+      console.log('Current time:', new Date().toISOString());
+      
+      const userData = await dbService.getUserData(reservationData.userId);
+      console.log('User data:', userData);
+      
+      const { finalAmount, actualHours } = await dbService.calculateFinalCheckoutAmount(reservationData);
+      console.log('Calculated final amount:', finalAmount);
+      console.log('Calculated actual hours:', actualHours);
+      console.log('Final amount in dollars:', (finalAmount / 100).toFixed(2));
+      console.log('=== PICKUP DEBUGGING END ===');
+
+      setPickUpModal({
+        show: true,
+        reservationId,
+        reservationData,
+        userData,
+        calculatedAmount: finalAmount,
+        actualHours
+      });
+    } catch (error) {
+      console.error('Error preparing pick-up:', error);
+      alert('Failed to prepare pick-up: ' + error.message);
+    }
+  };
+
+  const handleConfirmPickUp = async (finalAmount, calculatedAmount, overrideReason) => {
+    try {
+      const result = await dbService.pickUpChild(
+        pickUpModal.reservationId,
+        finalAmount,
+        calculatedAmount,
+        overrideReason
+      );
+      
       if (result.success) {
         queryClient.invalidateQueries(['adminAllReservations']);
         if (!result.noPaymentRequired) {
           alert('Checkout session created. Parent can complete payment from their profile.');
         }
       }
+      
+      setPickUpModal({
+        show: false,
+        reservationId: null,
+        reservationData: null,
+        userData: null,
+        calculatedAmount: 0,
+        actualHours: 0
+      });
     } catch (error) {
       console.error('Error picking up child:', error);
-      alert('Failed to pick up child: ' + error.message);
+      throw error;
     }
   };
 
@@ -216,7 +289,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
         return (
           <button 
             className="btn btn-success btn-sm"
-            onClick={() => handleDropOff(reservation.id)}
+            onClick={() => handleDropOff(reservation)}
           >
             Drop Off
           </button>
@@ -403,6 +476,30 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
           </div>
         </div>
       </div>
+      
+      <DropOffConfirmationModal
+        show={dropOffModal.show}
+        onHide={() => setDropOffModal({ show: false, reservationData: null })}
+        reservationData={dropOffModal.reservationData}
+        onConfirmDropOff={handleConfirmDropOff}
+      />
+      
+      <PickUpConfirmationModal
+        show={pickUpModal.show}
+        onHide={() => setPickUpModal({
+          show: false,
+          reservationId: null,
+          reservationData: null,
+          userData: null,
+          calculatedAmount: 0,
+          actualHours: 0
+        })}
+        reservationData={pickUpModal.reservationData}
+        userData={pickUpModal.userData}
+        calculatedAmount={pickUpModal.calculatedAmount}
+        actualHours={pickUpModal.actualHours}
+        onConfirmPickUp={handleConfirmPickUp}
+      />
     </>
   );
 }

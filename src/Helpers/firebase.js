@@ -729,7 +729,7 @@ export class FirebaseDbService {
     const amountPaid = this.getAmountPaidFromStripePayments(reservationData.stripePayments);
     const finalAmount = Math.max(0, totalCost - amountPaid);
     
-    return { finalAmount, groupActivityOverlapCharge };
+    return { finalAmount, groupActivityOverlapCharge, actualHours };
   };
 
   /**
@@ -1084,6 +1084,48 @@ export class FirebaseDbService {
       logger.info(`Reservation ${reservationId} deleted successfully`);
     } catch (error) {
       logger.error("Error deleting reservation:", error);
+      throw error;
+    }
+  };
+
+  /**
+   * Get user data by user ID
+   * @param {string} userId - The user ID
+   * @returns {Promise<Object>} - User data
+   */
+  getUserData = async (userId) => {
+    try {
+      const userRef = doc(collection(db, "Users"), userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        throw new Error('User not found');
+      }
+      
+      return userDoc.data();
+    } catch (error) {
+      logger.error('Error getting user data:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Get reservation data by reservation ID
+   * @param {string} reservationId - The reservation ID
+   * @returns {Promise<Object>} - Reservation data
+   */
+  getReservationData = async (reservationId) => {
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      const reservationDoc = await getDoc(reservationRef);
+      
+      if (!reservationDoc.exists()) {
+        throw new Error('Reservation not found');
+      }
+      
+      return reservationDoc.data();
+    } catch (error) {
+      logger.error('Error getting reservation data:', error);
       throw error;
     }
   };

@@ -38,13 +38,22 @@ const UserProfile = () => {
   }, [reservations]);
 
   const paymentHistory = useMemo(() => {
+    const validStatuses = ['unpaid', 'paid', 'late'];
+    
     return reservations
-      .filter(res => res.status === 'paid' && res.stripePayments?.full)
+      .filter(res => {
+        const status = res.status; // Use direct status field
+        return validStatuses.includes(status) && 
+               res.stripePayments && 
+               (res.stripePayments.full || res.stripePayments.minimum);
+      })
       .map(res => ({
         serviceDate: res.start,
         childName: res.title,
         amount: res.dropOffPickUp?.finalAmount || 0,
-        paymentDate: res.updatedAt
+        paymentDate: res.updatedAt,
+        status: res.status,
+        paymentType: res.stripePayments?.full ? 'Full' : 'Deposit'
       }))
       .sort((a, b) => new Date(b.serviceDate) - new Date(a.serviceDate));
   }, [reservations]);
@@ -300,7 +309,7 @@ const UserProfile = () => {
                         </div>
                         <p className="mb-1">{payment.childName}</p>
                         <small className="text-muted">
-                          Paid: {new Date(payment.paymentDate).toLocaleDateString()}
+                          Paid: {new Date(payment.paymentDate).toLocaleDateString()} | Status: {payment.status} | Type: {payment.paymentType}
                         </small>
                       </div>
                     ))}
