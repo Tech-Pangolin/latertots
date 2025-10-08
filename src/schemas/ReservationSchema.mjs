@@ -56,7 +56,8 @@ const ReservationSchema = Joi.object({
     overrideAppliedAt: Joi.object().instance(Timestamp).optional(),
     overrideAppliedBy: Joi.string().optional(),
     amountPaid: Joi.number().optional(),
-    amountRemaining: Joi.number().optional()
+    amountRemaining: Joi.number().optional(),
+    selectedGroupActivityId: Joi.string().optional()
   }).optional()
 })
   .prefs({ abortEarly: false });

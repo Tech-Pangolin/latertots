@@ -660,7 +660,7 @@ export class FirebaseDbService {
    * @param {string} overrideReason - Reason for amount override (optional)
    * @returns {Promise<Object>} - A promise that resolves with checkout session or no payment required
    */
-  pickUpChild = async (reservationId, finalAmount = null, calculatedAmount = null, overrideReason = null) => {
+  pickUpChild = async (reservationId, finalAmount = null, calculatedAmount = null, overrideReason = null, selectedActivityId = null) => {
     this.validateAuth('admin');
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
@@ -668,10 +668,10 @@ export class FirebaseDbService {
       const reservationData = reservationDoc.data();
       const now = Timestamp.now();
       
-      // Use provided finalAmount or calculate it
+      // Use provided finalAmount or calculate it with selected activity
       let amountToUse = finalAmount;
       if (amountToUse === null) {
-        const calculationResult = await this.calculateFinalCheckoutAmount(reservationData);
+        const calculationResult = await this.calculateFinalCheckoutAmount(reservationData, selectedActivityId);
         amountToUse = calculationResult.finalAmount;
       }
       
@@ -691,6 +691,11 @@ export class FirebaseDbService {
         updateFields['dropOffPickUp.calculatedAmount'] = calculatedAmount;
         updateFields['dropOffPickUp.overrideAppliedAt'] = now;
         updateFields['dropOffPickUp.overrideAppliedBy'] = this.userContext.uid;
+      }
+      
+      // Store selected activity if provided
+      if (selectedActivityId) {
+        updateFields['dropOffPickUp.selectedGroupActivityId'] = selectedActivityId;
       }
       
       // Update reservation with pick-up time
@@ -714,7 +719,7 @@ export class FirebaseDbService {
    * @param {Object} reservationData - The reservation data
    * @returns {Promise<Object>} - Final amount and group activity overlap charge
    */
-  calculateFinalCheckoutAmount = async (reservationData) => {
+  calculateFinalCheckoutAmount = async (reservationData, selectedActivityId = null) => {
     // 1. Calculate total actual hours
     const actualStart = reservationData.dropOffPickUp?.actualStartTime;
     if (!actualStart) {
@@ -743,10 +748,27 @@ export class FirebaseDbService {
     // 5. Calculate group activity cost if applicable
     let groupActivityCost = 0;
     let groupActivityHours = 0;
+    let availableActivities = [];
+    let activityInfo = null;
+    
     if (reservationData.groupActivity) {
-      const groupActivityResult = await this.calculateGroupActivityCost(actualStart, now);
+      const groupActivityResult = await this.calculateGroupActivityCost(
+        actualStart, 
+        now, 
+        selectedActivityId
+      );
       groupActivityCost = groupActivityResult.cost;
       groupActivityHours = groupActivityResult.hours;
+      availableActivities = groupActivityResult.availableActivities || [];
+      
+      if (groupActivityResult.activityName) {
+        activityInfo = {
+          name: groupActivityResult.activityName,
+          rate: groupActivityResult.activityRate,
+          isFlat: groupActivityResult.isFlat,
+          hasTimeData: groupActivityResult.hasTimeData
+        };
+      }
     }
     
     // 6. Calculate totals
@@ -764,11 +786,12 @@ export class FirebaseDbService {
           subtotal: baseCost,
           description: 'Base child care service'
         },
-        groupActivity: groupActivityHours > 0 ? {
+        groupActivity: groupActivityHours > 0 && activityInfo ? {
           hours: groupActivityHours,
-          rate: hourlyRate,
+          rate: activityInfo.rate,
           subtotal: groupActivityCost,
-          description: 'Group activity participation'
+          description: `${activityInfo.name}${activityInfo.isFlat ? ' (flat rate)' : ''}`,
+          isFlat: activityInfo.isFlat
         } : null,
         lateFee: overtimeHours > 0 ? {
           hours: overtimeHours,
@@ -778,7 +801,8 @@ export class FirebaseDbService {
         } : null,
         totalServiceCost,
         amountPaid,
-        amountDue: finalAmount
+        amountDue: finalAmount,
+        availableActivities // Include for modal dropdown
       }
     };
   };
@@ -835,21 +859,106 @@ export class FirebaseDbService {
    * @param {Timestamp} actualEnd - Actual end time
    * @returns {Promise<Object>} - Cost and hours for group activity
    */
-  calculateGroupActivityCost = async (actualStart, actualEnd) => {
-    // TODO: Implement actual group activity schedule checking
-    // For now, return placeholder that uses proper constants
+  calculateGroupActivityCost = async (actualStart, actualEnd, selectedActivityId = null) => {
+    // Fetch all service prices
     const servicePricesQuery = query(collection(db, 'ServicePrices'));
     const pricesSnapshot = await getDocs(servicePricesQuery);
     const prices = {};
     pricesSnapshot.forEach(doc => prices[doc.data().stripeId] = doc.data());
     
-    const hourlyRate = prices[SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_FIRST_CHILD_HOURLY]?.pricePerUnitInCents || 2500;
+    // Filter for tot-tivities only (those with daysOfWeek metadata)
+    const totTivities = Object.values(SERVICE_PRICE_LOOKUP_UIDS)
+      .filter(uid => uid.startsWith('TOTIVITY_'))
+      .map(uid => prices[uid])
+      .filter(price => price && price.metadata?.daysOfWeek);
     
-    // Placeholder calculation - would need actual group activity schedule
-    const overlapHours = 0; // This would be calculated based on actual schedule
-    const cost = overlapHours * hourlyRate;
+    // If no activity selected, return available options
+    if (!selectedActivityId) {
+      return {
+        cost: 0,
+        hours: 0,
+        availableActivities: totTivities.map(activity => ({
+          stripeId: activity.stripeId,
+          name: activity.name,
+          pricePerUnitInCents: activity.pricePerUnitInCents,
+          daysOfWeek: activity.metadata.daysOfWeek,
+          startTime: activity.metadata?.startTime || null,
+          endTime: activity.metadata?.endTime || null,
+          hasTimeData: !!(activity.metadata?.startTime && activity.metadata?.endTime),
+          isFlat: activity.stripeId.includes('_FLAT'),
+          isHourly: activity.stripeId.includes('_HOURLY')
+        }))
+      };
+    }
     
-    return { cost, hours: overlapHours };
+    // Calculate overlap for selected activity
+    const activity = prices[selectedActivityId];
+    if (!activity) {
+      return { cost: 0, hours: 0 };
+    }
+    
+    // Calculate time overlap (returns 0 if metadata missing)
+    const overlapHours = this.calculateActivityTimeOverlap(
+      actualStart, 
+      actualEnd, 
+      activity.metadata?.startTime,
+      activity.metadata?.endTime
+    );
+    
+    // Determine pricing based on activity type
+    const isFlat = selectedActivityId.includes('_FLAT');
+    const cost = isFlat 
+      ? (overlapHours > 0 ? activity.pricePerUnitInCents : 0) // Flat: charge full if any overlap
+      : Math.round(overlapHours * activity.pricePerUnitInCents); // Hourly: prorate
+    
+    return {
+      cost,
+      hours: overlapHours,
+      activityName: activity.name,
+      activityRate: activity.pricePerUnitInCents,
+      isFlat,
+      hasTimeData: !!(activity.metadata?.startTime && activity.metadata?.endTime)
+    };
+  };
+
+  /**
+   * Calculate overlap hours between reservation time and activity time
+   * @param {Timestamp} actualStart - Reservation start time
+   * @param {Timestamp} actualEnd - Reservation end time
+   * @param {string} activityStart - Activity start time "HH:MM" (optional)
+   * @param {string} activityEnd - Activity end time "HH:MM" (optional)
+   * @returns {number} - Overlap hours (0 if times not available)
+   */
+  calculateActivityTimeOverlap = (actualStart, actualEnd, activityStart, activityEnd) => {
+    if (!activityStart || !activityEnd) {
+      return 0; // No overlap calculation possible without time data
+    }
+    
+    // Convert Timestamps to Date objects
+    const resStart = actualStart.toDate();
+    const resEnd = actualEnd.toDate();
+    
+    // Parse activity times (format: "HH:MM")
+    const [actStartHour, actStartMin] = activityStart.split(':').map(Number);
+    const [actEndHour, actEndMin] = activityEnd.split(':').map(Number);
+    
+    // Create activity time windows on the same day as reservation
+    const actStart = new Date(resStart);
+    actStart.setHours(actStartHour, actStartMin, 0, 0);
+    
+    const actEnd = new Date(resStart);
+    actEnd.setHours(actEndHour, actEndMin, 0, 0);
+    
+    // Calculate overlap
+    const overlapStart = Math.max(resStart.getTime(), actStart.getTime());
+    const overlapEnd = Math.min(resEnd.getTime(), actEnd.getTime());
+    
+    if (overlapEnd <= overlapStart) {
+      return 0; // No overlap
+    }
+    
+    // Convert milliseconds to hours
+    return (overlapEnd - overlapStart) / (1000 * 60 * 60);
   };
 
   /**

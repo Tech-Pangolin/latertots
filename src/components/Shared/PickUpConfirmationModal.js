@@ -13,8 +13,13 @@ import {
   CardContent,
   Grid,
   CircularProgress,
-  InputAdornment
+  InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
+import { useAuth } from '../AuthProvider';
 
 const PickUpConfirmationModal = ({
   show,
@@ -24,11 +29,14 @@ const PickUpConfirmationModal = ({
   costBreakdown,
   onConfirmPickUp
 }) => {
+  const { dbService } = useAuth();
   const [isOverriding, setIsOverriding] = useState(false);
   const [finalAmount, setFinalAmount] = useState(0);
   const [overrideReason, setOverrideReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedGroupActivity, setSelectedGroupActivity] = useState(null);
+  const [isRecalculating, setIsRecalculating] = useState(false);
   
   useEffect(() => {
     if (show && costBreakdown) {
@@ -36,8 +44,27 @@ const PickUpConfirmationModal = ({
       setIsOverriding(false);
       setOverrideReason('');
       setError(null);
+      setSelectedGroupActivity(null); // Reset activity selection
     }
   }, [show, costBreakdown]);
+
+  const handleActivityChange = async (activityId) => {
+    setSelectedGroupActivity(activityId);
+    setIsRecalculating(true);
+    
+    try {
+      const newCostBreakdown = await dbService.calculateFinalCheckoutAmount(
+        reservationData,
+        activityId || null
+      );
+      setFinalAmount(newCostBreakdown.finalAmount);
+    } catch (error) {
+      console.error('Error recalculating with activity:', error);
+      setError('Failed to recalculate cost with selected activity');
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
   
   const handleAmountChange = (e) => {
     const dollars = parseFloat(e.target.value) || 0;
@@ -57,7 +84,8 @@ const PickUpConfirmationModal = ({
       await onConfirmPickUp(
         finalAmount,
         costBreakdown?.finalAmount || 0,
-        isOverriding ? overrideReason : null
+        isOverriding ? overrideReason : null,
+        selectedGroupActivity || null
       );
       onHide();
     } catch (err) {
@@ -71,7 +99,7 @@ const PickUpConfirmationModal = ({
   const isChanged = finalAmount !== (costBreakdown?.finalAmount || 0);
   
   // LineItem component for consistent display
-  const LineItem = ({ label, hours, rate, amount, description, isSubtotal, isLateFee, isCredit, isTotal }) => (
+  const LineItem = ({ label, hours, rate, amount, description, isSubtotal, isLateFee, isCredit, isTotal, isFlat }) => (
     <Box sx={{ 
       display: 'flex', 
       justifyContent: 'space-between', 
@@ -88,9 +116,14 @@ const PickUpConfirmationModal = ({
             {description}
           </Typography>
         )}
-        {hours !== undefined && rate !== undefined && (
+        {hours !== undefined && rate !== undefined && !isFlat && (
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
             {hours.toFixed(1)} hours × ${(rate / 100).toFixed(2)}/hour
+          </Typography>
+        )}
+        {isFlat && hours !== undefined && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            {hours.toFixed(1)} hours overlap (flat rate)
           </Typography>
         )}
       </Box>
@@ -148,6 +181,49 @@ const PickUpConfirmationModal = ({
             </Button>
           </Box>
           
+          {/* Group Activity Selection */}
+          {costBreakdown?.costBreakdown?.availableActivities?.length > 0 && !isOverriding && (
+            <Card sx={{ mb: 2, backgroundColor: '#fff3e0', border: '1px solid #ff9800' }}>
+              <CardContent>
+                <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
+                  Group Activity Selection
+                </Typography>
+                <FormControl fullWidth size="small" disabled={isRecalculating}>
+                  <InputLabel>Select Tot-tivity/Event</InputLabel>
+                  <Select
+                    value={selectedGroupActivity || ''}
+                    onChange={(e) => handleActivityChange(e.target.value)}
+                    label="Select Tot-tivity/Event"
+                  >
+                    <MenuItem value="">
+                      <em>No group activity</em>
+                    </MenuItem>
+                    {costBreakdown.costBreakdown.availableActivities.map((activity) => (
+                      <MenuItem key={activity.stripeId} value={activity.stripeId}>
+                        {activity.name} - {activity.daysOfWeek}
+                        {activity.hasTimeData && ` (${activity.startTime} - ${activity.endTime})`}
+                        {!activity.hasTimeData && ' (times not configured)'}
+                        {' - '}${(activity.pricePerUnitInCents / 100).toFixed(2)}
+                        {activity.isFlat ? ' (flat)' : '/hr'}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Select the tot-tivity or event this child participated in. 
+                  {costBreakdown.costBreakdown.availableActivities.some(a => !a.hasTimeData) && 
+                    ' Note: Activities without configured times will require manual override.'}
+                </Typography>
+                {isRecalculating && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                    <CircularProgress size={16} sx={{ mr: 1 }} />
+                    <Typography variant="caption">Recalculating...</Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {!isOverriding ? (
             <Card>
               <CardContent>
@@ -173,6 +249,7 @@ const PickUpConfirmationModal = ({
                       rate={costBreakdown.costBreakdown.groupActivity.rate}
                       amount={costBreakdown.costBreakdown.groupActivity.subtotal}
                       description={costBreakdown.costBreakdown.groupActivity.description}
+                      isFlat={costBreakdown.costBreakdown.groupActivity.isFlat}
                     />
                   )}
                   

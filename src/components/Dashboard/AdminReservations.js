@@ -238,13 +238,14 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
     }
   };
 
-  const handleConfirmPickUp = async (finalAmount, calculatedAmount, overrideReason) => {
+  const handleConfirmPickUp = async (finalAmount, calculatedAmount, overrideReason, selectedActivityId) => {
     try {
       const result = await dbService.pickUpChild(
         pickUpModal.reservationId,
         finalAmount,
         calculatedAmount,
-        overrideReason
+        overrideReason,
+        selectedActivityId
       );
       
       if (result.success) {
