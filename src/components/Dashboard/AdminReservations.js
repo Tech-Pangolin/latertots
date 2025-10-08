@@ -209,7 +209,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
 
   const handleConfirmDropOff = async (dropOffTimestamp) => {
     try {
-      await dbService.dropOffChild(dropOffModal.reservationData.id, dropOffTimestamp);
+      await dbService.dropOffChild(dropOffModal.reservationData.id, dropOffTimestamp, []);
       queryClient.invalidateQueries(['adminAllReservations']);
       setDropOffModal({ show: false, reservationData: null });
     } catch (error) {

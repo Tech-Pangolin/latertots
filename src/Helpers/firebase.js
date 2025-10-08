@@ -627,10 +627,11 @@ export class FirebaseDbService {
   /**
    * Drop off a child for service
    * @param {string} reservationId - The ID of the reservation document to update
+   * @param {Timestamp} actualDropOffTime - The actual time the child was dropped off
    * @param {Array} servicesProvided - Array of services provided during drop-off
    * @returns {Promise<void>} - A promise that resolves when the document is successfully updated
    */
-  dropOffChild = async (reservationId, servicesProvided = []) => {
+  dropOffChild = async (reservationId, actualDropOffTime, servicesProvided = []) => {
     this.validateAuth('admin');
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
@@ -639,13 +640,12 @@ export class FirebaseDbService {
       await updateDoc(reservationRef, {
         status: 'dropped-off',
         'extendedProps.status': 'dropped-off',
-        'dropOffPickUp.droppedOffAt': now,
-        'dropOffPickUp.actualStartTime': now,
+        'dropOffPickUp.actualStartTime': actualDropOffTime,
         'dropOffPickUp.servicesProvided': servicesProvided,
         updatedAt: now
       });
       
-      logger.info('Child dropped off successfully:', { reservationId });
+      logger.info('Child dropped off successfully:', { reservationId, actualDropOffTime });
     } catch (error) {
       logger.error('Error dropping off child:', error);
       throw error;

@@ -36,6 +36,9 @@ const { upsertFormDraft } = require('./formDrafts/upsertFormDraft');
 // Cleanup functions
 const { cleanupFailedReservations, cleanupFailedReservationsManual } = require('./cleanup/cleanupFailedReservations');
 
+// Payment history functions
+const { getPaymentHistory } = require('./payments/getPaymentHistory');
+
 
 
 
@@ -58,6 +61,7 @@ exports.checkPickupPaymentReminders = checkPickupPaymentReminders;
 exports.upsertFormDraft = upsertFormDraft;
 exports.cleanupFailedReservations = cleanupFailedReservations;
 exports.cleanupFailedReservationsManual = cleanupFailedReservationsManual;
+exports.getPaymentHistory = getPaymentHistory;
 
 
 
