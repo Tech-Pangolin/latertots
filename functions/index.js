@@ -27,12 +27,17 @@ const { dailyProductSync, syncProductsManual } = require('./payments/helpers/pro
 
 // Email functions
 const { sendContactEmail } = require('./email/contactEmail');
+const { sendPickupPaymentNotification } = require('./email/sendPickupPaymentNotification');
+const { checkPickupPaymentReminders } = require('./email/checkPickupPaymentReminders');
 
 // Form draft functions
 const { upsertFormDraft } = require('./formDrafts/upsertFormDraft');
 
 // Cleanup functions
 const { cleanupFailedReservations, cleanupFailedReservationsManual } = require('./cleanup/cleanupFailedReservations');
+
+// Payment history functions
+const { getPaymentHistory } = require('./payments/getPaymentHistory');
 
 
 
@@ -51,9 +56,12 @@ exports.cleanupFailedPayments = cleanupFailedPayments;
 exports.dailyProductSync = dailyProductSync;
 exports.syncProductsManual = syncProductsManual;
 exports.sendContactEmail = sendContactEmail;
+exports.sendPickupPaymentNotification = sendPickupPaymentNotification;
+exports.checkPickupPaymentReminders = checkPickupPaymentReminders;
 exports.upsertFormDraft = upsertFormDraft;
 exports.cleanupFailedReservations = cleanupFailedReservations;
 exports.cleanupFailedReservationsManual = cleanupFailedReservationsManual;
+exports.getPaymentHistory = getPaymentHistory;
 
 
 

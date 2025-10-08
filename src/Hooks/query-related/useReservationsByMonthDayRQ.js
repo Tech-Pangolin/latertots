@@ -12,6 +12,7 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
   const { dbService, currentUser } = useAuth();
   const [monthYear, setMonthYearRaw] = useState({ day: null, week: false, month: new Date().getMonth(), year: new Date().getFullYear() });
   const queryClient = useQueryClient();
+  const isAdmin = currentUser?.Role === 'admin';
 
 
   const queryKey = useMemo(() => {
@@ -99,13 +100,23 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
       end: luxonDateTimeFromFirebaseTimestamp(res.end).toISO(),
       startDT: luxonDateTimeFromFirebaseTimestamp(res.start),
       endDT: luxonDateTimeFromFirebaseTimestamp(res.end),
+      dropOffPickUp: res.dropOffPickUp, // Include dropOffPickUp object for payment buttons
     };
 
   };
 
   const queryResult = useQuery({
     queryKey,
-    queryFn: () => dbService.fetchDocs(reservationQuery, false),
+    queryFn: async () => {
+      // Additional security check: ensure query filters are applied correctly
+      if (!isAdmin && !reservationQuery._query.filters.some(f => 
+        f.field.segments.includes('User')
+      )) {
+        throw new Error("Unauthorized access to reservation data.");
+      }
+      const result = await dbService.fetchDocs(reservationQuery);
+      return result;
+    },
     select: (data) => data.map(transformReservationData).filter(Boolean),
     enabled,
     onError: (error) => {
@@ -122,10 +133,26 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
   useEffect(() => {
     if (!enabled) return;
     
-    const unsubscribe = dbService.subscribeDocs(reservationQuery, fresh => {
-      queryClient.setQueryData(queryKey, fresh.map(transformReservationData).filter(Boolean)); 
-    }, false);
-    return () => unsubscribe();
+    let unsubscribe;
+    let isSubscribed = true;
+    
+    const setupSubscription = async () => {
+      if (isSubscribed) {
+        unsubscribe = await dbService.subscribeDocs(reservationQuery, fresh => {
+          if (isSubscribed) {
+            queryClient.setQueryData(queryKey, fresh.map(transformReservationData).filter(Boolean)); 
+          }
+        });
+      }
+    };
+    
+    setupSubscription();
+    return () => {
+      isSubscribed = false;
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, [queryKey, reservationQuery, queryClient, enabled]);
 
   return {

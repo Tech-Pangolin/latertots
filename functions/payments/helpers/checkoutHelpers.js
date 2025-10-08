@@ -71,13 +71,17 @@ const calculateReservationPricing = (reservations, paymentType) => {
       // Calculate full amount using dynamic rate
       const baseAmount = Math.round(reservation.hourlyRateCents * reservation.durationHours);
       
+      // Use detailed service description if available
+      const serviceDescription = reservation.serviceDescription || 
+        `Full payment - ${reservation.durationHours} hours`;
+      
       // Base child care charge
       lineItems.push({
         price_data: {
           currency: 'usd',
           product_data: { 
             name: `Child Care - ${reservation.childName}`,
-            description: `Full payment - ${reservation.durationHours} hours`
+            description: serviceDescription
           },
           unit_amount: baseAmount
         },

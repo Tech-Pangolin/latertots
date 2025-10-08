@@ -34,7 +34,7 @@ export function useNotificationsRQ() {
   
   const queryResult = useQuery({
     queryKey,
-    queryFn: () => dbService.fetchDocs(notificationsQuery, isAdmin),
+    queryFn: () => dbService.fetchDocs(notificationsQuery),
     onError: (error) => {
       logger.error("Error fetching notifications:", error);
     },
@@ -46,11 +46,27 @@ export function useNotificationsRQ() {
   useEffect(() => {
     if (!currentUser) return;
     
-    const unsubscribe = dbService.subscribeDocs(notificationsQuery, fresh => {
-      queryClient.setQueryData(queryKey, fresh);
-    }, isAdmin);
+    let unsubscribe;
+    let isSubscribed = true;
     
-    return () => unsubscribe();
+    const setupSubscription = async () => {
+      if (isSubscribed) {
+        unsubscribe = await dbService.subscribeDocs(notificationsQuery, fresh => {
+          if (isSubscribed) {
+            queryClient.setQueryData(queryKey, fresh);
+          }
+        });
+      }
+    };
+    
+    setupSubscription();
+    
+    return () => {
+      isSubscribed = false;
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, [notificationsQuery, queryClient, queryKey, currentUser, isAdmin]);
   
   // Dismiss notification mutation

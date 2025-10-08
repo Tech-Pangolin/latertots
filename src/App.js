@@ -4,6 +4,7 @@ import LoginPage from './components/Pages/LoginPage';
 import ForgotPasswordPage from './components/Pages/ForgotPasswordPage';
 import ActionHandlerPage from './components/Pages/ActionHandlerPage';
 import PrivateRoute from './components/PrivateRoute';
+import AdminRoute from './components/AdminRoute';
 import UserRegistrationPage from './components/Pages/UserRegistrationPage';
 import UserProfile from './components/Pages/UserProfile';
 import Layout from './components/Layout';
@@ -39,7 +40,7 @@ function App() {
           <Route path="/register" element={ <UserRegistrationPage />} />
           <Route path="/profile" element={<PrivateRoute element={ <UserProfile /> } />} />
           <Route path="/schedule" element={ <PrivateRoute element={ <ScheduleChildSitterPage /> } />} />
-          <Route path="/admin" element={ <PrivateRoute element={ <AdminDashboard /> } />} />
+          <Route path="/admin" element={ <AdminRoute element={ <AdminDashboard /> } />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>

@@ -11,8 +11,11 @@ export function useAllReservationsRQ({
   pageSize = 25 
 } = {}) {
   const queryClient = useQueryClient();
-  const { dbService } = useAuth();
+  const { dbService, currentUser } = useAuth();
   const [totalCount, setTotalCount] = useState(0);
+  
+  // Add admin role validation
+  const isAdmin = currentUser?.Role === 'admin';
   
   const queryKey = ['adminAllReservations', page, pageSize];
 
@@ -33,10 +36,14 @@ export function useAllReservationsRQ({
   const countQueryResult = useQuery({
     queryKey: ['adminAllReservationsCount'],
     queryFn: async () => {
+      // Validate admin role before fetching
+      if (!isAdmin) {
+        throw new Error("Unauthorized access. Admin role required.");
+      }
       const snapshot = await getCountFromServer(countQuery);
       return snapshot.data().count;
     },
-    enabled,
+    enabled: enabled && isAdmin, // Only enable for admin users
     onError: (error) => {
       console.error("Error fetching reservations count:", error);
     },
@@ -46,6 +53,11 @@ export function useAllReservationsRQ({
   const dataQueryResult = useQuery({
     queryKey,
     queryFn: async () => {
+      // Validate admin role before fetching
+      if (!isAdmin) {
+        throw new Error("Unauthorized access. Admin role required.");
+      }
+      
       // First, get all document IDs (lightweight)
       const allDocsSnapshot = await getDocs(baseQuery);
       const allDocIds = allDocsSnapshot.docs.map(doc => doc.id);
@@ -66,7 +78,7 @@ export function useAllReservationsRQ({
       
       return pageDocs;
     },
-    enabled,
+    enabled: enabled && isAdmin, // Only enable for admin users
     staleTime: 15000, // 15 seconds between refetches
     onError: (error) => {
       console.error("Error fetching /Reservations data:", error);

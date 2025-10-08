@@ -1,4 +1,6 @@
 import React, { useState, useCallback } from 'react';
+import { useAuth } from '../AuthProvider';
+import { Navigate } from 'react-router-dom';
 import DashHome from '../Dashboard/DashHome';
 import DashNav from '../Dashboard/DashNav';
 import AdminUsers from '../Dashboard/AdminUsers';
@@ -7,8 +9,11 @@ import AdminChildren from '../Dashboard/AdminChildren';
 import AdminReservations from '../Dashboard/AdminReservations';
 
 const AdminDashboard = () => {
+  const { currentUser } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   
+  // Single admin role validation for the entire dashboard
+  const isAdmin = currentUser?.Role === 'admin';
 
   // Memoize renderView to prevent child components from unmounting/remounting
   const renderView = useCallback(() => {
@@ -26,6 +31,11 @@ const AdminDashboard = () => {
         return <DashHome />;
     }
   }, [currentView]);
+
+  // Redirect non-admin users
+  if (!isAdmin) {
+    return <Navigate to="/profile" replace />;
+  }
 
   return (
     <>

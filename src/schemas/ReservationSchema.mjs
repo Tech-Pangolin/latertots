@@ -44,6 +44,21 @@ const ReservationSchema = Joi.object({
   Child: DocumentReferenceOrCompatible.required(),
   User: DocumentReferenceOrCompatible.required(),
   groupActivity: Joi.boolean().default(false).optional(),
+  dropOffPickUp: Joi.object({
+    pickedUpAt: Joi.object().instance(Timestamp).optional(),
+    actualStartTime: Joi.object().instance(Timestamp).optional(),
+    actualEndTime: Joi.object().instance(Timestamp).optional(),
+    finalCheckoutSessionId: Joi.string().optional(),
+    finalCheckoutUrl: Joi.string().optional(),
+    finalAmount: Joi.number().optional(),
+    calculatedAmount: Joi.number().optional(),
+    overrideReason: Joi.string().optional(),
+    overrideAppliedAt: Joi.object().instance(Timestamp).optional(),
+    overrideAppliedBy: Joi.string().optional(),
+    amountPaid: Joi.number().optional(),
+    amountRemaining: Joi.number().optional(),
+    selectedGroupActivityId: Joi.string().optional()
+  }).optional()
 })
   .prefs({ abortEarly: false });
 

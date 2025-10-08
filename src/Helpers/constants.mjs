@@ -36,17 +36,15 @@ export const ROLES = Object.freeze({
 export const RESERVATION_STATUS = Object.freeze({
   PENDING: 'pending',         // Represents a reservation that is awaiting confirmation by the admin
   CONFIRMED: 'confirmed',     // Represents time between reservation confirmation and service rendered
+  DROPPED_OFF: 'dropped-off', // Child has arrived for service
+  PICKED_UP: 'picked-up',     // Child has left, service completed
   CANCELLED: 'cancelled',     // Represents a reservation that does not require payment
   NO_SHOW: 'no-show',         // Represents a reservation that was not attended. Fees may apply.
 
   // The following statuses are used for billing purposes
 
   PROCESSING: 'processing',   // Represents time between rendered service and invoice creation
-  UNPAID: 'unpaid',
   PAID: 'paid',
-  LATE: 'late',
-  REFUNDED: 'refunded',       // Payment was received but later refunded
-  COMPED: 'comped',           // Payment was waived, no fees apply
 })
 
 export const DEPOSIT_TYPES = Object.freeze({
@@ -98,18 +96,6 @@ export const LINE_ITEM_TAGS = Object.freeze({
   LATE_FEE: 'LATE_FEE'
 })
 
-export const BILLING_ADJUSTMENT_TYPES = Object.freeze({
-  OVERRIDE: 'override',
-  REFUND: 'refund',
-  DISCOUNT: 'discount',
-  CREDIT: 'credit'
-})
-
-export const BILLING_ADJUSTMENT_STATUS = Object.freeze({
-  ACTIVE: 'active',
-  REVERSED: 'reversed'
-})
-
 export const DISCOUNT_TYPES = Object.freeze({
   PERCENTAGE: 'percentage',
   FIXED: 'fixed'
@@ -146,6 +132,7 @@ export const ERROR_MESSAGES = Object.freeze({
   SYSTEM_VALIDATION_FAILURE: 'A problem was detected with your submission.',
   SYSTEM_PROCESSING_ERROR: 'Something went wrong processing your request.',
   SYSTEM_SUBMISSION_ERROR: 'An error occurred while processing your submission.',
+  UNAUTHORIZED_ACCESS: 'Unauthorized access.',
 })
 
 export const SERVICE_PRICE_LOOKUP_UIDS = Object.freeze({
@@ -167,6 +154,13 @@ export const SERVICE_PRICE_LOOKUP_UIDS = Object.freeze({
   TOTIVITY_TOT_AND_ME_FLAT: 'prod_TAbCsynUPM6BBP',
 })
 
+export const PAYMENT_PRICING = Object.freeze({
+  MINIMUM_HOURS: 2,
+  LATE_FEE_THRESHOLD_HOURS: 4,
+  MAX_BILLABLE_HOURS: 4,
+  GROUP_ACTIVITY_FEE_CENTS: 0
+})
+
 // CommonJS compatibility for Cloud Functions (only in Node.js environment)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -182,14 +176,13 @@ if (typeof module !== 'undefined' && module.exports) {
     NOTIFICATION_TYPES,
     INVOICE_STATUS,
     LINE_ITEM_TAGS,
-    BILLING_ADJUSTMENT_TYPES,
-    BILLING_ADJUSTMENT_STATUS,
     DISCOUNT_TYPES,
     REFUND_CATEGORIES,
     CREDIT_SOURCES,
     ALERT_TYPES,
     IMAGE_UPLOAD,
     ERROR_MESSAGES,
-    SERVICE_PRICE_LOOKUP_UIDS
+    SERVICE_PRICE_LOOKUP_UIDS,
+    PAYMENT_PRICING
   };
 } 

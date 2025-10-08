@@ -223,7 +223,7 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
       await updateUserPaymentMethods(appUserId, session.payment_method);
     }
 
-    logger.info('✅ [handleCheckoutSessionExpired] Checkout session processing completed:', {
+    logger.info('✅ [handleCheckoutSessionCompleted] Checkout session processing completed:', {
       sessionId: session.id,
       userId,
       reservationCount: reservations.length,
@@ -235,7 +235,7 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
     return { processed: true, userId, reservationCount: reservations.length, status: 'checkout_completed' };
 
   } catch (error) {
-    logger.error('❌ [handleCheckoutSessionExpired] Failed to process checkout session completion:', {
+    logger.error('❌ [handleCheckoutSessionCompleted] Failed to process checkout session completion:', {
       sessionId: session.id,
       error: error.message
     });
