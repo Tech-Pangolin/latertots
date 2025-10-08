@@ -197,8 +197,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
     reservationId: null,
     reservationData: null,
     userData: null,
-    calculatedAmount: 0,
-    actualHours: 0
+    costBreakdown: null
   });
 
   const handleDropOff = (reservation) => {
@@ -221,30 +220,17 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
 
   const handlePickUp = async (reservationId) => {
     try {
-      console.log('=== PICKUP DEBUGGING START ===');
-      console.log('Reservation ID:', reservationId);
-      
       const reservationData = await dbService.getReservationData(reservationId);
-      console.log('Reservation data:', reservationData);
-      console.log('Actual start time:', reservationData.dropOffPickUp?.actualStartTime);
-      console.log('Current time:', new Date().toISOString());
-      
       const userData = await dbService.getUserData(reservationData.userId);
-      console.log('User data:', userData);
       
-      const { finalAmount, actualHours } = await dbService.calculateFinalCheckoutAmount(reservationData);
-      console.log('Calculated final amount:', finalAmount);
-      console.log('Calculated actual hours:', actualHours);
-      console.log('Final amount in dollars:', (finalAmount / 100).toFixed(2));
-      console.log('=== PICKUP DEBUGGING END ===');
+      const costBreakdown = await dbService.calculateFinalCheckoutAmount(reservationData);
 
       setPickUpModal({
         show: true,
         reservationId,
         reservationData,
         userData,
-        calculatedAmount: finalAmount,
-        actualHours
+        costBreakdown
       });
     } catch (error) {
       console.error('Error preparing pick-up:', error);
@@ -273,8 +259,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
         reservationId: null,
         reservationData: null,
         userData: null,
-        calculatedAmount: 0,
-        actualHours: 0
+        costBreakdown: null
       });
     } catch (error) {
       console.error('Error picking up child:', error);
@@ -491,13 +476,11 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
           reservationId: null,
           reservationData: null,
           userData: null,
-          calculatedAmount: 0,
-          actualHours: 0
+          costBreakdown: null
         })}
         reservationData={pickUpModal.reservationData}
         userData={pickUpModal.userData}
-        calculatedAmount={pickUpModal.calculatedAmount}
-        actualHours={pickUpModal.actualHours}
+        costBreakdown={pickUpModal.costBreakdown}
         onConfirmPickUp={handleConfirmPickUp}
       />
     </>

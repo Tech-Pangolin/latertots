@@ -4,7 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
-import { IMAGE_UPLOAD } from "./constants";
+import { IMAGE_UPLOAD, SERVICE_PRICE_LOOKUP_UIDS, PAYMENT_PRICING } from "./constants";
 import ReservationSchema from "../schemas/ReservationSchema.mjs";
 
 
@@ -655,9 +655,12 @@ export class FirebaseDbService {
   /**
    * Pick up a child and calculate final payment
    * @param {string} reservationId - The ID of the reservation document to update
+   * @param {number} finalAmount - The final amount in cents (optional, will calculate if not provided)
+   * @param {number} calculatedAmount - The calculated amount in cents (for override tracking)
+   * @param {string} overrideReason - Reason for amount override (optional)
    * @returns {Promise<Object>} - A promise that resolves with checkout session or no payment required
    */
-  pickUpChild = async (reservationId) => {
+  pickUpChild = async (reservationId, finalAmount = null, calculatedAmount = null, overrideReason = null) => {
     this.validateAuth('admin');
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
@@ -665,22 +668,37 @@ export class FirebaseDbService {
       const reservationData = reservationDoc.data();
       const now = Timestamp.now();
       
-      // Calculate final amount based on actual time and group activity overlap
-      const { finalAmount, groupActivityOverlapCharge } = await this.calculateFinalCheckoutAmount(reservationData);
+      // Use provided finalAmount or calculate it
+      let amountToUse = finalAmount;
+      if (amountToUse === null) {
+        const calculationResult = await this.calculateFinalCheckoutAmount(reservationData);
+        amountToUse = calculationResult.finalAmount;
+      }
       
-      // Update reservation with pick-up time
-      await updateDoc(reservationRef, {
+      // Prepare update fields
+      const updateFields = {
         status: 'picked-up',
         'extendedProps.status': 'picked-up',
         'dropOffPickUp.pickedUpAt': now,
         'dropOffPickUp.actualEndTime': now,
-        'dropOffPickUp.finalAmount': finalAmount,
+        'dropOffPickUp.finalAmount': amountToUse,
         updatedAt: now
-      });
+      };
+      
+      // Add override information if provided
+      if (overrideReason) {
+        updateFields['dropOffPickUp.overrideReason'] = overrideReason;
+        updateFields['dropOffPickUp.calculatedAmount'] = calculatedAmount;
+        updateFields['dropOffPickUp.overrideAppliedAt'] = now;
+        updateFields['dropOffPickUp.overrideAppliedBy'] = this.userContext.uid;
+      }
+      
+      // Update reservation with pick-up time
+      await updateDoc(reservationRef, updateFields);
       
       // Create checkout session for remainder payment
-      if (finalAmount > 0) {
-        const checkoutSession = await this.createFinalCheckoutSession(reservationId, reservationData, finalAmount);
+      if (amountToUse > 0) {
+        const checkoutSession = await this.createFinalCheckoutSession(reservationId, reservationData, amountToUse);
         return checkoutSession;
       }
       
@@ -705,31 +723,64 @@ export class FirebaseDbService {
     const now = Timestamp.now();
     const actualHours = (now.toMillis() - actualStart.toMillis()) / (1000 * 60 * 60);
     
-    // 2. Get service price rates
+    // 2. Get service price rates using constants
     const servicePricesQuery = query(collection(db, 'ServicePrices'));
     const pricesSnapshot = await getDocs(servicePricesQuery);
     const prices = {};
     pricesSnapshot.forEach(doc => prices[doc.data().stripeId] = doc.data());
     
-    const hourlyRate = prices['prod_TAb5YS29FcZ4N4']?.pricePerUnitInCents || 2500;
+    const hourlyRate = prices[SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_FIRST_CHILD_HOURLY]?.pricePerUnitInCents || 2500;
+    const lateFeeRate = prices[SERVICE_PRICE_LOOKUP_UIDS.LATE_FEE_HOURLY]?.pricePerUnitInCents || 2500;
     
-    // 3. Calculate base cost for actual hours
-    let totalCost = actualHours * hourlyRate;
+    // 3. Calculate base cost (up to 4 hours using constant)
+    const baseHours = Math.min(actualHours, PAYMENT_PRICING.LATE_FEE_THRESHOLD_HOURS);
+    const baseCost = baseHours * hourlyRate;
     
-    // 4. Calculate group activity overlap charge if applicable
-    let groupActivityOverlapCharge = 0;
+    // 4. Calculate late fee (hours over threshold using constant)
+    const overtimeHours = Math.max(0, actualHours - PAYMENT_PRICING.LATE_FEE_THRESHOLD_HOURS);
+    const lateFeeCost = overtimeHours * lateFeeRate;
+    
+    // 5. Calculate group activity cost if applicable
+    let groupActivityCost = 0;
+    let groupActivityHours = 0;
     if (reservationData.groupActivity) {
-      // Calculate overlap with group activity time (needs helper function to check actual schedule)
-      const overlapHours = await this.calculateGroupActivityOverlap(actualStart, now);
-      groupActivityOverlapCharge = overlapHours * hourlyRate; // Additional charge for overlap
-      totalCost += groupActivityOverlapCharge;
+      const groupActivityResult = await this.calculateGroupActivityCost(actualStart, now);
+      groupActivityCost = groupActivityResult.cost;
+      groupActivityHours = groupActivityResult.hours;
     }
     
-    // 5. Subtract amount already paid (minimum or full deposit)
+    // 6. Calculate totals
+    const totalServiceCost = baseCost + lateFeeCost + groupActivityCost;
     const amountPaid = this.getAmountPaidFromStripePayments(reservationData.stripePayments);
-    const finalAmount = Math.max(0, totalCost - amountPaid);
+    const finalAmount = Math.max(0, totalServiceCost - amountPaid);
     
-    return { finalAmount, groupActivityOverlapCharge, actualHours };
+    return {
+      finalAmount,
+      actualHours,
+      costBreakdown: {
+        baseService: {
+          hours: baseHours,
+          rate: hourlyRate,
+          subtotal: baseCost,
+          description: 'Base child care service'
+        },
+        groupActivity: groupActivityHours > 0 ? {
+          hours: groupActivityHours,
+          rate: hourlyRate,
+          subtotal: groupActivityCost,
+          description: 'Group activity participation'
+        } : null,
+        lateFee: overtimeHours > 0 ? {
+          hours: overtimeHours,
+          rate: lateFeeRate,
+          subtotal: lateFeeCost,
+          description: `Late fee (over ${PAYMENT_PRICING.LATE_FEE_THRESHOLD_HOURS}-hour limit)`
+        } : null,
+        totalServiceCost,
+        amountPaid,
+        amountDue: finalAmount
+      }
+    };
   };
 
   /**
@@ -776,6 +827,29 @@ export class FirebaseDbService {
       logger.error('Error creating final checkout session:', error);
       throw error;
     }
+  };
+
+  /**
+   * Calculate group activity cost with proper rate lookup
+   * @param {Timestamp} actualStart - Actual start time
+   * @param {Timestamp} actualEnd - Actual end time
+   * @returns {Promise<Object>} - Cost and hours for group activity
+   */
+  calculateGroupActivityCost = async (actualStart, actualEnd) => {
+    // TODO: Implement actual group activity schedule checking
+    // For now, return placeholder that uses proper constants
+    const servicePricesQuery = query(collection(db, 'ServicePrices'));
+    const pricesSnapshot = await getDocs(servicePricesQuery);
+    const prices = {};
+    pricesSnapshot.forEach(doc => prices[doc.data().stripeId] = doc.data());
+    
+    const hourlyRate = prices[SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_FIRST_CHILD_HOURLY]?.pricePerUnitInCents || 2500;
+    
+    // Placeholder calculation - would need actual group activity schedule
+    const overlapHours = 0; // This would be calculated based on actual schedule
+    const cost = overlapHours * hourlyRate;
+    
+    return { cost, hours: overlapHours };
   };
 
   /**

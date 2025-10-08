@@ -21,8 +21,7 @@ const PickUpConfirmationModal = ({
   onHide,
   reservationData,
   userData,
-  calculatedAmount,
-  actualHours,
+  costBreakdown,
   onConfirmPickUp
 }) => {
   const [isOverriding, setIsOverriding] = useState(false);
@@ -32,13 +31,13 @@ const PickUpConfirmationModal = ({
   const [error, setError] = useState(null);
   
   useEffect(() => {
-    if (show && calculatedAmount !== undefined) {
-      setFinalAmount(calculatedAmount);
+    if (show && costBreakdown) {
+      setFinalAmount(costBreakdown.finalAmount);
       setIsOverriding(false);
       setOverrideReason('');
       setError(null);
     }
-  }, [show, calculatedAmount]);
+  }, [show, costBreakdown]);
   
   const handleAmountChange = (e) => {
     const dollars = parseFloat(e.target.value) || 0;
@@ -57,7 +56,7 @@ const PickUpConfirmationModal = ({
     try {
       await onConfirmPickUp(
         finalAmount,
-        calculatedAmount,
+        costBreakdown?.finalAmount || 0,
         isOverriding ? overrideReason : null
       );
       onHide();
@@ -68,8 +67,42 @@ const PickUpConfirmationModal = ({
     }
   };
   
-  const amountDifference = finalAmount - calculatedAmount;
-  const isChanged = finalAmount !== calculatedAmount;
+  const amountDifference = finalAmount - (costBreakdown?.finalAmount || 0);
+  const isChanged = finalAmount !== (costBreakdown?.finalAmount || 0);
+  
+  // LineItem component for consistent display
+  const LineItem = ({ label, hours, rate, amount, description, isSubtotal, isLateFee, isCredit, isTotal }) => (
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'flex-start',
+      py: isSubtotal || isTotal ? 1.5 : 1,
+      borderTop: isSubtotal ? '1px solid #e0e0e0' : 'none'
+    }}>
+      <Box sx={{ flex: 1 }}>
+        <Typography variant={isTotal ? 'h6' : 'body1'} sx={{ fontWeight: isTotal ? 'bold' : 'normal' }}>
+          {label}
+        </Typography>
+        {description && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            {description}
+          </Typography>
+        )}
+        {hours !== undefined && rate !== undefined && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            {hours.toFixed(1)} hours × ${(rate / 100).toFixed(2)}/hour
+          </Typography>
+        )}
+      </Box>
+      <Typography 
+        variant={isTotal ? 'h5' : 'body1'}
+        color={isLateFee ? 'warning.main' : isCredit ? 'success.main' : isTotal ? 'primary.main' : 'text.primary'}
+        sx={{ fontWeight: isTotal ? 'bold' : 'normal' }}
+      >
+        {isCredit ? '-' : ''}${(Math.abs(amount) / 100).toFixed(2)}
+      </Typography>
+    </Box>
+  );
   
   return (
     <Dialog open={show} onClose={onHide} maxWidth="lg" fullWidth>
@@ -91,7 +124,7 @@ const PickUpConfirmationModal = ({
               </Typography>
             </Grid>
             <Grid item xs={6}>
-              <Typography><strong>Duration:</strong> {actualHours?.toFixed(1)} hours</Typography>
+              <Typography><strong>Duration:</strong> {costBreakdown?.actualHours?.toFixed(1)} hours</Typography>
             </Grid>
           </Grid>
         </Box>
@@ -106,7 +139,7 @@ const PickUpConfirmationModal = ({
               onClick={() => {
                 setIsOverriding(!isOverriding);
                 if (isOverriding) {
-                  setFinalAmount(calculatedAmount);
+                  setFinalAmount(costBreakdown?.finalAmount || 0);
                   setOverrideReason('');
                 }
               }}
@@ -121,37 +154,60 @@ const PickUpConfirmationModal = ({
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="h6" gutterBottom>Service Cost Breakdown</Typography>
                   
-                  {/* Total Service Cost */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body1">
-                      {actualHours?.toFixed(1)} hours at $25/hour
-                      {reservationData?.groupActivity && ' (includes group activity)'}
-                    </Typography>
-                    <Typography variant="h6" color="primary">
-                      ${((actualHours * 2500) / 100).toFixed(2)}
-                    </Typography>
-                  </Box>
+                  {/* Base Service */}
+                  {costBreakdown?.costBreakdown?.baseService && (
+                    <LineItem
+                      label="Base Service"
+                      hours={costBreakdown.costBreakdown.baseService.hours}
+                      rate={costBreakdown.costBreakdown.baseService.rate}
+                      amount={costBreakdown.costBreakdown.baseService.subtotal}
+                      description={costBreakdown.costBreakdown.baseService.description}
+                    />
+                  )}
                   
-                  {/* Amount Already Paid */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      Amount already paid
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                      -${((actualHours * 2500 - calculatedAmount) / 100).toFixed(2)}
-                    </Typography>
-                  </Box>
+                  {/* Group Activity */}
+                  {costBreakdown?.costBreakdown?.groupActivity && (
+                    <LineItem
+                      label="Group Activity"
+                      hours={costBreakdown.costBreakdown.groupActivity.hours}
+                      rate={costBreakdown.costBreakdown.groupActivity.rate}
+                      amount={costBreakdown.costBreakdown.groupActivity.subtotal}
+                      description={costBreakdown.costBreakdown.groupActivity.description}
+                    />
+                  )}
                   
-                  {/* Divider */}
-                  <Box sx={{ borderTop: '1px solid #e0e0e0', my: 1 }} />
+                  {/* Late Fee */}
+                  {costBreakdown?.costBreakdown?.lateFee && (
+                    <LineItem
+                      label="Late Fee"
+                      hours={costBreakdown.costBreakdown.lateFee.hours}
+                      rate={costBreakdown.costBreakdown.lateFee.rate}
+                      amount={costBreakdown.costBreakdown.lateFee.subtotal}
+                      description={costBreakdown.costBreakdown.lateFee.description}
+                      isLateFee={true}
+                    />
+                  )}
+                  
+                  {/* Subtotal */}
+                  <LineItem
+                    label="Total Service Cost"
+                    amount={costBreakdown?.costBreakdown?.totalServiceCost || 0}
+                    isSubtotal={true}
+                  />
+                  
+                  {/* Amount Paid */}
+                  <LineItem
+                    label="Amount Already Paid"
+                    amount={-costBreakdown?.costBreakdown?.amountPaid || 0}
+                    isCredit={true}
+                  />
                   
                   {/* Final Amount Due */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6"><strong>Amount Due</strong></Typography>
-                    <Typography variant="h4" color="primary">
-                      ${(calculatedAmount / 100).toFixed(2)}
-                    </Typography>
-                  </Box>
+                  <LineItem
+                    label="Amount Due"
+                    amount={costBreakdown?.costBreakdown?.amountDue || 0}
+                    isTotal={true}
+                  />
                 </Box>
               </CardContent>
             </Card>
