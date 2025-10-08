@@ -670,9 +670,15 @@ export class FirebaseDbService {
       
       // Use provided finalAmount or calculate it with selected activity
       let amountToUse = finalAmount;
+      let costBreakdown = null;
+      
       if (amountToUse === null) {
         const calculationResult = await this.calculateFinalCheckoutAmount(reservationData, selectedActivityId);
         amountToUse = calculationResult.finalAmount;
+        costBreakdown = calculationResult;
+      } else {
+        // Even with override, calculate breakdown for description
+        costBreakdown = await this.calculateFinalCheckoutAmount(reservationData, selectedActivityId);
       }
       
       // Prepare update fields
@@ -703,7 +709,13 @@ export class FirebaseDbService {
       
       // Create checkout session for remainder payment
       if (amountToUse > 0) {
-        const checkoutSession = await this.createFinalCheckoutSession(reservationId, reservationData, amountToUse);
+        const checkoutSession = await this.createFinalCheckoutSession(
+          reservationId, 
+          reservationData, 
+          amountToUse,
+          costBreakdown,
+          overrideReason // Pass override reason if present
+        );
         return checkoutSession;
       }
       
@@ -812,10 +824,60 @@ export class FirebaseDbService {
    * @param {string} reservationId - The reservation ID
    * @param {Object} reservationData - The reservation data
    * @param {number} finalAmount - The final amount in cents
+   * @param {Object} costBreakdown - The detailed cost breakdown
+   * @param {string} overrideReason - Reason for amount override (optional)
    * @returns {Promise<Object>} - Checkout session result
    */
-  createFinalCheckoutSession = async (reservationId, reservationData, finalAmount) => {
+  createFinalCheckoutSession = async (reservationId, reservationData, finalAmount, costBreakdown = null, overrideReason = null) => {
     try {
+      let serviceDescription = '';
+      
+      if (costBreakdown) {
+        const breakdown = costBreakdown.costBreakdown;
+        const services = [];
+        
+        // Base service line
+        if (breakdown.baseService) {
+          services.push(
+            `${breakdown.baseService.hours.toFixed(1)}h base care ($${(breakdown.baseService.rate / 100).toFixed(2)}/hr) = $${(breakdown.baseService.subtotal / 100).toFixed(2)}`
+          );
+        }
+        
+        // Group activity line (only include if there's an actual charge)
+        if (breakdown.groupActivity && breakdown.groupActivity.subtotal > 0) {
+          const activityDesc = breakdown.groupActivity.isFlat ? 
+            `flat rate ${breakdown.groupActivity.description} = $${(breakdown.groupActivity.subtotal / 100).toFixed(2)}` : 
+            `${breakdown.groupActivity.hours.toFixed(1)}h ${breakdown.groupActivity.description} ($${(breakdown.groupActivity.rate / 100).toFixed(2)}/hr) = $${(breakdown.groupActivity.subtotal / 100).toFixed(2)}`;
+          services.push(activityDesc);
+        }
+        
+        // Late fee line
+        if (breakdown.lateFee) {
+          services.push(
+            `${breakdown.lateFee.hours.toFixed(1)}h late fee ($${(breakdown.lateFee.rate / 100).toFixed(2)}/hr) = $${(breakdown.lateFee.subtotal / 100).toFixed(2)}`
+          );
+        }
+        
+        serviceDescription = services.join(', ');
+        
+        // Add summary section
+        serviceDescription += ` | Total Service Cost: $${(breakdown.totalServiceCost / 100).toFixed(2)}`;
+        
+        if (breakdown.amountPaid > 0) {
+          serviceDescription += ` | Previously paid: $${(breakdown.amountPaid / 100).toFixed(2)}`;
+        }
+        
+        serviceDescription += ` | Amount Due: $${(breakdown.amountDue / 100).toFixed(2)}`;
+        
+        // Add override information if present
+        if (overrideReason) {
+          serviceDescription += ` | Note: Amount manually adjusted by staff - Reason: ${overrideReason}`;
+        }
+      } else {
+        // Fallback
+        serviceDescription = `Full payment - ${(finalAmount / 2500).toFixed(1)} hours`;
+      }
+
       // Call existing createCheckoutSession cloud function
       const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/latertots-a6694/us-central1/createCheckoutSession`, {
         method: 'POST',
@@ -826,7 +888,8 @@ export class FirebaseDbService {
             childName: reservationData.title,
             durationHours: finalAmount / 2500, // Convert cents back to hours for display
             hourlyRateCents: 2500,
-            groupActivity: false
+            groupActivity: false,
+            serviceDescription: serviceDescription
           }],
           paymentType: 'full',
           latertotsUserId: reservationData.userId,
