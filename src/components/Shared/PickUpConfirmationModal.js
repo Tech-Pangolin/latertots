@@ -37,10 +37,12 @@ const PickUpConfirmationModal = ({
   const [error, setError] = useState(null);
   const [selectedGroupActivity, setSelectedGroupActivity] = useState(null);
   const [isRecalculating, setIsRecalculating] = useState(false);
+  const [currentCostBreakdown, setCurrentCostBreakdown] = useState(null);
   
   useEffect(() => {
     if (show && costBreakdown) {
       setFinalAmount(costBreakdown.finalAmount);
+      setCurrentCostBreakdown(costBreakdown); // Initialize with original data
       setIsOverriding(false);
       setOverrideReason('');
       setError(null);
@@ -58,6 +60,7 @@ const PickUpConfirmationModal = ({
         activityId || null
       );
       setFinalAmount(newCostBreakdown.finalAmount);
+      setCurrentCostBreakdown(newCostBreakdown); // Store the recalculated data
     } catch (error) {
       console.error('Error recalculating with activity:', error);
       setError('Failed to recalculate cost with selected activity');
@@ -95,8 +98,11 @@ const PickUpConfirmationModal = ({
     }
   };
   
-  const amountDifference = finalAmount - (costBreakdown?.finalAmount || 0);
-  const isChanged = finalAmount !== (costBreakdown?.finalAmount || 0);
+  // Use current cost breakdown if available, otherwise fall back to original prop
+  const displayCostBreakdown = currentCostBreakdown || costBreakdown;
+  
+  const amountDifference = finalAmount - (displayCostBreakdown?.finalAmount || 0);
+  const isChanged = finalAmount !== (displayCostBreakdown?.finalAmount || 0);
   
   // LineItem component for consistent display
   const LineItem = ({ label, hours, rate, amount, description, isSubtotal, isLateFee, isCredit, isTotal, isFlat }) => (
@@ -182,7 +188,7 @@ const PickUpConfirmationModal = ({
           </Box>
           
           {/* Group Activity Selection */}
-          {costBreakdown?.costBreakdown?.availableActivities?.length > 0 && !isOverriding && (
+          {reservationData?.groupActivity && !isOverriding && (
             <Card sx={{ mb: 2, backgroundColor: '#fff3e0', border: '1px solid #ff9800' }}>
               <CardContent>
                 <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
@@ -198,7 +204,7 @@ const PickUpConfirmationModal = ({
                     <MenuItem value="">
                       <em>No group activity</em>
                     </MenuItem>
-                    {costBreakdown.costBreakdown.availableActivities.map((activity) => (
+                    {displayCostBreakdown.costBreakdown.availableActivities?.map((activity) => (
                       <MenuItem key={activity.stripeId} value={activity.stripeId}>
                         {activity.name} - {activity.daysOfWeek}
                         {activity.hasTimeData && ` (${activity.startTime} - ${activity.endTime})`}
@@ -206,13 +212,23 @@ const PickUpConfirmationModal = ({
                         {' - '}${(activity.pricePerUnitInCents / 100).toFixed(2)}
                         {activity.isFlat ? ' (flat)' : '/hr'}
                       </MenuItem>
-                    ))}
+                    )) || (
+                      <MenuItem value="no-activities" disabled>
+                        <em>No activities available</em>
+                      </MenuItem>
+                    )}
                   </Select>
                 </FormControl>
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                  Select the tot-tivity or event this child participated in. 
-                  {costBreakdown.costBreakdown.availableActivities.some(a => !a.hasTimeData) && 
-                    ' Note: Activities without configured times will require manual override.'}
+                  {displayCostBreakdown.costBreakdown.availableActivities?.length > 0 ? (
+                    <>
+                      Select the tot-tivity or event this child participated in. 
+                      {displayCostBreakdown.costBreakdown.availableActivities.some(a => !a.hasTimeData) && 
+                        ' Note: Activities without configured times will require manual override.'}
+                    </>
+                  ) : (
+                    'No activities are currently available. You can use the override amount feature to manually add group activity charges.'
+                  )}
                 </Typography>
                 {isRecalculating && (
                   <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
@@ -231,36 +247,36 @@ const PickUpConfirmationModal = ({
                   <Typography variant="h6" gutterBottom>Service Cost Breakdown</Typography>
                   
                   {/* Base Service */}
-                  {costBreakdown?.costBreakdown?.baseService && (
+                  {displayCostBreakdown?.costBreakdown?.baseService && (
                     <LineItem
                       label="Base Service"
-                      hours={costBreakdown.costBreakdown.baseService.hours}
-                      rate={costBreakdown.costBreakdown.baseService.rate}
-                      amount={costBreakdown.costBreakdown.baseService.subtotal}
-                      description={costBreakdown.costBreakdown.baseService.description}
+                      hours={displayCostBreakdown.costBreakdown.baseService.hours}
+                      rate={displayCostBreakdown.costBreakdown.baseService.rate}
+                      amount={displayCostBreakdown.costBreakdown.baseService.subtotal}
+                      description={displayCostBreakdown.costBreakdown.baseService.description}
                     />
                   )}
                   
                   {/* Group Activity */}
-                  {costBreakdown?.costBreakdown?.groupActivity && (
+                  {displayCostBreakdown?.costBreakdown?.groupActivity && (
                     <LineItem
                       label="Group Activity"
-                      hours={costBreakdown.costBreakdown.groupActivity.hours}
-                      rate={costBreakdown.costBreakdown.groupActivity.rate}
-                      amount={costBreakdown.costBreakdown.groupActivity.subtotal}
-                      description={costBreakdown.costBreakdown.groupActivity.description}
-                      isFlat={costBreakdown.costBreakdown.groupActivity.isFlat}
+                      hours={displayCostBreakdown.costBreakdown.groupActivity.hours}
+                      rate={displayCostBreakdown.costBreakdown.groupActivity.rate}
+                      amount={displayCostBreakdown.costBreakdown.groupActivity.subtotal}
+                      description={displayCostBreakdown.costBreakdown.groupActivity.description}
+                      isFlat={displayCostBreakdown.costBreakdown.groupActivity.isFlat}
                     />
                   )}
                   
                   {/* Late Fee */}
-                  {costBreakdown?.costBreakdown?.lateFee && (
+                  {displayCostBreakdown?.costBreakdown?.lateFee && (
                     <LineItem
                       label="Late Fee"
-                      hours={costBreakdown.costBreakdown.lateFee.hours}
-                      rate={costBreakdown.costBreakdown.lateFee.rate}
-                      amount={costBreakdown.costBreakdown.lateFee.subtotal}
-                      description={costBreakdown.costBreakdown.lateFee.description}
+                      hours={displayCostBreakdown.costBreakdown.lateFee.hours}
+                      rate={displayCostBreakdown.costBreakdown.lateFee.rate}
+                      amount={displayCostBreakdown.costBreakdown.lateFee.subtotal}
+                      description={displayCostBreakdown.costBreakdown.lateFee.description}
                       isLateFee={true}
                     />
                   )}
@@ -268,21 +284,21 @@ const PickUpConfirmationModal = ({
                   {/* Subtotal */}
                   <LineItem
                     label="Total Service Cost"
-                    amount={costBreakdown?.costBreakdown?.totalServiceCost || 0}
+                    amount={displayCostBreakdown?.costBreakdown?.totalServiceCost || 0}
                     isSubtotal={true}
                   />
                   
                   {/* Amount Paid */}
                   <LineItem
                     label="Amount Already Paid"
-                    amount={-costBreakdown?.costBreakdown?.amountPaid || 0}
+                    amount={-displayCostBreakdown?.costBreakdown?.amountPaid || 0}
                     isCredit={true}
                   />
                   
                   {/* Final Amount Due */}
                   <LineItem
                     label="Amount Due"
-                    amount={costBreakdown?.costBreakdown?.amountDue || 0}
+                    amount={displayCostBreakdown?.costBreakdown?.amountDue || 0}
                     isTotal={true}
                   />
                 </Box>

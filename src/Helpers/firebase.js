@@ -786,12 +786,12 @@ export class FirebaseDbService {
           subtotal: baseCost,
           description: 'Base child care service'
         },
-        groupActivity: groupActivityHours > 0 && activityInfo ? {
+        groupActivity: reservationData.groupActivity ? {
           hours: groupActivityHours,
-          rate: activityInfo.rate,
+          rate: activityInfo?.rate || 0,
           subtotal: groupActivityCost,
-          description: `${activityInfo.name}${activityInfo.isFlat ? ' (flat rate)' : ''}`,
-          isFlat: activityInfo.isFlat
+          description: activityInfo ? `${activityInfo.name}${activityInfo.isFlat ? ' (flat rate)' : ''}` : 'No activity selected',
+          isFlat: activityInfo?.isFlat || false
         } : null,
         lateFee: overtimeHours > 0 ? {
           hours: overtimeHours,
@@ -867,9 +867,9 @@ export class FirebaseDbService {
     pricesSnapshot.forEach(doc => prices[doc.data().stripeId] = doc.data());
     
     // Filter for tot-tivities only (those with daysOfWeek metadata)
-    const totTivities = Object.values(SERVICE_PRICE_LOOKUP_UIDS)
-      .filter(uid => uid.startsWith('TOTIVITY_'))
-      .map(uid => prices[uid])
+    const totTivities = Object.entries(SERVICE_PRICE_LOOKUP_UIDS)
+      .filter(([key, uid]) => key.startsWith('TOTIVITY_'))
+      .map(([key, uid]) => prices[uid])
       .filter(price => price && price.metadata?.daysOfWeek);
     
     // If no activity selected, return available options

@@ -100,6 +100,7 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
       end: luxonDateTimeFromFirebaseTimestamp(res.end).toISO(),
       startDT: luxonDateTimeFromFirebaseTimestamp(res.start),
       endDT: luxonDateTimeFromFirebaseTimestamp(res.end),
+      dropOffPickUp: res.dropOffPickUp, // Include dropOffPickUp object for payment buttons
     };
 
   };
