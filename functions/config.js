@@ -3,7 +3,7 @@
 // This file defines configuration parameters using firebase-functions/params
 // for secure, type-safe configuration management.
 
-const { defineSecret, defineString, defineBoolean, defineInt } = require('firebase-functions/params');
+const { defineSecret } = require('firebase-functions/params');
 
 // Stripe secrets - stored in Google Cloud Secret Manager
 const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');

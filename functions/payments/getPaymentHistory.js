@@ -95,7 +95,7 @@ exports.getPaymentHistory = onCall(async (request) => {
             amount: paymentIntent.amount,
             paymentDate: paymentIntent.created,
             status: 'paid',
-            paymentType: paymentType === 'full' ? 'Full' : 'Deposit'
+            paymentType: paymentType === 'full' ? 'Full' : (paymentType === 'remainder' ? 'Final Payment' : 'Deposit')
           });
         }
       }

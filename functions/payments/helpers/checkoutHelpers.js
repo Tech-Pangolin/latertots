@@ -60,7 +60,7 @@ const calculateReservationPricing = (reservations, paymentType) => {
         });
       }
     });
-  } else {
+  } else if (paymentType === PAYMENT_TYPES.FULL || paymentType === PAYMENT_TYPES.REMAINDER) {
     // Calculate full amount for each reservation using dynamic rates
     reservations.forEach(reservation => {
       // Validate required fields

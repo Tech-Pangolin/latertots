@@ -37,7 +37,8 @@ const PAYMENT_PRICING = {
 // NEW: Payment types for new system
 const PAYMENT_TYPES = {
   MINIMUM: 'minimum',                 // Pay 2-hour minimum upfront
-  FULL: 'full'                       // Pay full amount upfront
+  FULL: 'full',                      // Pay full amount upfront
+  REMAINDER: 'remainder'             // Pay remainder at pickup
 };
 
 // NEW: Deposit types for payment selection
@@ -58,7 +59,8 @@ const CHECKOUT_CONFIG = {
 const STRIPE_METADATA_KEYS = {
   APP_USER_ID: 'appUserId',
   RESERVATION_IDS: 'reservationIds',
-  PAYMENT_TYPE: 'paymentType'
+  PAYMENT_TYPE: 'paymentType',
+  DEPOSIT_PAYMENT: 'depositPayment'
 };
 
 // NEW: Invoice line item tags (extend existing)
