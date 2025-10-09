@@ -556,7 +556,7 @@ export class FirebaseDbService {
       dataWithoutId.end = Timestamp.fromDate(new Date(dataWithoutId.end));
 
       const userRef = doc(collection(db, "Users"), userId);
-      const childRef = doc(collection(db, "Children"), reservationData.extendedProps.childId);
+      const childRef = doc(collection(db, "Children"), reservationData.childId);
 
       const dataWithExtraRefs = {
         ...dataWithoutId,
@@ -615,7 +615,7 @@ export class FirebaseDbService {
     await this.validateAuth('admin');
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
-      await updateDoc(reservationRef, { extendedProps: { status: newStatus } });
+      await updateDoc(reservationRef, { status: newStatus });
     } catch (error) {
       logger.error(`Could not change reservation ${reservationId} status to ${newStatus}:`, error);
       throw error;
@@ -639,7 +639,6 @@ export class FirebaseDbService {
       
       await updateDoc(reservationRef, {
         status: 'dropped-off',
-        'extendedProps.status': 'dropped-off',
         'dropOffPickUp.actualStartTime': actualDropOffTime,
         'dropOffPickUp.servicesProvided': servicesProvided,
         updatedAt: now
@@ -684,8 +683,6 @@ export class FirebaseDbService {
       // Prepare update fields
       const updateFields = {
         status: 'picked-up',
-        'extendedProps.status': 'picked-up',
-        'dropOffPickUp.pickedUpAt': now,
         'dropOffPickUp.actualEndTime': now,
         'dropOffPickUp.finalAmount': amountToUse,
         updatedAt: now
@@ -785,7 +782,7 @@ export class FirebaseDbService {
     
     // 6. Calculate totals
     const totalServiceCost = baseCost + lateFeeCost + groupActivityCost;
-    const amountPaid = this.getAmountPaidFromStripePayments(reservationData.stripePayments);
+    const amountPaid = await this.getAmountPaidFromStripePayments(reservationData.stripePayments);
     const finalAmount = Math.max(0, totalServiceCost - amountPaid);
     
     return {
@@ -817,6 +814,42 @@ export class FirebaseDbService {
         availableActivities // Include for modal dropdown
       }
     };
+  };
+
+  /**
+   * Get actual payment amounts from Stripe Payment Intent IDs
+   * @param {string[]} paymentIntentIds - Array of Stripe Payment Intent IDs
+   * @returns {Promise<number>} - Total amount paid in cents
+   */
+  getPaymentAmountsFromStripe = async (paymentIntentIds) => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/latertots-a6694/us-central1/getPaymentAmounts`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentIntentIds })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      const totalAmount = Object.values(result.paymentAmounts)
+        .reduce((sum, amount) => sum + amount, 0);
+      
+      return totalAmount;
+    } catch (error) {
+      logger.error('Error getting payment amounts from Stripe:', error);
+      throw error;
+    }
   };
 
   /**
@@ -891,8 +924,9 @@ export class FirebaseDbService {
             groupActivity: false,
             serviceDescription: serviceDescription
           }],
-          paymentType: 'full',
+          paymentType: 'remainder',
           latertotsUserId: reservationData.userId,
+          depositPayment: reservationData.stripePayments?.full || reservationData.stripePayments?.minimum || null,
           successUrl: `${window.location.origin}/profile?payment=success&tab=payment`,
           cancelUrl: `${window.location.origin}/profile?payment=failed&tab=payment`
         })
@@ -1037,20 +1071,34 @@ export class FirebaseDbService {
   };
 
   /**
-   * Get amount paid from stripe payments
+   * Get amount paid from stripe payments by querying Stripe API
    * @param {Object} stripePayments - The stripe payments object
-   * @returns {number} - Amount paid in cents
+   * @returns {Promise<number>} - Amount paid in cents
    */
-  getAmountPaidFromStripePayments = (stripePayments) => {
-    // This is a placeholder - would need to query Stripe for actual amounts
-    // For now, assume minimum payment was made if minimum exists
-    if (stripePayments?.minimum) {
-      return 5000; // 2 hours * $25/hour = $50 = 5000 cents
+  getAmountPaidFromStripePayments = async (stripePayments) => {
+    if (!stripePayments) {
+      return 0;
     }
-    if (stripePayments?.full) {
-      return 10000; // Assume full payment was made
+
+    // Collect all payment intent IDs
+    const paymentIntentIds = [];
+    if (stripePayments.minimum) paymentIntentIds.push(stripePayments.minimum);
+    if (stripePayments.full) paymentIntentIds.push(stripePayments.full);
+    if (stripePayments.remainder) paymentIntentIds.push(stripePayments.remainder);
+
+    if (paymentIntentIds.length === 0) {
+      return 0;
     }
-    return 0;
+
+    try {
+      // Call the new dbService method
+      const totalAmount = await this.getPaymentAmountsFromStripe(paymentIntentIds);
+      return totalAmount;
+    } catch (error) {
+      console.error('Error getting payment amounts from Stripe:', error);
+      // Return 0 if we can't get actual payment amounts - safer than guessing
+      return 0;
+    }
   };
   changeReservationTime = async (reservationId, newStart, newEnd) => {
     await this.validateAuth();
@@ -1083,7 +1131,7 @@ export class FirebaseDbService {
         return null;
       }
 
-      const status = reservationSnapshot.data().extendedProps.status;
+      const status = reservationSnapshot.data().status;
       if (status === 'pending' || status === 'confirmed') {
         await deleteDoc(reservationRef);
       } else {
@@ -1112,7 +1160,7 @@ export class FirebaseDbService {
         return null;
       }
 
-      const status = reservationSnapshot.data().extendedProps.status;
+      const status = reservationSnapshot.data().status;
       if (status === 'pending' || status === 'confirmed') {
         // Archive the document by updating the "archived" field
         await updateDoc(reservationRef, { archived: true });
@@ -1273,7 +1321,7 @@ export class FirebaseDbService {
         
         // Build the reservation data with required fields
         const userRef = doc(collection(db, 'Users'), userId);
-        const childRef = doc(collection(db, 'Children'), reservationData.extendedProps.childId);
+        const childRef = doc(collection(db, 'Children'), reservationData.childId);
         
         const fullReservationData = {
           archived: false,
@@ -1281,10 +1329,7 @@ export class FirebaseDbService {
           start: Timestamp.fromDate(new Date(reservationData.start)),
           end: Timestamp.fromDate(new Date(reservationData.end)),
           title: reservationData.title,
-          extendedProps: {
-            status: 'pending',
-            childId: reservationData.extendedProps.childId
-          },
+          childId: reservationData.childId,
           userId: userId,
           User: userRef,
           Child: childRef,
