@@ -78,10 +78,8 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
   }, [monthYear]);
 
   const transformReservationData = (res) => {
-    if (!res.hasOwnProperty('extendedProps')) {
-      // data already transformed
-      return res;
-    }
+    // Note: After migration, all data will be in the new format
+    // This check is no longer needed but kept for backward compatibility
     
     // Hide orphaned PENDING reservations that have formDraftId but no payment info
     if (res.status === 'pending' && 
@@ -92,8 +90,8 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
     
     return {
       id: res.id,
-      status: res.extendedProps.status,
-      childId: res.extendedProps.childId,
+      status: res.status, // FIXED: Now using res.status instead of res.extendedProps.status
+      childId: res.childId,
       title: res.title || "",
       userId: res.userId, // Include userId field
       start: luxonDateTimeFromFirebaseTimestamp(res.start).toISO(),
@@ -102,7 +100,6 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
       endDT: luxonDateTimeFromFirebaseTimestamp(res.end),
       dropOffPickUp: res.dropOffPickUp, // Include dropOffPickUp object for payment buttons
     };
-
   };
 
   const queryResult = useQuery({
