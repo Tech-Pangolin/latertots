@@ -121,10 +121,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
             remainder: null,
             full: null
           },
-          extendedProps: {
-            status: RESERVATION_STATUS.PENDING,
-            childId: reservation.extendedProps.childId
-          }
+          childId: reservation.childId
         };
         
         // Create reservation in database
@@ -188,10 +185,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
         allDay: false,
         billingLocked: false,
         groupActivity: formData.groupActivity,
-        extendedProps: {
-          status: 'pending',
-          childId: child.id
-        },
+        // Note: extendedProps removed - fields handled at top level in backend
         totalTime: calculateTimeDifference(formData.start, formData.end)
       }
     });

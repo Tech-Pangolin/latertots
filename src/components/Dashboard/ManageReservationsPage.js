@@ -87,7 +87,7 @@ const ManageReservationsPage = ({ enableAggregates = false }) => {
   // Set the dialog value when the dialog is opened
   useEffect(() => {
     if (!dialogReservationContext) return;
-    setDialogValue(dialogReservationContext.extendedProps.status);
+    setDialogValue(dialogReservationContext.status);
   }, [dialogReservationContext]);
 
   const reservationTimeChangeMutation = useMutation({

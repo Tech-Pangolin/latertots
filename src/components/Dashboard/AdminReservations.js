@@ -81,8 +81,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
 
   // Helper function to get status from either data format
   const getReservationStatus = (reservation) => {
-    // Handle both raw data (extendedProps.status) and transformed data (status)
-    return reservation.status || reservation.extendedProps?.status || '--';
+    return reservation.status || '--';
   };
 
   // Filter reservations by selected date if provided

@@ -179,13 +179,11 @@ const UnifiedReservationModal = ({
       return {
         stableId: `${child.id}-${index}`, // Create stable identifier
         title: child.name,
+        childId: child.id, // FIXED: Add childId field for backend processing
         start: new Date(formData.date + 'T' + formData.start).toISOString(),
         end: new Date(formData.date + 'T' + formData.end).toISOString(),
         groupActivity: formData.groupActivity,
-        extendedProps: {
-          status: 'pending',
-          childId: child.id
-        },
+        // Note: extendedProps removed - fields handled at top level in backend
         totalTime: calculateTimeDifference(formData.start, formData.end)
       };
     });

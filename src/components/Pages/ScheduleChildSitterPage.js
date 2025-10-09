@@ -205,7 +205,7 @@ const ScheduleChildSitterPage = () => {
   })
   const handleEventClick = useCallback(({ event }) => {
     // Only allow deletion of children reservations that belong to the current user
-    const belongsToCurrentUser = children.some(child => child.id === event.extendedProps.childId);
+    const belongsToCurrentUser = children.some(child => child.id === event.childId);
 
     if (currentUser.Role === 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
       archiveReservationMutation.mutate(event.id);
