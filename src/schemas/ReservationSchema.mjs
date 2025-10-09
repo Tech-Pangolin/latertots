@@ -33,13 +33,7 @@ const ReservationSchema = Joi.object({
     'object.instance': 'End time must be a valid Timestamp object.'
   }),
   title: Joi.string().required(),
-  extendedProps: Joi.object({
-    status: Joi.string()
-      .valid(...Object.values(RESERVATION_STATUS))
-      .required(),
-    childId: Joi.string().required(),
-    duration: Joi.number().min(0).optional(),                           // TODO: Does this field serve a purpose?
-  }),
+  childId: Joi.string().required(),
   userId: Joi.string().required(),
   Child: DocumentReferenceOrCompatible.required(),
   User: DocumentReferenceOrCompatible.required(),
