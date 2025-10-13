@@ -4,11 +4,15 @@ import { collection, documentId, query, where } from "firebase/firestore";
 import { db } from "../../config/firestore";
 import { COLLECTIONS } from "../../Helpers/constants";
 import { useEffect, useMemo } from "react";
+import { logger } from "../../Helpers/logger";
 
-export function useContactsRQ() {
+export function useContactsRQ(forceUserMode = false) {
   const { dbService, currentUser } = useAuth();
-  const isAdmin = currentUser?.Role === 'admin';
   const queryClient = useQueryClient();
+  
+  // Only use admin mode if user is admin AND not forced to user mode
+  const isAdmin = currentUser?.Role === 'admin' && !forceUserMode;
+  
   const queryKey = isAdmin ? ['adminAllContacts'] : ['fetchContacts', currentUser.Email];
 
   const allContacts = useMemo(() => query(
@@ -28,7 +32,7 @@ export function useContactsRQ() {
   const queryResult = useQuery({
     queryKey,
     queryFn: () => dbService.fetchDocs(isAdmin ? allContacts : myContacts),
-    onError: (error) => console.error("Error fetching /Contacts data:", error),
+    onError: (error) => logger.error("Error fetching /Contacts data:", error),
     enabled: currentUser.Contacts.length > 0 || isAdmin, 
     initialData: []
   })

@@ -5,7 +5,7 @@ import { AuthProvider } from '../../components/AuthProvider';
 import LoginPage from '../../components/Pages/LoginPage';
 import UserForm from '../../components/Shared/UserForm';
 import { FirebaseDbService } from '../../Helpers/firebase';
-import { createMockUser, createMockAdminUser, createMockFormData, FIREBASE_ERRORS } from '../utils/testUtils';
+import { createMockUser, createMockAdminUser, createMockFormData, FIREBASE_ERRORS } from '../../utils/testUtils';
 
 // Mock Firebase modules
 jest.mock('firebase/auth', () => ({

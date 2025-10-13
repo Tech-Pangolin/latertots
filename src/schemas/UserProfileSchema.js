@@ -1,9 +1,10 @@
 import Joi from 'joi';
 import { ROLES } from '../Helpers/constants';
 import { DocumentReference } from 'firebase/firestore';
+import { createImageValidation, createPhotoURLValidation } from '../Helpers/validationHelpers.mjs';
 
 export const generateUserProfileSchema = (forFormValidation = false) => {
-  let schema = Joi.object({
+  let schemaFields = {
     // Administrative fields
     archived: Joi.boolean().default(false).required(),
     paymentHold: Joi.boolean().default(false).required(),
@@ -38,8 +39,15 @@ export const generateUserProfileSchema = (forFormValidation = false) => {
     Contacts: Joi.array()
       .items(Joi.object().instance(DocumentReference))
       .optional(),
-    photoURL: Joi.string().uri().optional(),
-  })
+    PhotoURL: createPhotoURLValidation(),
+  };
+
+  // Add Image field only for form validation (transient upload field)
+  if (forFormValidation) {
+    schemaFields.Image = createImageValidation();
+  }
+
+  let schema = Joi.object(schemaFields)
     .prefs({ abortEarly: false })
     .messages({
       'any.required': 'This field is required.',
@@ -52,7 +60,7 @@ export const generateUserProfileSchema = (forFormValidation = false) => {
   // fields that are not relevant to the form submission.
   if (forFormValidation) {
     schema = schema.fork([
-      'archived', 'paymentHold', 'photoURL', 'Children', 'Contacts'
+      'archived', 'paymentHold', 'PhotoURL', 'Children', 'Contacts', 'Role'
     ], (field) => field.forbidden());
   }
 

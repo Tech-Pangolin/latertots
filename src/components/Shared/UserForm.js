@@ -5,15 +5,16 @@ import { doc, updateDoc } from "firebase/firestore";
 import { signInWithGoogle, useAuth } from "../AuthProvider";
 import { firebaseAuth } from "../../config/firebaseAuth";
 import { logger, setLogLevel, LOG_LEVELS } from "../../Helpers/logger";
-import ChangePasswordForm from "../ChangePasswordForm";
 import { useMutation } from "@tanstack/react-query";
 import { FirebaseDbService } from "../../Helpers/firebase";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { generateUserProfileSchema } from "../../schemas/UserProfileSchema";
 import { useNavigate } from "react-router-dom";
-import GoogleIcon from "./GoogleIcon";
 
-const UserForm = () => {
+import GoogleIcon from "./GoogleIcon";
+import { ALERT_TYPES, ERROR_MESSAGES } from "../../Helpers/constants";
+
+const UserForm = ({ addAlert }) => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: joiResolver(generateUserProfileSchema(true)),
   });
@@ -85,28 +86,40 @@ const UserForm = () => {
 
   const updateUserMutation = useMutation({
     mutationKey: ['updateUser'],
-    mutationFn: async (dataWithoutPassword, userImage) => {
+    mutationFn: async ({ validatedFormData, userImage }) => {
       if (!dbService) throw new Error("Database service is not initialized");
       const userDocRef = doc(db, 'Users', currentUser.uid);
+      
       if (userImage) {
-        let photoURL = await dbService.uploadProfilePhoto(currentUser.uid, userImage);
-        // Add the photoURL to the user document data
-        dataWithoutPassword.PhotoURL = photoURL;
+        try {
+          let PhotoURL = await dbService.uploadProfilePhoto(currentUser.uid, userImage);
+          // Add the PhotoURL to the user document data
+          validatedFormData.PhotoURL = PhotoURL;
+        } catch (uploadError) {
+          // Re-throw with a more user-friendly message for photo upload failures
+          throw new Error(`Photo upload failed: ${uploadError.message}`);
+        }
       }
-      await updateDoc(userDocRef, dataWithoutPassword);
+      
+      await updateDoc(userDocRef, validatedFormData);
     },
     onSuccess: () => {
       logger.info('User updated successfully');
+      addAlert(ALERT_TYPES.SUCCESS, 'Profile updated successfully!');
+      setError(null);
     },
     onError: (error) => {
       logger.error('Failed to update user:', error.message);
+      addAlert(ALERT_TYPES.ERROR, `Update failed: ${error.message}`);
       setError(error.message);
     }
   })
 
   const updateUserOnSubmit = async (data) => {
-    // Remove the image from the data object
-    const userImage = data.Image[0];
+    // Extract the image before deleting it
+    const userImage = data.Image?.[0];
+    
+    // Remove the image from the data object - safely handle cases where no image is selected
     delete data.Image;
     delete data.Photo;
 
@@ -114,25 +127,40 @@ const UserForm = () => {
     const dataWithoutPassword = { ...data };
     delete dataWithoutPassword.Password;
 
+    // EXPLICITLY filter to only include the fields we want to update
+    const allowedFields = ['Name', 'Email', 'CellNumber', 'StreetAddress', 'City', 'State', 'Zip'];
+    const filteredData = {};
+    allowedFields.forEach(field => {
+      if (dataWithoutPassword[field] !== undefined) {
+        filteredData[field] = dataWithoutPassword[field];
+      }
+    });
+
     try {
-      const validatedFormData = await generateUserProfileSchema().validateAsync(dataWithoutPassword);
-      updateUserMutation.mutate(validatedFormData, userImage);
+      const validatedFormData = await generateUserProfileSchema(true).validateAsync(filteredData);
+      updateUserMutation.mutate({ validatedFormData, userImage });
     } catch (e) {
       logger.error('Error adding/updating document: ', e.message);
       logger.error('Stack Trace:', e.stack);
+      if (e.isJoi) {
+        addAlert(ALERT_TYPES.ERROR, ERROR_MESSAGES.SYSTEM_VALIDATION_FAILURE);
+      } else {
+        addAlert(ALERT_TYPES.ERROR, `Update failed: ${e.message}`);
+      }
     }
 
   };
 
   return (
     <div className="container" style={{}}>
-      <div className="row justify-content-center">
-        <div className="col register-form">
+      <div className="row">
+        {/* <div className="col register-form"> */}
 
           {/* Create User Form */}
           {(mode === "create") &&
-            <form onSubmit={createUserOnSubmit} className="row">
-              <div className="mb-3 col-12 col-md-6">
+          <div className="d-flex justify-content-center">
+            <form onSubmit={createUserOnSubmit} >
+              <div className="mb-3 col-12">
                 <label htmlFor="email" className="form-label">Email:</label>
                 <input className="form-control"
                   type="email"
@@ -142,7 +170,7 @@ const UserForm = () => {
                   required
                 />
               </div>
-              <div className="mb-3 col-12 col-md-6">
+              <div className="mb-3 col-12">
                 <label htmlFor="password" className="form-label">Password:</label>
                 <input className="form-control"
                   type="password"
@@ -152,7 +180,7 @@ const UserForm = () => {
                   required
                 />
               </div>
-              <div>
+              <div className="mb-3 col-12">
                 <label htmlFor="confirm" className="form-label">Confirm Password:</label>
                 <input className="form-control"
                   type="password"
@@ -165,28 +193,45 @@ const UserForm = () => {
               {passwordMismatch && <p>Passwords do not match</p>}
               {error && <p className="mt-3">{error}</p>}
               <div className="row ">
-                <div className="col-12 col-md-6 mt-3"> <button type="submit" className="register-btn w-100">Sign Up</button></div>
-                <div className="col-12 col-md-6 mt-3"> <button onClick={signInWithGoogle} className="google-btn w-100" type="button">
-                  <GoogleIcon size={16} />
-                  <span className="ms-2">Sign up with Google</span>
-                </button></div>
+                <div className="col-12 my-3"> 
+                  <button 
+                    type="submit" 
+                    className="register-btn w-100"
+                    disabled={createUserMutation.isLoading}
+                  >
+                    {createUserMutation.isLoading ? 'Creating...' : 'Sign Up'}
+                  </button>
+                </div>
+                <div className="text-center my-3 or">or</div>
+                <div className="col-12 my-3"> 
+                  <button 
+                    onClick={signInWithGoogle} 
+                    className="google-btn w-100" 
+                    type="button"
+                    disabled={createUserMutation.isLoading}
+                  >
+                    <GoogleIcon size={16} />
+                    <span className="ms-2">Sign up with Google</span>
+                  </button>
+                </div>
               </div>
-              <div className="d-flex justify-content-center">
+              {/* <div className="d-flex justify-content-center">
 
 
-              </div>
+              </div> */}
             </form>
+            </div>
           }
 
           {/* Update User Form */}
           {(mode === "update") && (
             <form onSubmit={handleSubmit(updateUserOnSubmit)} className="row">
-              <div className="mb-3">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="Name" className="form-label">Name *</label>
                 <input type="text" className="form-control" {...register("Name")} />
                 {errors.Name?.message && <div className="">{errors.Name.message}</div>}
               </div>
-              <div className="mb-3">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="Email" className="form-label">Email</label>
                 <input
                   className="form-control"
@@ -196,16 +241,7 @@ const UserForm = () => {
                 />
                 {errors.Email?.message && <p>{errors.Email.message}</p>}
               </div>
-              <div className="col-10 mb-3">
-                <label htmlFor="Image" className="form-label">Photo</label>
-                <input
-                  type="file"
-                  {...register("Image")}
-                  className="form-control"
-                />
-                {errors.Image?.message && <p>{errors.Image.message}</p>}
-              </div>
-              <div className="mb-3  col-4">
+                <div className="mb-3  col-4">
                 <label htmlFor="CellNumber" className="form-label">Cell #</label>
                 <input
                   className="form-control"
@@ -214,8 +250,7 @@ const UserForm = () => {
                 />
                 {errors.CellNumber?.message && <p>{errors.CellNumber.message}</p>}
               </div>
-
-              <div className="mb-3 col-6">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="StreetAddress" className="form-label">Street Address</label>
                 <input
                   className="form-control"
@@ -224,7 +259,7 @@ const UserForm = () => {
                 />
                 {errors.StreetAddress?.message && <p>{errors.StreetAddress.message}</p>}
               </div>
-              <div className="mb-3 col-4">
+              <div className="mb-3 col-12 col-lg-4">
                 <label htmlFor="City" className="form-label">City</label>
                 <input
                   className="form-control"
@@ -233,7 +268,7 @@ const UserForm = () => {
                 />
                 {errors.City?.message && <p>{errors.City.message}</p>}
               </div>
-              <div className="mb-3 col-4">
+              <div className="mb-3 col-12 col-lg-2">
                 <label htmlFor="State" className="form-label">State</label>
                 <input
                   className="form-control"
@@ -242,7 +277,7 @@ const UserForm = () => {
                 />
                 {errors.State?.message && <p>{errors.State.message}</p>}
               </div>
-              <div className="mb-3 col-2">
+              <div className="mb-3 col-12 col-lg-2">
                 <label htmlFor="Zip" className="form-label">Zip</label>
                 <input
                   className="form-control"
@@ -251,17 +286,36 @@ const UserForm = () => {
                 />
                 {errors.Zip?.message && <p>{errors.Zip.message}</p>}
               </div>
+              <div className="col-12 mb-3">
+                <label htmlFor="Image" className="form-label">Photo</label>
+                <input
+                  type="file"
+                  {...register("Image")}
+                  className="form-control"
+                />
+                {errors.Image?.message && <p>{errors.Image.message}</p>}
+              </div>
+            
+
+              
               <div className="col-12">
-                <button type="submit" className="btn btn-primary mt-5  register-start">{mode === 'create' ? "Create" : "Update"} User</button></div>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary mt-5 register-start"
+                  disabled={updateUserMutation.isLoading}
+                >
+                  {updateUserMutation.isLoading ? 'Updating...' : (mode === 'create' ? "Create" : "Update") + " User"}
+                </button>
+              </div>
             </form>)}
-        </div>
+        {/* </div> */}
       </div>
-      {mode === 'update' && (
-        <div className="row">
-          <h5 className="mt-5">Change Password</h5>
-          <ChangePasswordForm />
-        </div>
-      )}
+      {/* {mode === 'update' && ( */}
+        {/* // <div className="row">
+        //   <h5 className="mt-5">Change Password</h5>
+        //   <ChangePasswordForm />
+        // </div> */}
+      {/* )} */}
     </div>
   );
 };

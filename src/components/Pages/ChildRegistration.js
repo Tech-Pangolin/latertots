@@ -1,80 +1,187 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../AuthProvider';
 import { useLocation } from 'react-router-dom';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, addDoc, collection, arrayUnion } from 'firebase/firestore';
 import { db } from '../../config/firestore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logger } from '../../Helpers/logger';
 import { joiResolver } from '@hookform/resolvers/joi';
 import { generateChildSchema } from '../../schemas/ChildSchema';
-import { GENDERS } from '../../Helpers/constants';
+import { GENDERS, ALERT_TYPES, ERROR_MESSAGES } from '../../Helpers/constants';
+import { withFirebaseRetry } from '../../Helpers/retryHelpers';
+import { firebaseTimestampToFormDateString } from '../../Helpers/datetime';
 
-const ChildRegistration = ({ setOpenState }) => {
+const ChildRegistration = ({ setOpenStateFxn, addAlertFxn, editingChild }) => {
+  const [isUpdatingChild, setIsUpdatingChild] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: joiResolver(generateChildSchema(true))
   });
   const { currentUser, dbService } = useAuth();
   const queryClient = useQueryClient();
 
-  // Get the child from the location state
-  // This is passed from the ChildCard component when editing
+  // Get the child from props (for modal editing) or location state (for navigation editing)
   const location = useLocation();
-  const child = location.state?.child || null;
+  const child = editingChild || location.state?.child || null;
 
   // Pre-populate the form with the child data if editing
   useEffect(() => {
     if (child) {
-      reset(child);
+      // Only include fields that are allowed by the form validation schema
+      const formData = {
+        Name: child.Name,
+        DOB: child.DOB ? firebaseTimestampToFormDateString(child.DOB) : '',
+        Gender: child.Gender,
+        Allergies: child.Allergies || '',
+        Medications: child.Medications || '',
+        Notes: child.Notes || ''
+      };
+      
+      // Only include PhotoURL if it exists
+      if (child.PhotoURL) {
+        formData.PhotoURL = child.PhotoURL;
+      }
+      reset(formData);
     }
   }, [child, reset]);
 
-  const createChildMutation = useMutation({
-    mutationKey: ['createChild'],
-    mutationFn: async (data) => await dbService.createChildDocument(data),
+  // Separate mutation for child data updates only
+  const updateChildMutation = useMutation({
+    mutationKey: ['updateChild'],
+    mutationFn: async (validatedFormData) => {
+      if (!dbService) throw new Error("Database service is not initialized");
+      
+      const childRef = doc(db, 'Children', child.id);
+      return await updateDoc(childRef, validatedFormData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
-      reset(); // Reset the form after successful submission
-      setOpenState(false); // Close the modal after submission
+      reset();
+      setOpenStateFxn();
     },
     onError: (error) => {
-      logger.error('Error creating child document:', error);
+      logger.error('Error updating child document:', error);
+      addAlertFxn(ALERT_TYPES.ERROR, `Update failed: ${error.message}`);
     }
-  })
+  });
+
+  // Separate mutation for photo uploads only
+  const uploadPhotoMutation = useMutation({
+    mutationKey: ['uploadChildPhoto'],
+    mutationFn: async ({ childId, image }) => {
+      if (!dbService) throw new Error("Database service is not initialized");
+      
+      const PhotoURL = await withFirebaseRetry(
+        () => dbService.uploadChildPhoto(childId, image)
+      );
+      
+      // Update the child document with the photo URL
+      const childRef = doc(db, 'Children', childId);
+      await updateDoc(childRef, { PhotoURL });
+      
+      return PhotoURL;
+    },
+    onError: (error) => {
+      logger.error('Error uploading child photo:', error);
+      // Photo upload errors are handled in the onSubmit flow
+    }
+  });
 
   const onSubmit = async (data) => {
+    
+    // STAGE 1: Extract image before processing (following UserForm pattern)
+    const childImage = data.Image?.[0];
+    
+    // Remove the image from the data object
+    delete data.Image;
+
     const payload = {
       ...data,
       archived: false,
-    }
+    };
 
     try {
+      // STAGE 2: Validate remaining data (no Image field)
       const validatedPayload = await generateChildSchema().validateAsync(payload);
 
       if (child) {
-        // Update the existing child document
-        const childRef = doc(db, 'Children', child.id);
-        await updateDoc(childRef, validatedPayload);
+        // Update existing child - use sequential mutations
+        try {
+          // Step 1: Update child data first
+          setIsUpdatingChild(true);
+          await updateChildMutation.mutateAsync(validatedPayload);
+          setIsUpdatingChild(false);
+          
+          // Step 2: Upload photo only if child update succeeded
+          if (childImage) {
+            try {
+              setIsUploadingPhoto(true);
+              await uploadPhotoMutation.mutateAsync({ 
+                childId: child.id, 
+                image: childImage 
+              });
+              setIsUploadingPhoto(false);
+              addAlertFxn(ALERT_TYPES.SUCCESS, 'Child updated successfully with photo!');
+            } catch (photoError) {
+              setIsUploadingPhoto(false);
+              addAlertFxn(ALERT_TYPES.WARNING, 'Child updated successfully, but photo upload failed. You can try uploading again by editing the child\'s profile.');
+            }
+          } else {
+            addAlertFxn(ALERT_TYPES.SUCCESS, 'Child updated successfully!');
+          }
+        } catch (childError) {
+          setIsUpdatingChild(false);
+          addAlertFxn(ALERT_TYPES.ERROR, `Update failed: ${childError.message}`);
+        }
       } else {
-        // Create a new child document
-        createChildMutation.mutate(validatedPayload);
+        // Create new child - need to create document first to get ID for photo upload
+        const docRef = await addDoc(collection(db, "Children"), validatedPayload);
+        const userRef = doc(collection(db, "Users"), currentUser.uid);
+        await updateDoc(userRef, { Children: arrayUnion(docRef) });
+        
+        
+        // Now upload photo with retry logic for race condition
+        if (childImage) {
+          try {
+            // Use retry logic to handle race condition between child creation and storage rules
+            const PhotoURL = await withFirebaseRetry(
+              () => dbService.uploadChildPhoto(docRef.id, childImage)
+            );
+            
+            await updateDoc(docRef, { PhotoURL });
+            addAlertFxn(ALERT_TYPES.SUCCESS, 'Child registered successfully with photo!');
+          } catch (uploadError) {
+            addAlertFxn(ALERT_TYPES.WARNING, 'Child registered successfully, but photo upload failed. You can add a photo later by editing the child\'s profile.');
+          }
+        } else {
+          addAlertFxn(ALERT_TYPES.SUCCESS, 'Child registered successfully!');
+        }
+        
+        queryClient.invalidateQueries(['fetchChildren', currentUser.Email]);
+        reset();
+        setOpenStateFxn();
       }
     } catch (error) {
       if (error.isJoi) {
         logger.error('Child registration failed validation:', error.details);
+        addAlertFxn(ALERT_TYPES.ERROR, ERROR_MESSAGES.SYSTEM_VALIDATION_FAILURE);
+      } else {
+        logger.error('Error adding document: ', error);
+        addAlertFxn(ALERT_TYPES.ERROR, `Registration failed: ${error.message}`);
       }
-      logger.error('Error adding document: ', error);
     }
   };
 
   return (
     <div className='container bg-white'>
-      <h1 className="text-center pt-5">Child Registration</h1>
-      <p className="text-center">Add your child here!</p>
+      <h1 className="text-center pt-5">{child ? 'Edit Child' : 'Child Registration'}</h1>
+      <p className="text-center">{child ? 'Update your child\'s information' : 'Add your child here!'}</p>
       <div className="row d-flex justify-content-center">
         <form onSubmit={handleSubmit(onSubmit)} className='col-md-12'>
           <label htmlFor="Name" className="form-label">Name:</label>
-          <input type="text" disabled={child?.Name} id="Name" {...register('Name')} className="form-control" />
+          <input type="text" disabled={child?.Name} id="NameChild" {...register('Name')} className="form-control" />
           {errors.Name?.message && <p>{errors.Name.message}</p>}
 
           <label htmlFor="DOB" className="form-label">DOB:</label>
@@ -98,7 +205,28 @@ const ChildRegistration = ({ setOpenState }) => {
           <label htmlFor="Notes" className="form-label">Notes:</label>
           <input type="text" id="Notes" {...register('Notes')} className="form-control" />
 
-          <button type="submit" className="my-5 btn btn-primary login-btn w-100">Submit</button>
+          {/* Photo upload field */}
+          <div className="mb-3">
+            <label htmlFor="Image" className="form-label">Photo</label>
+            <input
+              type="file"
+              id="Image"
+              {...register("Image")}
+              className="form-control"
+              accept="image/*"
+            />
+            {errors.Image?.message && <p className="text-danger">{errors.Image.message}</p>}
+          </div>
+
+          <button 
+            type="submit" 
+            className="my-5 btn btn-primary login-btn w-100"
+            disabled={isUpdatingChild || isUploadingPhoto}
+          >
+            {isUpdatingChild ? 'Updating Child...' : 
+             isUploadingPhoto ? 'Uploading Photo...' : 
+             child ? 'Update Child' : 'Add Child'}
+          </button>
         </form>
       </div>
     </div>

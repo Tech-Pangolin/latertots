@@ -2,7 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material'
 
 function ContactsTable({ contacts }) {
   return (
-    <Table>
+    <Table responsive="sm" className='w-100'>
       <TableHead>
         <TableRow>
           <TableCell>Name</TableCell>

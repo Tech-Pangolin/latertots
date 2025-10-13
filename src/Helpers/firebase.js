@@ -1,10 +1,11 @@
-import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, setDoc, deleteDoc, Timestamp, onSnapshot } from "@firebase/firestore";
+import { collection, getDocs, getDoc, where, query, arrayUnion, updateDoc, addDoc, doc, setDoc, deleteDoc, Timestamp, onSnapshot, writeBatch } from "@firebase/firestore";
 import { db } from "../config/firestore";
 import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
-import ReservationSchema from "../schemas/ReservationSchema";
+import { IMAGE_UPLOAD } from "./constants";
+import ReservationSchema from "../schemas/ReservationSchema.mjs";
 
 
 export class FirebaseDbService {
@@ -12,7 +13,7 @@ export class FirebaseDbService {
     this.userContext = userContext;
   }
 
-  
+
   /**
    * Fetches the avatar photo URL of a user based on the provided user ID.
    * 
@@ -42,7 +43,7 @@ export class FirebaseDbService {
     try {
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-      console.error("Error mapping snapshot to data:", error);
+      logger.error("Error mapping snapshot to data:", error);
     }
   }
 
@@ -83,7 +84,7 @@ export class FirebaseDbService {
       try {
         callback(this.#mapSnapshotToData(snapshot));
       } catch (error) {
-        console.error("Error subscribing to documents:", error);
+        logger.error("Error subscribing to documents:", error);
       }
     });
   }
@@ -96,7 +97,7 @@ export class FirebaseDbService {
    * @returns {Promise<string>} - A promise that resolves to the ID of the created document.
    * @throws {Error} - If there is an error creating the document.
    */
-  createChildDocument = async (childData) => {
+  async createChildDocument(childData) {
     this.validateAuth();
     try {
       const docRef = await addDoc(collection(db, "Children"), childData);
@@ -104,7 +105,7 @@ export class FirebaseDbService {
       await updateDoc(userRef, { Children: arrayUnion(docRef) });
       return docRef.id;
     } catch (error) {
-      console.error("Error creating child document:", error);
+      logger.error("Error creating child document:", error);
       throw error;
     }
   };
@@ -126,10 +127,83 @@ export class FirebaseDbService {
       await updateDoc(userRef, { Contacts: arrayUnion(docRef) });
       return docRef.id;
     } catch (error) {
-      console.error("Error creating contact document:", error);
+      logger.error("Error creating contact document:", error);
       throw error;
     }
   };
+
+
+  /**
+   * Queries all users and their associated children.
+   * 
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects, each containing their associated children.
+   * @throws {Error} - If there is an error querying the users.
+   */
+  getUsersWithChildren = async () => {
+    const usersRef = collection(db, "Users");
+    const usersSnap = await getDocs(usersRef);
+
+    const results = [];
+
+    for (const userDoc of usersSnap.docs) {
+      const userData = userDoc.data();
+      const childIds = userData.Children || []; // Array of child IDs
+
+      let childrenData = [];
+      if (childIds.length > 0) {
+        // Firestore where('id', 'in', [...]) only supports up to 10 IDs per query
+        const childrenRef = collection(db, "Children");
+        const childrenQuery = query(childrenRef, where("__name__", "in", childIds.slice(0, 10)));
+        const childrenSnap = await getDocs(childrenQuery);
+
+        childrenData = childrenSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+      }
+
+      results.push({
+        id: userDoc.id,
+        ...userData,
+        children: childrenData,
+      });
+    }
+
+    return results;
+  }
+  /**
+    * Queries all children and their associated parents(users).
+    * 
+    * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects, each containing their associated children.
+    * @throws {Error} - If there is an error querying the users.
+    */
+  getChildrenWithParents = async () => {
+    const childrenRef = collection(db, "Children");
+    const childrenSnap = await getDocs(childrenRef);
+
+    const results = [];
+
+    for (const childDoc of childrenSnap.docs) {
+      const childData = childDoc.data();
+      const parentId = childData.parentId; // <-- recommended field
+
+      let parentData = null;
+      if (parentId) {
+        const parentSnap = await getDoc(doc(db, "Users", parentId));
+        if (parentSnap.exists()) {
+          parentData = { id: parentSnap.id, ...parentSnap.data() };
+        }
+      }
+
+      results.push({
+        id: childDoc.id,
+        ...childData,
+        parent: parentData,
+      });
+    }
+
+    return results;
+  }
 
   /**
    * Queries all the children associated with the current user.
@@ -152,7 +226,7 @@ export class FirebaseDbService {
           return [];
         } else if (!Array.isArray(childrenRefs)) {
           // This happens when there's only one child and the data is not an array
-          childrenRefs = [childrenRefs]; 
+          childrenRefs = [childrenRefs];
         }
         const childrenPromises = childrenRefs.map(async (childRef) => {
           try {
@@ -170,7 +244,28 @@ export class FirebaseDbService {
         throw new Error("No record found with email: " + this.userContext.email);
       }
     } catch (error) {
-      console.error("Error querying children:", error);
+      logger.error("Error querying children:", error);
+      throw error;
+    }
+  };
+  /**
+   * Queries all the children associated with the current user.
+   * @returns {Promise<Array<Object>>} - A promise that resolves to an array of user objects.
+   * @throws {Error} - If there is an error querying the users.
+   */
+  fetchAllCurrentUsers = async () => {
+    this.validateAuth();
+    try {
+      const q = query(collection(db, "Users"), where("archived", "==", false));
+      const querySnapshot = await getDocs(q);
+      const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (users) {
+        return users;
+      } else {
+        throw new Error("No Users found");
+      }
+    } catch (error) {
+      logger.error("Error querying users:", error);
       throw error;
     }
   };
@@ -203,13 +298,62 @@ export class FirebaseDbService {
         throw new Error("No record found with email: " + email);
       }
     } catch (error) {
-      console.error("Error querying contacts:", error);
+      logger.error("Error querying contacts:", error);
       return []
     }
   }
 
   /**
-   * Uploads a photo to Firebase Storage, referencing the current user.
+   * Uploads a photo to Firebase Storage with dynamic entity type and ID.
+   * 
+   * @param {string} entityType - The type of entity (e.g., 'profile', 'child')
+   * @param {string} entityId - The ID of the entity
+   * @param {File} file - The photo file to upload.
+   * @returns {Promise<string>} - A promise that resolves to the download URL of the uploaded photo.
+   * @throws {Error} - If there is an error uploading the photo.
+   */
+  uploadPhoto = async (entityType, entityId, file) => {
+    this.validateAuth();
+    try {
+      if (!(file instanceof File)) {
+        throw new Error(`Invalid file type: ${typeof file}. Please provide a valid File object.`);
+      }
+
+      // Security validation: Check file type and size
+      if (!IMAGE_UPLOAD.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        throw new Error(`Invalid file type: ${file.type}. Only JPEG, PNG, GIF, and WebP images are allowed.`);
+      }
+
+      if (file.size > IMAGE_UPLOAD.MAX_IMAGE_SIZE_BYTES) {
+        throw new Error(`File size too large: ${(file.size / 1024 / 1024).toFixed(2)}MB. Maximum allowed size is 5MB.`);
+      }
+
+      // Create a storage reference with dynamic path based on entity type
+      const storageRef = ref(storage, `${entityType}-photos/${entityId}`);
+
+      // Upload the file with custom metadata for security
+      const metadata = {
+        customMetadata: {
+          owner: this.userContext.uid,
+          entityType: entityType,
+          entityId: entityId
+        }
+      };
+      const snapshot = await uploadBytes(storageRef, file, metadata);
+
+      // Get the download URL of the uploaded photo
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      return downloadURL;
+    } catch (error) {
+      logger.error("Error uploading photo:", error);
+      // Re-throw the error so it can be handled by the calling code
+      throw error;
+    }
+  };
+
+  /**
+   * Uploads a profile photo to Firebase Storage, referencing the current user.
    * 
    * @param {string} userId - The ID of the current user.
    * @param {File} file - The photo file to upload.
@@ -217,25 +361,19 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error uploading the photo.
    */
   uploadProfilePhoto = async (userId, file) => {
-    this.validateAuth();
-    try {
-      if (!(file instanceof File)) {
-        throw new Error(`Invalid file type: ${typeof file}. Please provide a valid File object.`);
-      }
+    return this.uploadPhoto('profile', userId, file);
+  };
 
-      // Create a storage reference with the user ID as the path
-      const storageRef = ref(storage, `profile-photos/${userId}`);
-
-      // Upload the file to Firebase Storage
-      const snapshot = await uploadBytes(storageRef, file);
-
-      // Get the download URL of the uploaded photo
-      const downloadURL = await getDownloadURL(snapshot.ref);
-
-      return downloadURL;
-    } catch (error) {
-      console.error("Error uploading photo:", error);
-    }
+  /**
+   * Uploads a child photo to Firebase Storage.
+   * 
+   * @param {string} childId - The ID of the child.
+   * @param {File} file - The photo file to upload.
+   * @returns {Promise<string>} - A promise that resolves to the download URL of the uploaded photo.
+   * @throws {Error} - If there is an error uploading the photo.
+   */
+  uploadChildPhoto = async (childId, file) => {
+    return this.uploadPhoto('child', childId, file);
   };
 
   /**
@@ -262,7 +400,7 @@ export class FirebaseDbService {
       const reservations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       return reservations;
     } catch (error) {
-      console.error("Error fetching reservations:", error);
+      logger.error("Error fetching reservations:", error);
       throw error;
     }
   };
@@ -303,7 +441,7 @@ export class FirebaseDbService {
       const reservations = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       return reservations;
     } catch (error) {
-      console.error("Error fetching reservations:", error);
+      logger.error("Error fetching reservations:", error);
       throw error;
     }
   };
@@ -324,25 +462,25 @@ export class FirebaseDbService {
    */
   checkReservationOverlapLimit(newReservation, unsavedEvents = []) {
     this.validateAuth();
-    
+
     let eventsOverlappingNewReservation = unsavedEvents.filter(event => {
       if (newReservation.id && event.id === newReservation.id) return false;
       return (
         new Date(event.end) > new Date(newReservation.start) &&
         new Date(event.start) < new Date(newReservation.end)
-      ); 
+      );
     });
-    
+
     const overlapMarkers = [];
     eventsOverlappingNewReservation.forEach(evt => {
       overlapMarkers.push({ ts: new Date(evt.start), delta: +1 });
-      overlapMarkers.push({ ts: new Date(evt.end),   delta: -1 });
+      overlapMarkers.push({ ts: new Date(evt.end), delta: -1 });
     });
 
     // compare timestamps first, but if those are equal,
     // compare deltas to ensure -1 comes before +1
-    overlapMarkers.sort((a,b) => a.ts - b.ts || (a.delta - b.delta) );
-    
+    overlapMarkers.sort((a, b) => a.ts - b.ts || (a.delta - b.delta));
+
     let maxOverlap = 0;
     let currentOverlap = 0;
     overlapMarkers.forEach(marker => {
@@ -394,7 +532,7 @@ export class FirebaseDbService {
       const docRef = await addDoc(collection(db, "Reservations"), validatedData);
       return docRef.id;
     } catch (error) {
-      console.error("Error creating reservation document:", error);
+      logger.error("Error creating reservation document:", error);
       throw error;
     }
   };
@@ -419,7 +557,7 @@ export class FirebaseDbService {
       const reservationRef = doc(collection(db, "Reservations"), id);
       await updateDoc(reservationRef, { ...dataWithoutId });
     } catch (error) {
-      console.error("Error updating reservation document:", error);
+      logger.error("Error updating reservation document:", error);
       throw error;
     }
   };
@@ -438,7 +576,7 @@ export class FirebaseDbService {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       await updateDoc(reservationRef, { extendedProps: { status: newStatus } });
     } catch (error) {
-      console.error(`Could not change reservation ${reservationId} status to ${newStatus}:`, error);
+      logger.error(`Could not change reservation ${reservationId} status to ${newStatus}:`, error);
       throw error;
     }
   }
@@ -453,7 +591,7 @@ export class FirebaseDbService {
         end: Timestamp.fromDate(new Date(newEnd))
       });
     } catch (error) {
-      console.error(`Could not change reservation ${reservationId} time:`, error);
+      logger.error(`Could not change reservation ${reservationId} time:`, error);
       throw error;
     }
   }
@@ -482,7 +620,7 @@ export class FirebaseDbService {
         throw new Error("Cannot delete reservation with status: " + status);
       }
     } catch (error) {
-      console.error("Error deleting reservation document:", error);
+      logger.error("Error deleting reservation document:", error);
       throw error;
     }
   };
@@ -512,7 +650,7 @@ export class FirebaseDbService {
         throw new Error("Cannot archive reservation with status: " + status);
       }
     } catch (error) {
-      console.error("Error archiving reservation document:", error);
+      logger.error("Error archiving reservation document:", error);
       throw error;
     }
   };
@@ -525,7 +663,7 @@ export class FirebaseDbService {
    * @param {string} password - The password of the user.
    * @returns {Promise<User>} A promise that resolves to the authenticated user object.
    */
-  createUserAndAuthenticate = async (firebaseAuth, email, password) => {
+  async createUserAndAuthenticate(firebaseAuth, email, password) {
     let userCredential = null
     try {
       userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
@@ -536,7 +674,7 @@ export class FirebaseDbService {
           CellNumber: "",
           City: "",
           Email: userCredential.user.email,
-          Name:   userCredential.user.displayName || "",
+          Name: userCredential.user.displayName || "",
           Role: doc(db, 'Roles', 'parent-user'),
           State: "",
           StreetAddress: "",
@@ -545,7 +683,7 @@ export class FirebaseDbService {
           paymentHold: false,
           Children: [],
           Contacts: []
-      });
+        });
         logger.info("User document initialized with template data.");
       } catch (error) {
         logger.error("createUserAndAuthenticate: Could not initialize /Users document with template data: ", error);
@@ -569,14 +707,14 @@ export class FirebaseDbService {
    * @param {Object} authUser - The Firebase Auth user object from Google sign-in.
    * @returns {Promise<void>} A promise that resolves when the user profile is created.
    */
-  createUserProfileFromGoogleAuth = async (authUser) => {
+  async createUserProfileFromGoogleAuth(authUser) {
     try {
       await setDoc(doc(db, 'Users', authUser.uid), {
         // Map available Google data
         Email: authUser.email,
         Name: authUser.displayName || "",
-        photoURL: authUser.photoURL || undefined,
-        
+        PhotoURL: authUser.PhotoURL || authUser.photoURL || undefined,
+
         // Hard-coded defaults (same as email/password flow)
         CellNumber: "",
         City: "",
@@ -589,7 +727,7 @@ export class FirebaseDbService {
         Children: [],
         Contacts: []
       });
-      
+
       logger.info("Google user profile created successfully:", authUser.uid);
     } catch (error) {
       logger.error("Error creating Google user profile:", error);
@@ -620,5 +758,109 @@ export class FirebaseDbService {
       await new Promise(r => setTimeout(r, 1000 * i));
     }
     throw new Error('User document not found after maximum retries.');
+  };
+
+
+  /**
+   * Gets a form draft for a user
+   * 
+   * @param {string} userId - The user ID
+   * @returns {Promise<Object|null>} - The form draft or null if not found
+   */
+  getFormDraft = async (userId) => {
+    this.validateAuth();
+    try {
+      const draftRef = doc(db, 'FormDrafts', userId);
+      const draftDoc = await getDoc(draftRef);
+      
+      if (draftDoc.exists()) {
+        return { id: draftDoc.id, ...draftDoc.data() };
+      }
+      return null;
+    } catch (error) {
+      logger.error("Error getting form draft:", error);
+      throw error;
+    }
+  };
+
+
+  /**
+   * Creates multiple reservations in a batch with formDraftId
+   * 
+   * @param {string} userId - The user ID
+   * @param {Array} reservationsInput - Array of reservation data
+   * @param {string} formDraftId - The form draft ID to associate with reservations
+   * @returns {Promise<Array>} - Array of document references for created reservations
+   */
+  createReservationsBatch = async (userId, reservationsInput, formDraftId) => {
+    this.validateAuth();
+    try {
+      const batch = writeBatch(db);
+      const reservationRefs = [];
+      
+      for (const reservationData of reservationsInput) {
+        const reservationRef = doc(collection(db, 'Reservations'));
+        
+        // Build the reservation data with required fields
+        const userRef = doc(collection(db, 'Users'), userId);
+        const childRef = doc(collection(db, 'Children'), reservationData.extendedProps.childId);
+        
+        const fullReservationData = {
+          archived: false,
+          status: 'pending',
+          start: Timestamp.fromDate(new Date(reservationData.start)),
+          end: Timestamp.fromDate(new Date(reservationData.end)),
+          title: reservationData.title,
+          extendedProps: {
+            status: 'pending',
+            childId: reservationData.extendedProps.childId
+          },
+          userId: userId,
+          User: userRef,
+          Child: childRef,
+          groupActivity: reservationData.groupActivity,
+          stripePayments: {
+            minimum: null,
+            remainder: null,
+            full: null
+          },
+          formDraftId: formDraftId // Associate with form draft
+        };
+        
+        // Validate the data
+        const validatedData = await ReservationSchema.validateAsync(fullReservationData, { abortEarly: false });
+        if (validatedData.error) {
+          throw new Error(`Validation error: ${validatedData.error.message}`);
+        }
+        
+        batch.set(reservationRef, validatedData);
+        reservationRefs.push(reservationRef);
+      }
+      
+      await batch.commit();
+      logger.info(`Created ${reservationRefs.length} reservations in batch`);
+      return reservationRefs;
+    } catch (error) {
+      logger.error("Error creating reservations batch:", error);
+      throw error;
+    }
+  };
+
+  /**
+   * Deletes a reservation by ID
+   * 
+   * @param {string} reservationId - The reservation ID to delete
+   * @returns {Promise<void>} - A promise that resolves when the reservation is deleted
+   */
+  deleteReservation = async (reservationId) => {
+    this.validateAuth();
+    try {
+      const reservationRef = doc(db, 'Reservations', reservationId);
+      await deleteDoc(reservationRef);
+      logger.info(`Reservation ${reservationId} deleted successfully`);
+    } catch (error) {
+      logger.error("Error deleting reservation:", error);
+      throw error;
+    }
   };
 }

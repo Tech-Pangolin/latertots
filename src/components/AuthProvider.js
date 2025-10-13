@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signI
 import { app } from '../config/firebase';
 import { logger } from '../Helpers/logger';
 import { FirebaseDbService } from '../Helpers/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firestore';
 
 const auth = getAuth();
@@ -79,6 +79,16 @@ export const AuthProvider = ({ children }) => {
     return children.filter(child => typeof child === 'string' || (child && typeof child === 'object' && 'path' in child && 'id' in child));
   }
 
+  const waitForUserProfile = async (userId, { maxRetries = 10, delayMs = 500 } = {}) => {
+    const ref = doc(db, 'Users', userId);
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const snap = await getDoc(ref);
+      if (snap.exists()) return snap; // success
+      await new Promise(r => setTimeout(r, delayMs));
+    }
+    throw new Error('User profile document not found after maximum retries');
+  };
+
   useEffect(() => {
     let unsubProfile = () => { }; // This will be used to unsubscribe from the profile listener
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
@@ -97,50 +107,21 @@ export const AuthProvider = ({ children }) => {
 
         const userProfileDocRef = doc(db, 'Users', user.uid);
 
-        // Subscribe to the user profile document
-        // This will update the user profile in real-time from the Firestore
+        // Wait until backend auth trigger creates the profile
+        const initialSnap = await waitForUserProfile(user.uid, { maxRetries: 10, delayMs: 500 });
+
+        // After the doc exists, attach realtime listener
         unsubProfile = onSnapshot(userProfileDocRef, async (profileSnap) => {
-          if (profileSnap.exists()) {
-            const userProfileData = profileSnap.data();
-
-            // Make sure every reference array is always an array
-            userProfileData.Children = cleanupReferencesArray(userProfileData.Children);
-            userProfileData.Contacts = cleanupReferencesArray(userProfileData.Contacts);
-            userProfileData.Role = userProfileData.Role.path.split('/').pop();
-
-            // Try to fetch avatar
-            const userPhoto = await tempDbService.fetchAvatarPhotoByUserId(user.uid);
-
-            // Update the user object with profile data
-            loggedInUser = { ...user, ...userProfileData, photoURL: userPhoto };
-
-            // Update the AuthProvider state
-            setDbService(new FirebaseDbService(loggedInUser));
-            setCurrentUser(loggedInUser);
-            setLoading(false);
-
-            // Redirect to profile page if this is a newly created profile
-            if (profileJustCreated) {
-              window.location.href = '/profile';
-              setProfileJustCreated(false); // Reset the flag
-            }
-          } else {
-            logger.warn("User.uid: ", user.uid, " profile does not exist in Firestore. Creating profile...");
-            
-            // Create user profile for new users (Google or email/password)
-            try {
-              await tempDbService.createUserProfileFromGoogleAuth(user);
-              logger.info("User profile created successfully for:", user.uid);
-              setProfileJustCreated(true);
-              // The onSnapshot listener will pick up the newly created profile
-            } catch (error) {
-              logger.error("Failed to create user profile:", error);
-              // Sign out user if profile creation fails
-              await logout();
-              setCurrentUser(null);
-              setLoading(false);
-            }
-          }
+          if (!profileSnap.exists()) return; // rare edge case; ignore
+          const userProfileData = profileSnap.data();
+          userProfileData.Children = cleanupReferencesArray(userProfileData.Children);
+          userProfileData.Contacts = cleanupReferencesArray(userProfileData.Contacts);
+          userProfileData.Role = userProfileData.Role.path.split('/').pop();
+          const userPhoto = userProfileData.PhotoURL || null;
+          const loggedInUser = { ...user, ...userProfileData, PhotoURL: userPhoto };
+          setDbService(new FirebaseDbService(loggedInUser));
+          setCurrentUser(loggedInUser);
+          setLoading(false);
         });
 
       } catch (err) {

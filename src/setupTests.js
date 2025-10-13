@@ -1,12 +1,27 @@
 import '@testing-library/jest-dom';
 
+
 // Mock Firebase
 jest.mock('firebase/auth', () => ({
   getAuth: jest.fn(() => ({
     currentUser: null,
     signOut: jest.fn(),
   })),
-  onAuthStateChanged: jest.fn(),
+  onAuthStateChanged: jest.fn((auth, callback) => {
+    // Use setTimeout to simulate async behavior but ensure it completes quickly
+    const timeoutId = setTimeout(() => {
+      try {
+        callback(null);
+      } catch (error) {
+        console.log('onAuthStateChanged callback error:', error);
+      }
+    }, 0);
+    // Return a cleanup function that clears the timeout
+    return () => {
+      console.log('=== DEBUGGING: onAuthStateChanged cleanup called ===');
+      clearTimeout(timeoutId);
+    };
+  }),
   GoogleAuthProvider: jest.fn(),
   signInWithPopup: jest.fn(),
   signInWithEmailAndPassword: jest.fn(),
@@ -31,9 +46,52 @@ jest.mock('firebase/firestore', () => ({
   query: jest.fn(),
   where: jest.fn(),
   arrayUnion: jest.fn(),
-  onSnapshot: jest.fn(),
-  Timestamp: {
-    fromDate: jest.fn((date) => ({ toDate: () => date })),
+  onSnapshot: jest.fn((docRef, callback) => {
+    // Use setTimeout to simulate async behavior but ensure it completes quickly
+    const timeoutId = setTimeout(() => {
+      try {
+        callback({
+          exists: () => false,
+          data: () => ({}),
+        });
+      } catch (error) {
+        console.log('onSnapshot callback error:', error);
+      }
+    }, 0);
+    // Return a cleanup function that clears the timeout
+    return () => {
+      console.log('=== DEBUGGING: onSnapshot cleanup called ===');
+      clearTimeout(timeoutId);
+    };
+  }),
+  Timestamp: class MockTimestamp {
+    constructor(date) {
+      console.log('=== DEBUGGING: MockTimestamp constructor called with:', date);
+      this._date = date || new Date();
+    }
+    
+    static fromDate(date) {
+      console.log('=== DEBUGGING: MockTimestamp.fromDate called with:', date);
+      return new MockTimestamp(date);
+    }
+    
+    static now() {
+      console.log('=== DEBUGGING: MockTimestamp.now called');
+      return new MockTimestamp(new Date());
+    }
+    
+    toDate() {
+      console.log('=== DEBUGGING: MockTimestamp.toDate called, returning:', this._date);
+      return this._date;
+    }
+    
+    toString() {
+      return this._date.toString();
+    }
+    
+    valueOf() {
+      return this._date.valueOf();
+    }
   },
   DocumentReference: class MockDocumentReference {
     constructor(id, path) {
@@ -47,6 +105,45 @@ jest.mock('@firebase/storage', () => ({
   ref: jest.fn(),
   uploadBytes: jest.fn(),
   getDownloadURL: jest.fn(),
+}));
+
+// Mock @firebase/firestore
+jest.mock('@firebase/firestore', () => ({
+  collection: jest.fn(),
+  getDocs: jest.fn(),
+  getDoc: jest.fn(),
+  setDoc: jest.fn(),
+  updateDoc: jest.fn(),
+  addDoc: jest.fn(),
+  deleteDoc: jest.fn(),
+  doc: jest.fn(),
+  query: jest.fn(),
+  where: jest.fn(),
+  arrayUnion: jest.fn(),
+  onSnapshot: jest.fn((docRef, callback) => {
+    const timeoutId = setTimeout(() => {
+      try {
+        callback({
+          exists: () => false,
+          data: () => ({}),
+        });
+      } catch (error) {
+        console.log('@firebase/firestore onSnapshot callback error:', error);
+      }
+    }, 0);
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }),
+  Timestamp: {
+    fromDate: jest.fn((date) => ({ toDate: () => date })),
+  },
+  DocumentReference: class MockDocumentReference {
+    constructor(id, path) {
+      this.id = id;
+      this.path = path;
+    }
+  },
 }));
 
 // Mock Firebase config
@@ -83,6 +180,9 @@ jest.mock('./Helpers/logger', () => ({
   },
 }));
 
+// FirebaseDbService mocking is now handled per test file
+// This allows unit tests to use the real class while integration tests can use mocks
+
 // Mock react-router-dom
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -98,16 +198,7 @@ jest.mock('@tanstack/react-query', () => ({
   })),
 }));
 
-// Mock react-hook-form
-jest.mock('react-hook-form', () => ({
-  useForm: jest.fn(() => ({
-    register: jest.fn(),
-    handleSubmit: jest.fn((fn) => fn),
-    formState: { errors: {} },
-    reset: jest.fn(),
-    watch: jest.fn(),
-  })),
-}));
+// Don't mock react-hook-form globally - use real implementation in tests
 
 // Mock joi resolver
 jest.mock('@hookform/resolvers/joi', () => ({
@@ -119,7 +210,7 @@ global.mockFirebaseUser = {
   uid: 'test-user-123',
   email: 'test@example.com',
   displayName: 'Test User',
-  photoURL: 'https://example.com/photo.jpg',
+  PhotoURL: 'https://example.com/photo.jpg',
   Role: 'parent-user',
   Name: 'Test User',
   CellNumber: '123-456-7890',

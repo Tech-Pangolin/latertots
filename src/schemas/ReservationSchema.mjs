@@ -1,13 +1,29 @@
 import Joi from 'joi';
-import { RESERVATION_STATUS } from '../Helpers/constants';
-import { DocumentReference, Timestamp } from 'firebase/firestore';
+import { RESERVATION_STATUS } from '../Helpers/constants.mjs';
+import { Timestamp } from 'firebase/firestore';
+import { DocumentReferenceOrCompatible } from '../Helpers/validationHelpers.mjs';
+
 
 const ReservationSchema = Joi.object({
   // Administrative fields
   archived: Joi.boolean().default(false).required(),
-  billingLocked: Joi.boolean().default(false).required(),
-  allDay: Joi.boolean().default(false).required(),                    // TODO: Remove all references to this field
-  overrideTotalCents: Joi.number().integer().min(0).optional(),       // Optional field for overriding total billing amount
+  formDraftId: Joi.string().required(),
+
+  // Billing integration fields
+  stripePayments: Joi.object()
+    .required()
+    .keys({
+      minimum: Joi.alternatives().try(Joi.string(), Joi.valid(null)), 
+      remainder: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
+      full: Joi.alternatives().try(Joi.string(), Joi.valid(null))
+    }),
+  status: Joi.string()
+    .valid(...Object.values(RESERVATION_STATUS))
+    .required()
+    .messages({
+      'any.only': `Status must be one of: ${Object.values(RESERVATION_STATUS).join(', ')}`,
+      'string.empty': 'Status is required'
+    }),
 
   // Reservation fields
   start: Joi.object().instance(Timestamp).required().messages({
@@ -25,12 +41,8 @@ const ReservationSchema = Joi.object({
     duration: Joi.number().min(0).optional(),                           // TODO: Does this field serve a purpose?
   }),
   userId: Joi.string().required(),
-  Child: Joi.object().instance(DocumentReference).required().messages({
-    'object.instance': 'Child must be a valid DocumentReference.'
-  }),
-  User: Joi.object().instance(DocumentReference).required().messages({
-    'object.instance': 'User must be a valid DocumentReference.'
-  }),
+  Child: DocumentReferenceOrCompatible.required(),
+  User: DocumentReferenceOrCompatible.required(),
   groupActivity: Joi.boolean().default(false).optional(),
 })
   .prefs({ abortEarly: false });

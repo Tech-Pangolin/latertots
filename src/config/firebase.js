@@ -1,9 +1,13 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getStorage } from "@firebase/storage";
+import { getStorage, connectStorageEmulator } from "@firebase/storage";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
+
+// Check if we should use emulator
+const useEmulator = process.env.REACT_APP_USE_EMULATOR === 'true';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -19,8 +23,32 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const storage = getStorage(app);
 
-// export app and analytics
-export { app, analytics, storage };
+// Initialize services
+const analytics = useEmulator ? null : getAnalytics(app);
+const storage = getStorage(app);
+const functions = getFunctions(app);
+
+// Connect to emulators if in emulator mode
+if (useEmulator) {
+  try {
+    connectStorageEmulator(storage, 'localhost', 9199);
+  } catch (error) {
+    // Connection might already exist, which is fine
+    if (!error.message.includes('already been called')) {
+      console.warn('Storage emulator connection warning:', error.message);
+    }
+  }
+  
+  try {
+    connectFunctionsEmulator(functions, 'localhost', 5001);
+  } catch (error) {
+    // Connection might already exist, which is fine
+    if (!error.message.includes('already been called')) {
+      console.warn('Functions emulator connection warning:', error.message);
+    }
+  }
+}
+
+// export app, analytics, storage, functions, and emulator flag
+export { app, analytics, storage, functions, useEmulator };

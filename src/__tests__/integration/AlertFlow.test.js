@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../utils/testUtils';
+import { renderWithProviders } from '../../utils/testUtils';
 import UserProfile from '../../components/Pages/UserProfile';
 
 // Mock all the dependencies
 jest.mock('../../components/AuthProvider', () => ({
   useAuth: () => ({
-    currentUser: { Name: 'Test User', Email: 'test@example.com', photoURL: null },
+    currentUser: { Name: 'Test User', Email: 'test@example.com', PhotoURL: null },
   }),
 }));
 
