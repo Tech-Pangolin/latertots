@@ -27,13 +27,14 @@ function UserRegistrationPage() {
                 <li>Pay at Pick-Up – Payment is collected when you come to grab your happy, played-out tot!</li>
                 <li>4-Hour Play Limit – To keep the fun fair for everyone, tots can enjoy up to 4 hours of play per day.</li>
               </ul>
-              <p>Let’s get ready to giggle, explore, and create lasting memories! </p>
-              <h5 className='text-center'>Registration coming soon</h5>
-              </div>
-            </div>
-            <div className="col-12 col-md-6 d-none">
+              <p>Let’s get ready to giggle, explore, and create lasting memories! </p> 
               <h3 className='text-center' style={{ color: '#e51377', fontSize: '40px' }}>Register</h3>
               <UserForm />
+              {/* <h5 className='text-center'>Registration coming soon</h5> */}
+              </div>
+            </div>
+            <div className="col-12 col-md-6">
+             
             </div>
           </div>
         </div>
