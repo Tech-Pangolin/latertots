@@ -116,6 +116,11 @@ function IntroPage() {
                                         <p>Concord, North Carolina 28027</p>
                                     </div>
 
+                                    <div className="phone">
+                                        <i className="bi bi-phone"></i>
+                                        <h4>Phone:</h4>
+                                        <p>(704) 794-4276</p>
+                                    </div>
                                     <div className="email">
                                         <i className="bi bi-envelope"></i>
                                         <h4>Email:</h4>

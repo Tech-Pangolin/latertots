@@ -41,8 +41,7 @@ const FooterBar = () => {
                                 <a href="https://x.com/l8tertots/" className="twitter"><img src="/assets/img/footer/twitter.png" className='img-fluid' /></a>
 
                                 <a href="https://www.instagram.com/l8tertots/" className="instagram"><img src="/assets/img/footer/ig.png" className='img-fluid' /></a>
-                                <a href="#" className="facebook"><img src="/assets/img/footer/fb.png" className='img-fluid' /></a>
-                                <a href="#" className="linkedin"><img src="/assets/img/footer/linkedin.png" className='img-fluid' /></a>
+                                <a href="https://www.facebook.com/profile.php?id=61567825782544" className="facebook"><img src="/assets/img/footer/fb.png" className='img-fluid' /></a>
                             </div>
                         </div>
 

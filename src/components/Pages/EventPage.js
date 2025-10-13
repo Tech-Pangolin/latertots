@@ -35,7 +35,7 @@ function EventPage() {
                     <div className="col-md-8 mt-5" dataAos="fade-up">
 
                         <h3>Tots Night In </h3>
-                        <p>We know how important it is for our Tot-tenders to enjoy a tot-free evening, and we’ve got you covered with our Tots Night In package! While you unwind, your little ones will be having a blast with a fun-filled night of music, games, crafts, and movies. We also provide a fun dinner, so you can relax knowing that your tots are in good hands, enjoying every moment. It’s the perfect way to treat yourself to a carefree evening while we take great care of your special little ones. Price:$75 for the first tot additional $10 per tot  (7:00 PM – 11:00 PM)
+                        <p>We know how important it is for our Tot-tenders to enjoy a tot-free evening, and we’ve got you covered with our Tots Night In package! While you unwind, your little ones will be having a blast with a fun-filled night of music, games, crafts, and movies. We also provide a fun dinner, so you can relax knowing that your tots are in good hands, enjoying every moment. It’s the perfect way to treat yourself to a carefree evening while we take great care of your special little ones. Price:$35/hr for the first tot additional $10 per sibling  (7:00 PM – 11:00 PM)
                         </p>
 
                         <h3 className="mt-5">Tot & Me</h3>
