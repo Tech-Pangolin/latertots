@@ -10,7 +10,9 @@
 const RESERVATION_STATUS = {
   PROCESSING: 'processing',
   COMPLETED: 'completed',
-  CANCELLED: 'cancelled'
+  CANCELLED: 'cancelled',
+  DROPPED_OFF: 'dropped-off',
+  PICKED_UP: 'picked-up'
 };
 
 // Legacy invoice and payment activity constants removed
@@ -35,7 +37,8 @@ const PAYMENT_PRICING = {
 // NEW: Payment types for new system
 const PAYMENT_TYPES = {
   MINIMUM: 'minimum',                 // Pay 2-hour minimum upfront
-  FULL: 'full'                       // Pay full amount upfront
+  FULL: 'full',                      // Pay full amount upfront
+  REMAINDER: 'remainder'             // Pay remainder at pickup
 };
 
 // NEW: Deposit types for payment selection
@@ -56,7 +59,8 @@ const CHECKOUT_CONFIG = {
 const STRIPE_METADATA_KEYS = {
   APP_USER_ID: 'appUserId',
   RESERVATION_IDS: 'reservationIds',
-  PAYMENT_TYPE: 'paymentType'
+  PAYMENT_TYPE: 'paymentType',
+  DEPOSIT_PAYMENT: 'depositPayment'
 };
 
 // NEW: Invoice line item tags (extend existing)

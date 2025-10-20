@@ -4,7 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
-import { IMAGE_UPLOAD } from "./constants";
+import { IMAGE_UPLOAD, SERVICE_PRICE_LOOKUP_UIDS, PAYMENT_PRICING } from "./constants";
 import ReservationSchema from "../schemas/ReservationSchema.mjs";
 
 
@@ -29,13 +29,54 @@ export class FirebaseDbService {
     return null;
   }
 
-  validateAuth(requiredRole = null) {
+  async validateAuth(requiredRole = null) {
+    // Check if user is authenticated
     if (!this.userContext || !this.userContext.uid) {
       throw new Error("Authentication required.");
     }
 
-    if (requiredRole && this.userContext.Role !== requiredRole) {
-      throw new Error("Unauthorized access.");
+    // If no specific role is required, authentication is sufficient
+    if (!requiredRole) {
+      return;
+    }
+
+    try {
+      // Fetch all valid roles from the Roles collection
+      const rolesCollection = collection(db, 'Roles');
+      const rolesSnapshot = await getDocs(rolesCollection);
+      const validRoles = rolesSnapshot.docs
+        .filter(doc => !doc.data().archived) // Only include non-archived roles
+        .map(doc => doc.id); // Get the document IDs (role names)
+
+      // Validate that the required role exists in the database
+      if (!validRoles.includes(requiredRole)) {
+        throw new Error("Invalid role specified.");
+      }
+
+      // Check if user has the required role
+      const userRole = this.userContext.Role;
+      
+      // Handle case where user doesn't have a role assigned
+      if (!userRole) {
+        throw new Error("User role not assigned. Please contact support.");
+      }
+
+      // Compare roles (both should be strings at this point)
+      if (userRole !== requiredRole) {
+        throw new Error("Unauthorized access.");
+      }
+
+    } catch (error) {
+      // If it's already one of our custom errors, re-throw it
+      if (error.message.includes('Invalid role') || 
+          error.message.includes('User role not assigned') || 
+          error.message.includes('Unauthorized access')) {
+        throw error;
+      }
+      
+      // For Firestore errors, provide a more user-friendly message
+      logger.error("Error validating user role:", error);
+      throw new Error("Unable to validate user permissions. Please try again.");
     }
   }
 
@@ -57,9 +98,9 @@ export class FirebaseDbService {
    */
   async fetchDocs(ref, adminOnly = false) {
     if (adminOnly) {
-      this.validateAuth('admin');
+      await this.validateAuth('admin');
     } else {
-      this.validateAuth();
+      await this.validateAuth();
     }
     const data = await getDocs(ref).then(snapshot => this.#mapSnapshotToData(snapshot))
     return data;
@@ -74,11 +115,11 @@ export class FirebaseDbService {
    * @returns {function} - A function to unsubscribe from the real-time updates.
    * @throws {Error} - If the user is not authenticated or does not have the required role.
    */
-  subscribeDocs(ref, callback, adminOnly = false) {
+  async subscribeDocs(ref, callback, adminOnly = false) {
     if (adminOnly) {
-      this.validateAuth('admin');
+      await this.validateAuth('admin');
     } else {
-      this.validateAuth();
+      await this.validateAuth();
     }
     return onSnapshot(ref, (snapshot) => {
       try {
@@ -98,7 +139,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error creating the document.
    */
   async createChildDocument(childData) {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const docRef = await addDoc(collection(db, "Children"), childData);
       const userRef = doc(collection(db, "Users"), this.userContext.uid);
@@ -119,7 +160,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error creating the document.
    */
   createContactDocument = async (contactData) => {
-    this.validateAuth();
+    await this.validateAuth();
     contactData.archived = false;
     try {
       const docRef = await addDoc(collection(db, "Contacts"), contactData);
@@ -213,7 +254,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error querying the children.
    */
   fetchAllCurrentUsersChildren = async () => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const q = query(collection(db, "Users"), where("Email", "==", this.userContext.email), where("archived", "==", false));
       const querySnapshot = await getDocs(q);
@@ -254,7 +295,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error querying the users.
    */
   fetchAllCurrentUsers = async () => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const q = query(collection(db, "Users"), where("archived", "==", false));
       const querySnapshot = await getDocs(q);
@@ -278,7 +319,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error querying the contacts.
    */
   fetchAllCurrentUsersContacts = async (email) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const q = query(collection(db, "Users"), where("Email", "==", email), where("archived", "==", false));
       const querySnapshot = await getDocs(q);
@@ -313,7 +354,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error uploading the photo.
    */
   uploadPhoto = async (entityType, entityId, file) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       if (!(file instanceof File)) {
         throw new Error(`Invalid file type: ${typeof file}. Please provide a valid File object.`);
@@ -384,7 +425,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error fetching the reservations.
    */
   fetchUserReservations = async (userId) => {
-    this.validateAuth();
+    await this.validateAuth();
     // Handle case when user ID is not yet available
     if (!userId) {
       return [];
@@ -415,7 +456,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error fetching the reservations.
    */
   fetchAllReservationsByMonthDay = async (year, monthNumber, dayNumber = null) => {
-    this.validateAuth("admin");
+    await this.validateAuth("admin");
     // 'start' property is a Firestore Timestamp
     try {
       let q, dateStart, dateEnd;
@@ -460,8 +501,8 @@ export class FirebaseDbService {
    * @returns {string} [return.message] - An optional message if the reservation is not allowable.
    * @throws {Error} - If there is an error checking the reservation allowability.
    */
-  checkReservationOverlapLimit(newReservation, unsavedEvents = []) {
-    this.validateAuth();
+  async checkReservationOverlapLimit(newReservation, unsavedEvents = []) {
+    await this.validateAuth();
 
     let eventsOverlappingNewReservation = unsavedEvents.filter(event => {
       if (newReservation.id && event.id === newReservation.id) return false;
@@ -505,7 +546,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error creating the document.
    */
   createReservationDocument = async (userId, reservationData) => {
-    this.validateAuth();
+    await this.validateAuth();
     reservationData.archived = false;
     try {
       const { id, ...dataWithoutId } = reservationData; // Remove the ID from the data. It's auto-generated by Firestore
@@ -515,7 +556,7 @@ export class FirebaseDbService {
       dataWithoutId.end = Timestamp.fromDate(new Date(dataWithoutId.end));
 
       const userRef = doc(collection(db, "Users"), userId);
-      const childRef = doc(collection(db, "Children"), reservationData.extendedProps.childId);
+      const childRef = doc(collection(db, "Children"), reservationData.childId);
 
       const dataWithExtraRefs = {
         ...dataWithoutId,
@@ -546,7 +587,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error updating the document.
    */
   updateReservationDocument = async (reservationData) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const { id, ...dataWithoutId } = reservationData; // Remove the ID from the data
 
@@ -571,10 +612,10 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error updating the document.
    * */
   changeReservationStatus = async (reservationId, newStatus) => {
-    this.validateAuth('admin');
+    await this.validateAuth('admin');
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
-      await updateDoc(reservationRef, { extendedProps: { status: newStatus } });
+      await updateDoc(reservationRef, { status: newStatus });
     } catch (error) {
       logger.error(`Could not change reservation ${reservationId} status to ${newStatus}:`, error);
       throw error;
@@ -582,8 +623,485 @@ export class FirebaseDbService {
   }
 
   // TODO: Add validation to ensure that non-admin users can only change their own reservations
+
+  /**
+   * Drop off a child for service
+   * @param {string} reservationId - The ID of the reservation document to update
+   * @param {Timestamp} actualDropOffTime - The actual time the child was dropped off
+   * @param {Array} servicesProvided - Array of services provided during drop-off
+   * @returns {Promise<void>} - A promise that resolves when the document is successfully updated
+   */
+  dropOffChild = async (reservationId, actualDropOffTime, servicesProvided = []) => {
+    this.validateAuth('admin');
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      const now = Timestamp.now();
+      
+      await updateDoc(reservationRef, {
+        status: 'dropped-off',
+        'dropOffPickUp.actualStartTime': actualDropOffTime,
+        'dropOffPickUp.servicesProvided': servicesProvided,
+        updatedAt: now
+      });
+      
+      logger.info('Child dropped off successfully:', { reservationId, actualDropOffTime });
+    } catch (error) {
+      logger.error('Error dropping off child:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Pick up a child and calculate final payment
+   * @param {string} reservationId - The ID of the reservation document to update
+   * @param {number} finalAmount - The final amount in cents (optional, will calculate if not provided)
+   * @param {number} calculatedAmount - The calculated amount in cents (for override tracking)
+   * @param {string} overrideReason - Reason for amount override (optional)
+   * @returns {Promise<Object>} - A promise that resolves with checkout session or no payment required
+   */
+  pickUpChild = async (reservationId, finalAmount = null, calculatedAmount = null, overrideReason = null, selectedActivityId = null) => {
+    this.validateAuth('admin');
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      const reservationDoc = await getDoc(reservationRef);
+      const reservationData = reservationDoc.data();
+      const now = Timestamp.now();
+      
+      // Use provided finalAmount or calculate it with selected activity
+      let amountToUse = finalAmount;
+      let costBreakdown = null;
+      
+      if (amountToUse === null) {
+        const calculationResult = await this.calculateFinalCheckoutAmount(reservationData, selectedActivityId);
+        amountToUse = calculationResult.finalAmount;
+        costBreakdown = calculationResult;
+      } else {
+        // Even with override, calculate breakdown for description
+        costBreakdown = await this.calculateFinalCheckoutAmount(reservationData, selectedActivityId);
+      }
+      
+      // Prepare update fields
+      const updateFields = {
+        status: 'picked-up',
+        'dropOffPickUp.actualEndTime': now,
+        'dropOffPickUp.finalAmount': amountToUse,
+        updatedAt: now
+      };
+      
+      // Add override information if provided
+      if (overrideReason) {
+        updateFields['dropOffPickUp.overrideReason'] = overrideReason;
+        updateFields['dropOffPickUp.calculatedAmount'] = calculatedAmount;
+        updateFields['dropOffPickUp.overrideAppliedAt'] = now;
+        updateFields['dropOffPickUp.overrideAppliedBy'] = this.userContext.uid;
+      }
+      
+      // Store selected activity if provided
+      if (selectedActivityId) {
+        updateFields['dropOffPickUp.selectedGroupActivityId'] = selectedActivityId;
+      }
+      
+      // Update reservation with pick-up time
+      await updateDoc(reservationRef, updateFields);
+      
+      // Create checkout session for remainder payment
+      if (amountToUse > 0) {
+        const checkoutSession = await this.createFinalCheckoutSession(
+          reservationId, 
+          reservationData, 
+          amountToUse,
+          costBreakdown,
+          overrideReason // Pass override reason if present
+        );
+        return checkoutSession;
+      }
+      
+      return { success: true, noPaymentRequired: true };
+    } catch (error) {
+      logger.error('Error picking up child:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Calculate final checkout amount based on actual service time
+   * @param {Object} reservationData - The reservation data
+   * @returns {Promise<Object>} - Final amount and group activity overlap charge
+   */
+  calculateFinalCheckoutAmount = async (reservationData, selectedActivityId = null) => {
+    // 1. Calculate total actual hours
+    const actualStart = reservationData.dropOffPickUp?.actualStartTime;
+    if (!actualStart) {
+      throw new Error('Child has not been dropped off yet');
+    }
+    const now = Timestamp.now();
+    const actualHours = (now.toMillis() - actualStart.toMillis()) / (1000 * 60 * 60);
+    
+    // 2. Get service price rates using constants
+    const servicePricesQuery = query(collection(db, 'ServicePrices'));
+    const pricesSnapshot = await getDocs(servicePricesQuery);
+    const prices = {};
+    pricesSnapshot.forEach(doc => prices[doc.data().stripeId] = doc.data());
+    
+    const hourlyRate = prices[SERVICE_PRICE_LOOKUP_UIDS.STANDARD_FEE_FIRST_CHILD_HOURLY]?.pricePerUnitInCents || 2500;
+    const lateFeeRate = prices[SERVICE_PRICE_LOOKUP_UIDS.LATE_FEE_HOURLY]?.pricePerUnitInCents || 2500;
+    
+    // 3. Calculate base cost (up to 4 hours using constant)
+    const baseHours = Math.min(actualHours, PAYMENT_PRICING.LATE_FEE_THRESHOLD_HOURS);
+    const baseCost = baseHours * hourlyRate;
+    
+    // 4. Calculate late fee (hours over threshold using constant)
+    const overtimeHours = Math.max(0, actualHours - PAYMENT_PRICING.LATE_FEE_THRESHOLD_HOURS);
+    const lateFeeCost = overtimeHours * lateFeeRate;
+    
+    // 5. Calculate group activity cost if applicable
+    let groupActivityCost = 0;
+    let groupActivityHours = 0;
+    let availableActivities = [];
+    let activityInfo = null;
+    
+    if (reservationData.groupActivity) {
+      const groupActivityResult = await this.calculateGroupActivityCost(
+        actualStart, 
+        now, 
+        selectedActivityId
+      );
+      groupActivityCost = groupActivityResult.cost;
+      groupActivityHours = groupActivityResult.hours;
+      availableActivities = groupActivityResult.availableActivities || [];
+      
+      if (groupActivityResult.activityName) {
+        activityInfo = {
+          name: groupActivityResult.activityName,
+          rate: groupActivityResult.activityRate,
+          isFlat: groupActivityResult.isFlat,
+          hasTimeData: groupActivityResult.hasTimeData
+        };
+      }
+    }
+    
+    // 6. Calculate totals
+    const totalServiceCost = baseCost + lateFeeCost + groupActivityCost;
+    const amountPaid = await this.getAmountPaidFromStripePayments(reservationData.stripePayments);
+    const finalAmount = Math.max(0, totalServiceCost - amountPaid);
+    
+    return {
+      finalAmount,
+      actualHours,
+      costBreakdown: {
+        baseService: {
+          hours: baseHours,
+          rate: hourlyRate,
+          subtotal: baseCost,
+          description: 'Base child care service'
+        },
+        groupActivity: reservationData.groupActivity ? {
+          hours: groupActivityHours,
+          rate: activityInfo?.rate || 0,
+          subtotal: groupActivityCost,
+          description: activityInfo ? `${activityInfo.name}${activityInfo.isFlat ? ' (flat rate)' : ''}` : 'No activity selected',
+          isFlat: activityInfo?.isFlat || false
+        } : null,
+        lateFee: overtimeHours > 0 ? {
+          hours: overtimeHours,
+          rate: lateFeeRate,
+          subtotal: lateFeeCost,
+          description: `Late fee (over ${PAYMENT_PRICING.LATE_FEE_THRESHOLD_HOURS}-hour limit)`
+        } : null,
+        totalServiceCost,
+        amountPaid,
+        amountDue: finalAmount,
+        availableActivities // Include for modal dropdown
+      }
+    };
+  };
+
+  /**
+   * Get actual payment amounts from Stripe Payment Intent IDs
+   * @param {string[]} paymentIntentIds - Array of Stripe Payment Intent IDs
+   * @returns {Promise<number>} - Total amount paid in cents
+   */
+  getPaymentAmountsFromStripe = async (paymentIntentIds) => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/latertots-a6694/us-central1/getPaymentAmounts`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentIntentIds })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      const totalAmount = Object.values(result.paymentAmounts)
+        .reduce((sum, amount) => sum + amount, 0);
+      
+      return totalAmount;
+    } catch (error) {
+      logger.error('Error getting payment amounts from Stripe:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Create final checkout session for remainder payment
+   * @param {string} reservationId - The reservation ID
+   * @param {Object} reservationData - The reservation data
+   * @param {number} finalAmount - The final amount in cents
+   * @param {Object} costBreakdown - The detailed cost breakdown
+   * @param {string} overrideReason - Reason for amount override (optional)
+   * @returns {Promise<Object>} - Checkout session result
+   */
+  createFinalCheckoutSession = async (reservationId, reservationData, finalAmount, costBreakdown = null, overrideReason = null) => {
+    try {
+      let serviceDescription = '';
+      
+      if (costBreakdown) {
+        const breakdown = costBreakdown.costBreakdown;
+        const services = [];
+        
+        // Base service line
+        if (breakdown.baseService) {
+          services.push(
+            `${breakdown.baseService.hours.toFixed(1)}h base care ($${(breakdown.baseService.rate / 100).toFixed(2)}/hr) = $${(breakdown.baseService.subtotal / 100).toFixed(2)}`
+          );
+        }
+        
+        // Group activity line (only include if there's an actual charge)
+        if (breakdown.groupActivity && breakdown.groupActivity.subtotal > 0) {
+          const activityDesc = breakdown.groupActivity.isFlat ? 
+            `flat rate ${breakdown.groupActivity.description} = $${(breakdown.groupActivity.subtotal / 100).toFixed(2)}` : 
+            `${breakdown.groupActivity.hours.toFixed(1)}h ${breakdown.groupActivity.description} ($${(breakdown.groupActivity.rate / 100).toFixed(2)}/hr) = $${(breakdown.groupActivity.subtotal / 100).toFixed(2)}`;
+          services.push(activityDesc);
+        }
+        
+        // Late fee line
+        if (breakdown.lateFee) {
+          services.push(
+            `${breakdown.lateFee.hours.toFixed(1)}h late fee ($${(breakdown.lateFee.rate / 100).toFixed(2)}/hr) = $${(breakdown.lateFee.subtotal / 100).toFixed(2)}`
+          );
+        }
+        
+        serviceDescription = services.join(', ');
+        
+        // Add summary section
+        serviceDescription += ` | Total Service Cost: $${(breakdown.totalServiceCost / 100).toFixed(2)}`;
+        
+        if (breakdown.amountPaid > 0) {
+          serviceDescription += ` | Previously paid: $${(breakdown.amountPaid / 100).toFixed(2)}`;
+        }
+        
+        serviceDescription += ` | Amount Due: $${(breakdown.amountDue / 100).toFixed(2)}`;
+        
+        // Add override information if present
+        if (overrideReason) {
+          serviceDescription += ` | Note: Amount manually adjusted by staff - Reason: ${overrideReason}`;
+        }
+      } else {
+        // Fallback
+        serviceDescription = `Full payment - ${(finalAmount / 2500).toFixed(1)} hours`;
+      }
+
+      // Call existing createCheckoutSession cloud function
+      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/latertots-a6694/us-central1/createCheckoutSession`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reservations: [{
+            reservationId: reservationId,
+            childName: reservationData.title,
+            durationHours: finalAmount / 2500, // Convert cents back to hours for display
+            hourlyRateCents: 2500,
+            groupActivity: false,
+            serviceDescription: serviceDescription
+          }],
+          paymentType: 'remainder',
+          latertotsUserId: reservationData.userId,
+          depositPayment: reservationData.stripePayments?.full || reservationData.stripePayments?.minimum || null,
+          successUrl: `${window.location.origin}/profile?payment=success&tab=payment`,
+          cancelUrl: `${window.location.origin}/profile?payment=failed&tab=payment`
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update reservation with checkout URL
+        const reservationRef = doc(collection(db, "Reservations"), reservationId);
+        await updateDoc(reservationRef, {
+          'dropOffPickUp.finalCheckoutSessionId': result.sessionId,
+          'dropOffPickUp.finalCheckoutUrl': result.url
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      logger.error('Error creating final checkout session:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Calculate group activity cost with proper rate lookup
+   * @param {Timestamp} actualStart - Actual start time
+   * @param {Timestamp} actualEnd - Actual end time
+   * @returns {Promise<Object>} - Cost and hours for group activity
+   */
+  calculateGroupActivityCost = async (actualStart, actualEnd, selectedActivityId = null) => {
+    // Fetch all service prices
+    const servicePricesQuery = query(collection(db, 'ServicePrices'));
+    const pricesSnapshot = await getDocs(servicePricesQuery);
+    const prices = {};
+    pricesSnapshot.forEach(doc => prices[doc.data().stripeId] = doc.data());
+    
+    // Filter for tot-tivities only (those with daysOfWeek metadata)
+    const totTivities = Object.entries(SERVICE_PRICE_LOOKUP_UIDS)
+      .filter(([key, uid]) => key.startsWith('TOTIVITY_'))
+      .map(([key, uid]) => prices[uid])
+      .filter(price => price && price.metadata?.daysOfWeek);
+    
+    // If no activity selected, return available options
+    if (!selectedActivityId) {
+      return {
+        cost: 0,
+        hours: 0,
+        availableActivities: totTivities.map(activity => ({
+          stripeId: activity.stripeId,
+          name: activity.name,
+          pricePerUnitInCents: activity.pricePerUnitInCents,
+          daysOfWeek: activity.metadata.daysOfWeek,
+          startTime: activity.metadata?.startTime || null,
+          endTime: activity.metadata?.endTime || null,
+          hasTimeData: !!(activity.metadata?.startTime && activity.metadata?.endTime),
+          isFlat: activity.stripeId.includes('_FLAT'),
+          isHourly: activity.stripeId.includes('_HOURLY')
+        }))
+      };
+    }
+    
+    // Calculate overlap for selected activity
+    const activity = prices[selectedActivityId];
+    if (!activity) {
+      return { cost: 0, hours: 0 };
+    }
+    
+    // Calculate time overlap (returns 0 if metadata missing)
+    const overlapHours = this.calculateActivityTimeOverlap(
+      actualStart, 
+      actualEnd, 
+      activity.metadata?.startTime,
+      activity.metadata?.endTime
+    );
+    
+    // Determine pricing based on activity type
+    const isFlat = selectedActivityId.includes('_FLAT');
+    const cost = isFlat 
+      ? (overlapHours > 0 ? activity.pricePerUnitInCents : 0) // Flat: charge full if any overlap
+      : Math.round(overlapHours * activity.pricePerUnitInCents); // Hourly: prorate
+    
+    return {
+      cost,
+      hours: overlapHours,
+      activityName: activity.name,
+      activityRate: activity.pricePerUnitInCents,
+      isFlat,
+      hasTimeData: !!(activity.metadata?.startTime && activity.metadata?.endTime)
+    };
+  };
+
+  /**
+   * Calculate overlap hours between reservation time and activity time
+   * @param {Timestamp} actualStart - Reservation start time
+   * @param {Timestamp} actualEnd - Reservation end time
+   * @param {string} activityStart - Activity start time "HH:MM" (optional)
+   * @param {string} activityEnd - Activity end time "HH:MM" (optional)
+   * @returns {number} - Overlap hours (0 if times not available)
+   */
+  calculateActivityTimeOverlap = (actualStart, actualEnd, activityStart, activityEnd) => {
+    if (!activityStart || !activityEnd) {
+      return 0; // No overlap calculation possible without time data
+    }
+    
+    // Convert Timestamps to Date objects
+    const resStart = actualStart.toDate();
+    const resEnd = actualEnd.toDate();
+    
+    // Parse activity times (format: "HH:MM")
+    const [actStartHour, actStartMin] = activityStart.split(':').map(Number);
+    const [actEndHour, actEndMin] = activityEnd.split(':').map(Number);
+    
+    // Create activity time windows on the same day as reservation
+    const actStart = new Date(resStart);
+    actStart.setHours(actStartHour, actStartMin, 0, 0);
+    
+    const actEnd = new Date(resStart);
+    actEnd.setHours(actEndHour, actEndMin, 0, 0);
+    
+    // Calculate overlap
+    const overlapStart = Math.max(resStart.getTime(), actStart.getTime());
+    const overlapEnd = Math.min(resEnd.getTime(), actEnd.getTime());
+    
+    if (overlapEnd <= overlapStart) {
+      return 0; // No overlap
+    }
+    
+    // Convert milliseconds to hours
+    return (overlapEnd - overlapStart) / (1000 * 60 * 60);
+  };
+
+  /**
+   * Calculate group activity overlap hours (placeholder implementation)
+   * @param {Timestamp} actualStart - Actual start time
+   * @param {Timestamp} actualEnd - Actual end time
+   * @returns {Promise<number>} - Overlap hours
+   */
+  calculateGroupActivityOverlap = async (actualStart, actualEnd) => {
+    // TODO: Implement actual group activity schedule checking
+    // For now, return 0 as placeholder
+    return 0;
+  };
+
+  /**
+   * Get amount paid from stripe payments by querying Stripe API
+   * @param {Object} stripePayments - The stripe payments object
+   * @returns {Promise<number>} - Amount paid in cents
+   */
+  getAmountPaidFromStripePayments = async (stripePayments) => {
+    if (!stripePayments) {
+      return 0;
+    }
+
+    // Collect all payment intent IDs
+    const paymentIntentIds = [];
+    if (stripePayments.minimum) paymentIntentIds.push(stripePayments.minimum);
+    if (stripePayments.full) paymentIntentIds.push(stripePayments.full);
+    if (stripePayments.remainder) paymentIntentIds.push(stripePayments.remainder);
+
+    if (paymentIntentIds.length === 0) {
+      return 0;
+    }
+
+    try {
+      // Call the new dbService method
+      const totalAmount = await this.getPaymentAmountsFromStripe(paymentIntentIds);
+      return totalAmount;
+    } catch (error) {
+      console.error('Error getting payment amounts from Stripe:', error);
+      // Return 0 if we can't get actual payment amounts - safer than guessing
+      return 0;
+    }
+  };
   changeReservationTime = async (reservationId, newStart, newEnd) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       await updateDoc(reservationRef, {
@@ -605,7 +1123,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error deleting the document.
    */
   deleteReservationDocument = async (reservationId) => {
-    this.validateAuth('admin');
+    await this.validateAuth('admin');
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       const reservationSnapshot = await getDoc(reservationRef);
@@ -613,7 +1131,7 @@ export class FirebaseDbService {
         return null;
       }
 
-      const status = reservationSnapshot.data().extendedProps.status;
+      const status = reservationSnapshot.data().status;
       if (status === 'pending' || status === 'confirmed') {
         await deleteDoc(reservationRef);
       } else {
@@ -634,7 +1152,7 @@ export class FirebaseDbService {
    * @throws {Error} - If there is an error archiving the document.
    */
   archiveReservationDocument = async (reservationId) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
       const reservationSnapshot = await getDoc(reservationRef);
@@ -642,7 +1160,7 @@ export class FirebaseDbService {
         return null;
       }
 
-      const status = reservationSnapshot.data().extendedProps.status;
+      const status = reservationSnapshot.data().status;
       if (status === 'pending' || status === 'confirmed') {
         // Archive the document by updating the "archived" field
         await updateDoc(reservationRef, { archived: true });
@@ -746,7 +1264,7 @@ export class FirebaseDbService {
    * @throws {Error} - Throws an error if the user document is not found after the maximum retries.
    */
   pollForUserDocument = async (db, userId, retries = 10) => {
-    this.validateAuth();
+    await this.validateAuth();
     let userDocRef;
     for (let i = 0; i < retries; i++) {
       userDocRef = doc(db, 'Users', userId);
@@ -768,7 +1286,7 @@ export class FirebaseDbService {
    * @returns {Promise<Object|null>} - The form draft or null if not found
    */
   getFormDraft = async (userId) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const draftRef = doc(db, 'FormDrafts', userId);
       const draftDoc = await getDoc(draftRef);
@@ -793,7 +1311,7 @@ export class FirebaseDbService {
    * @returns {Promise<Array>} - Array of document references for created reservations
    */
   createReservationsBatch = async (userId, reservationsInput, formDraftId) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const batch = writeBatch(db);
       const reservationRefs = [];
@@ -803,7 +1321,7 @@ export class FirebaseDbService {
         
         // Build the reservation data with required fields
         const userRef = doc(collection(db, 'Users'), userId);
-        const childRef = doc(collection(db, 'Children'), reservationData.extendedProps.childId);
+        const childRef = doc(collection(db, 'Children'), reservationData.childId);
         
         const fullReservationData = {
           archived: false,
@@ -811,10 +1329,7 @@ export class FirebaseDbService {
           start: Timestamp.fromDate(new Date(reservationData.start)),
           end: Timestamp.fromDate(new Date(reservationData.end)),
           title: reservationData.title,
-          extendedProps: {
-            status: 'pending',
-            childId: reservationData.extendedProps.childId
-          },
+          childId: reservationData.childId,
           userId: userId,
           User: userRef,
           Child: childRef,
@@ -853,13 +1368,55 @@ export class FirebaseDbService {
    * @returns {Promise<void>} - A promise that resolves when the reservation is deleted
    */
   deleteReservation = async (reservationId) => {
-    this.validateAuth();
+    await this.validateAuth();
     try {
       const reservationRef = doc(db, 'Reservations', reservationId);
       await deleteDoc(reservationRef);
       logger.info(`Reservation ${reservationId} deleted successfully`);
     } catch (error) {
       logger.error("Error deleting reservation:", error);
+      throw error;
+    }
+  };
+
+  /**
+   * Get user data by user ID
+   * @param {string} userId - The user ID
+   * @returns {Promise<Object>} - User data
+   */
+  getUserData = async (userId) => {
+    try {
+      const userRef = doc(collection(db, "Users"), userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        throw new Error('User not found');
+      }
+      
+      return userDoc.data();
+    } catch (error) {
+      logger.error('Error getting user data:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Get reservation data by reservation ID
+   * @param {string} reservationId - The reservation ID
+   * @returns {Promise<Object>} - Reservation data
+   */
+  getReservationData = async (reservationId) => {
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      const reservationDoc = await getDoc(reservationRef);
+      
+      if (!reservationDoc.exists()) {
+        throw new Error('Reservation not found');
+      }
+      
+      return reservationDoc.data();
+    } catch (error) {
+      logger.error('Error getting reservation data:', error);
       throw error;
     }
   };

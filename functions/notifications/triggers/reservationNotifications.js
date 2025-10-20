@@ -7,7 +7,7 @@ exports.createReservationRequestNotification = functions.firestore
   .onCreate(async (snapshot, context) => {
     const reservation = snapshot.data();
 
-    if (reservation.extendedProps?.status === 'pending') {
+    if (reservation.status === 'pending') {
       await createNotification({
         message: `New reservation pending approval for ${reservation.title}`,
         type: 'admin',

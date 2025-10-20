@@ -637,10 +637,8 @@ describe('FirebaseDbService Proper Unit Tests', () => {
         end: new Date('2024-01-01T11:00:00Z'),
         billingLocked: false,
         allDay: false,
-        extendedProps: {
-          childId: 'child-123',
-          status: 'pending'
-        }
+        childId: 'child-123',
+        status: 'pending'
       };
       const mockDocRef = { id: 'reservation-123' };
       
@@ -666,10 +664,8 @@ describe('FirebaseDbService Proper Unit Tests', () => {
           archived: false,
           billingLocked: false,
           allDay: false,
-          extendedProps: {
-            childId: 'child-123',
-            status: 'pending'
-          }
+          childId: 'child-123',
+          status: 'pending'
         })
       );
       
@@ -732,9 +728,7 @@ describe('FirebaseDbService Proper Unit Tests', () => {
       getDoc.mockResolvedValueOnce({
         exists: () => true,
         data: () => ({
-          extendedProps: {
-            status: 'pending'
-          }
+          status: 'pending'
         })
       });
       
@@ -769,7 +763,7 @@ describe('FirebaseDbService Proper Unit Tests', () => {
       const mockDoc = { 
         exists: () => true,
         data: () => ({
-          extendedProps: { status: 'pending' }
+          status: 'pending'
         })
       };
       getDoc.mockResolvedValue(mockDoc);
@@ -814,7 +808,7 @@ describe('FirebaseDbService Proper Unit Tests', () => {
       // ASSERT: Verify external calls
       expect(updateDoc).toHaveBeenCalledWith(
         expect.any(Object), // doc reference
-        { extendedProps: { status: 'confirmed' } }
+        { status: 'confirmed' }
       );
     });
 

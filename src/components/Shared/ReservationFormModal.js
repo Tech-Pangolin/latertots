@@ -121,10 +121,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
             remainder: null,
             full: null
           },
-          extendedProps: {
-            status: RESERVATION_STATUS.PENDING,
-            childId: reservation.extendedProps.childId
-          }
+          childId: reservation.childId
         };
         
         // Create reservation in database
@@ -188,10 +185,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
         allDay: false,
         billingLocked: false,
         groupActivity: formData.groupActivity,
-        extendedProps: {
-          status: 'pending',
-          childId: child.id
-        },
+        // Note: extendedProps removed - fields handled at top level in backend
         totalTime: calculateTimeDifference(formData.start, formData.end)
       }
     });
@@ -205,7 +199,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
       return;
     }
 
-    const validOverlap = dbService.checkReservationOverlapLimit(newEvents);
+    const validOverlap = await dbService.checkReservationOverlapLimit(newEvents);
     if (!validOverlap) {
       alert('No more than 5 reservations can take place simultaneously. Please check available time slots and try again.');
       return;

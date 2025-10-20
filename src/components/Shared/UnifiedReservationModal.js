@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Button, 
   Dialog, 
@@ -179,13 +179,11 @@ const UnifiedReservationModal = ({
       return {
         stableId: `${child.id}-${index}`, // Create stable identifier
         title: child.name,
+        childId: child.id, // FIXED: Add childId field for backend processing
         start: new Date(formData.date + 'T' + formData.start).toISOString(),
         end: new Date(formData.date + 'T' + formData.end).toISOString(),
         groupActivity: formData.groupActivity,
-        extendedProps: {
-          status: 'pending',
-          childId: child.id
-        },
+        // Note: extendedProps removed - fields handled at top level in backend
         totalTime: calculateTimeDifference(formData.start, formData.end)
       };
     });
@@ -199,7 +197,7 @@ const UnifiedReservationModal = ({
       return;
     }
 
-    const validOverlap = dbService.checkReservationOverlapLimit(newEvents);
+    const validOverlap = await dbService.checkReservationOverlapLimit(newEvents);
     if (!validOverlap) {
       updateState({ error: 'No more than 5 reservations can take place simultaneously. Please check available time slots and try again.' });
       return;

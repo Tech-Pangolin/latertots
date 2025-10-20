@@ -185,6 +185,7 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
     const reservations = JSON.parse(session.metadata.reservationIds || '[]');
     const paymentType = session.metadata.paymentType;
     const appUserId = session.metadata.appUserId;
+    const isRemainderPayment = paymentType === 'remainder';
 
     // Extract user ID from appUserId (format: "Users/{userId}")
     const userId = appUserId.split('/')[1];
@@ -195,27 +196,36 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
       const reservationId = reservationPath.split('/')[1];
       const reservationRef = db.collection('Reservations').doc(reservationId);
 
-      // Update stripePayments based on payment type
-      const stripePayments = {
-        minimum: paymentType === 'minimum' ? session.payment_intent : null,
-        remainder: paymentType === 'minimum' ? null : null,
-        full: paymentType === 'full' ? session.payment_intent : null
-      };
-
-      batch.update(reservationRef, {
-        stripePayments,
-        status: 'confirmed', // Update status from PENDING to CONFIRMED
-        'extendedProps.status': 'confirmed', // Update extendedProps status as well
-        formDraftId: FieldValue.delete(), // Remove formDraftId
+      // Build update object with field-level updates to preserve existing data
+      const updateData = {
+        status: isRemainderPayment ? 'paid' : 'confirmed',
         updatedAt: Timestamp.now()
-      });
+      };
+      
+      // Update specific payment field based on payment type
+      if (paymentType === 'minimum') {
+        updateData['stripePayments.minimum'] = session.payment_intent;
+      } else if (paymentType === 'full') {
+        updateData['stripePayments.full'] = session.payment_intent;
+      } else if (paymentType === 'remainder') {
+        updateData['stripePayments.remainder'] = session.payment_intent;
+      }
+      
+      // Only delete formDraftId for non-remainder payments
+      if (!isRemainderPayment) {
+        updateData.formDraftId = FieldValue.delete();
+      }
+      
+      batch.update(reservationRef, updateData);
     }
 
     await batch.commit();
 
-    // Clean up the user's form draft using centralized cleanup
-    const { performCleanup } = require('../../cleanup/cleanupFailedReservations');
-    await performCleanup({ specificDraftId: userId, userId });
+    // Only perform cleanup for non-remainder payments
+    if (!isRemainderPayment) {
+      const { performCleanup } = require('../../cleanup/cleanupFailedReservations');
+      await performCleanup({ specificDraftId: userId, userId });
+    }
 
     // Update user's saved payment methods if any
     if (session.payment_method) {
@@ -223,7 +233,7 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
       await updateUserPaymentMethods(appUserId, session.payment_method);
     }
 
-    logger.info('✅ [handleCheckoutSessionExpired] Checkout session processing completed:', {
+    logger.info('✅ [handleCheckoutSessionCompleted] Checkout session processing completed:', {
       sessionId: session.id,
       userId,
       reservationCount: reservations.length,
@@ -235,7 +245,7 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
     return { processed: true, userId, reservationCount: reservations.length, status: 'checkout_completed' };
 
   } catch (error) {
-    logger.error('❌ [handleCheckoutSessionExpired] Failed to process checkout session completion:', {
+    logger.error('❌ [handleCheckoutSessionCompleted] Failed to process checkout session completion:', {
       sessionId: session.id,
       error: error.message
     });
@@ -254,7 +264,10 @@ const handleCheckoutSessionExpired = async (stripeEvent) => {
   try {
     // Extract user ID from session metadata
     const appUserId = session.metadata?.appUserId;
-    if (appUserId) {
+    const paymentType = session.metadata?.paymentType;
+    const isRemainderPayment = paymentType === 'remainder';
+    
+    if (appUserId && !isRemainderPayment) {
       const userId = appUserId.split('/')[1]; // Extract from "Users/{userId}" format
 
       // Clean up the user's form draft and associated reservations
@@ -268,6 +281,11 @@ const handleCheckoutSessionExpired = async (stripeEvent) => {
         sessionId: session.id,
         userId,
         cleanupResult
+      });
+    } else if (appUserId && isRemainderPayment) {
+      logger.info('⏰ [handleCheckoutSessionExpired] Skipped cleanup for remainder payment:', {
+        sessionId: session.id,
+        paymentType
       });
     } else {
       logger.warn('⚠️ [handleCheckoutSessionExpired] No appUserId found in expired session metadata:', {

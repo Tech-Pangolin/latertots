@@ -33,17 +33,26 @@ const ReservationSchema = Joi.object({
     'object.instance': 'End time must be a valid Timestamp object.'
   }),
   title: Joi.string().required(),
-  extendedProps: Joi.object({
-    status: Joi.string()
-      .valid(...Object.values(RESERVATION_STATUS))
-      .required(),
-    childId: Joi.string().required(),
-    duration: Joi.number().min(0).optional(),                           // TODO: Does this field serve a purpose?
-  }),
+  childId: Joi.string().required(),
   userId: Joi.string().required(),
   Child: DocumentReferenceOrCompatible.required(),
   User: DocumentReferenceOrCompatible.required(),
   groupActivity: Joi.boolean().default(false).optional(),
+  dropOffPickUp: Joi.object({
+    pickedUpAt: Joi.object().instance(Timestamp).optional(),
+    actualStartTime: Joi.object().instance(Timestamp).optional(),
+    actualEndTime: Joi.object().instance(Timestamp).optional(),
+    finalCheckoutSessionId: Joi.string().optional(),
+    finalCheckoutUrl: Joi.string().optional(),
+    finalAmount: Joi.number().optional(),
+    calculatedAmount: Joi.number().optional(),
+    overrideReason: Joi.string().optional(),
+    overrideAppliedAt: Joi.object().instance(Timestamp).optional(),
+    overrideAppliedBy: Joi.string().optional(),
+    amountPaid: Joi.number().optional(),
+    amountRemaining: Joi.number().optional(),
+    selectedGroupActivityId: Joi.string().optional()
+  }).optional()
 })
   .prefs({ abortEarly: false });
 

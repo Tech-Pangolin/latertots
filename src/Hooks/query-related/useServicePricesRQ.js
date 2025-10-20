@@ -57,18 +57,41 @@ export function useServicePricesRQ() {
   useEffect(() => {
     if (!currentUser) return;
     
-    const unsubscribe = dbService.subscribeDocs(servicePricesQuery, fresh => {
-      queryClient.setQueryData(queryKey, fresh);
-    });
+    let unsubscribe;
+    let isSubscribed = true;
     
-    return () => unsubscribe();
+    const setupSubscription = async () => {
+      if (isSubscribed) {
+        unsubscribe = await dbService.subscribeDocs(servicePricesQuery, fresh => {
+          if (isSubscribed) {
+            queryClient.setQueryData(queryKey, fresh);
+          }
+        });
+      }
+    };
+    
+    setupSubscription();
+    
+    return () => {
+      isSubscribed = false;
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, [queryClient,  dbService]);
   
+  // Enhanced loading state - only false when data is actually ready
+  const isDataReady = useMemo(() => {
+    return !queryResult.isLoading && 
+           queryResult.data && 
+           queryResult.data.length > 0 &&
+           Object.keys(servicePricesMap).length > 0;
+  }, [queryResult.isLoading, queryResult.data, servicePricesMap]);
+
   return {
     getServicePrice,
-    isLoading: queryResult.isLoading,
+    isLoading: !isDataReady, // More accurate loading state
     isError: queryResult.isError,
-    error: queryResult.error,
-    data: queryResult.data
+    error: queryResult.error
   };
 }

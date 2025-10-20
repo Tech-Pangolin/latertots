@@ -34,20 +34,30 @@ export const renderEventContent = (eventInfo) => {
   
   // Handle individual events (pending appointments and other statuses)
   let backgroundColor;
-  switch (event.status) {
-    case 'confirmed':
-      backgroundColor = 'mediumseagreen';
-      break;
+  
+  // FIXED: Check both event.status and event.extendedProps.status as fallback
+  // This handles the case where FullCalendar moves the status to extendedProps
+  const eventStatus = event.status || event.extendedProps?.status;
+  
+  switch (eventStatus) {
     case 'pending':
-      backgroundColor = 'tomato';
+      backgroundColor = 'gray';
       break;
-    case 'unpaid':
-      backgroundColor = 'darkorange';
+    case 'confirmed':
+    case 'dropped-off':
+      backgroundColor = 'green';
+      break;
+    case 'picked-up':
+      backgroundColor = 'red';
+      break;
+    case 'paid':
+      backgroundColor = 'blue';
       break;
     default:
       backgroundColor = 'gray';
       break;
   }
+  
   return <StyledCalendarEvent event={event} backgroundColor={backgroundColor} />;
 }
 

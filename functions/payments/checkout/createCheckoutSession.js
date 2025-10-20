@@ -22,7 +22,7 @@ exports.createCheckoutSession = onRequest(
   },
   async (request, response) => {
     try {
-      const { reservations, paymentType, latertotsUserId, successUrl, cancelUrl } = request.body;
+      const { reservations, paymentType, latertotsUserId, successUrl, cancelUrl, depositPayment } = request.body;
       
       // Validate input
       if (!reservations || !Array.isArray(reservations) || reservations.length === 0) {
@@ -62,7 +62,8 @@ exports.createCheckoutSession = onRequest(
         metadata: {
           [STRIPE_METADATA_KEYS.APP_USER_ID]: `Users/${latertotsUserId}`,
           [STRIPE_METADATA_KEYS.RESERVATION_IDS]: JSON.stringify(reservations.map(r => `Reservations/${r.reservationId}`)),
-          [STRIPE_METADATA_KEYS.PAYMENT_TYPE]: paymentType
+          [STRIPE_METADATA_KEYS.PAYMENT_TYPE]: paymentType,
+          [STRIPE_METADATA_KEYS.DEPOSIT_PAYMENT]: depositPayment || null
         },
         successUrl: successUrl || `${reactUrl.value()}/schedule?payment=success`,
         cancelUrl: cancelUrl || `${reactUrl.value()}/schedule?payment=failed`,

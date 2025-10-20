@@ -179,10 +179,8 @@ await testEnv.withSecurityRulesDisabled(async (ctx) => {
       "userId": parent.id,
       "start": Timestamp.fromDate(start),
       "end": Timestamp.fromDate(end),
-      "extendedProps": {
-        "childId": childRef.id,
-        "status": _.sample([RESERVATION_STATUS.PROCESSING, ...Object.values(RESERVATION_STATUS)]) // give processing a 50% chance for testing
-      }
+      "childId": childRef.id,
+      "status": _.sample([RESERVATION_STATUS.PROCESSING, ...Object.values(RESERVATION_STATUS)]) // give processing a 50% chance for testing
     };
 
     try {

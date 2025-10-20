@@ -2,6 +2,11 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useAllReservationsRQ } from "../../Hooks/query-related/useAllReservationsRQ";
 import { useReservationsByMonthDayRQ } from "../../Hooks/query-related/useReservationsByMonthDayRQ";
 import { useAdminPanelContext } from "./AdminPanelContext";
+import { useQueryClient } from '@tanstack/react-query';
+import { getReservationStatus } from '../../Helpers/util';
+import { useAuth } from '../AuthProvider';
+import DropOffConfirmationModal from '../Shared/DropOffConfirmationModal';
+import PickUpConfirmationModal from '../Shared/PickUpConfirmationModal';
 
 // Helper function to generate visible page numbers for pagination
 const generateVisiblePageNumbers = (currentPage, totalPages, maxVisiblePages = 5) => {
@@ -76,8 +81,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
 
   // Helper function to get status from either data format
   const getReservationStatus = (reservation) => {
-    // Handle both raw data (extendedProps.status) and transformed data (status)
-    return reservation.status || reservation.extendedProps?.status || '--';
+    return reservation.status || '--';
   };
 
   // Filter reservations by selected date if provided
@@ -178,6 +182,130 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const queryClient = useQueryClient();
+  const { dbService } = useAuth();
+
+  // Modal state
+  const [dropOffModal, setDropOffModal] = useState({
+    show: false,
+    reservationData: null
+  });
+
+  const [pickUpModal, setPickUpModal] = useState({
+    show: false,
+    reservationId: null,
+    reservationData: null,
+    userData: null,
+    costBreakdown: null
+  });
+
+  const handleDropOff = (reservation) => {
+    setDropOffModal({
+      show: true,
+      reservationData: reservation
+    });
+  };
+
+  const handleConfirmDropOff = async (dropOffTimestamp) => {
+    try {
+      await dbService.dropOffChild(dropOffModal.reservationData.id, dropOffTimestamp, []);
+      queryClient.invalidateQueries(['adminAllReservations']);
+      setDropOffModal({ show: false, reservationData: null });
+    } catch (error) {
+      console.error('Error dropping off child:', error);
+      throw error;
+    }
+  };
+
+  const handlePickUp = async (reservationId) => {
+    try {
+      const reservationData = await dbService.getReservationData(reservationId);
+      const userData = await dbService.getUserData(reservationData.userId);
+      
+      const costBreakdown = await dbService.calculateFinalCheckoutAmount(reservationData);
+
+      setPickUpModal({
+        show: true,
+        reservationId,
+        reservationData,
+        userData,
+        costBreakdown
+      });
+    } catch (error) {
+      console.error('Error preparing pick-up:', error);
+      alert('Failed to prepare pick-up: ' + error.message);
+    }
+  };
+
+  const handleConfirmPickUp = async (finalAmount, calculatedAmount, overrideReason, selectedActivityId) => {
+    try {
+      const result = await dbService.pickUpChild(
+        pickUpModal.reservationId,
+        finalAmount,
+        calculatedAmount,
+        overrideReason,
+        selectedActivityId
+      );
+      
+      if (result.success) {
+        queryClient.invalidateQueries(['adminAllReservations']);
+        if (!result.noPaymentRequired) {
+          alert('Checkout session created. Parent can complete payment from their profile.');
+        }
+      }
+      
+      setPickUpModal({
+        show: false,
+        reservationId: null,
+        reservationData: null,
+        userData: null,
+        costBreakdown: null
+      });
+    } catch (error) {
+      console.error('Error picking up child:', error);
+      throw error;
+    }
+  };
+
+  const renderActionButtons = (reservation) => {
+    const status = getReservationStatus(reservation);
+    switch (status) {
+      case 'confirmed':
+        return (
+          <button 
+            className="btn btn-success btn-sm"
+            onClick={() => handleDropOff(reservation)}
+          >
+            Drop Off
+          </button>
+        );
+      case 'dropped-off':
+        return (
+          <button 
+            className="btn btn-warning btn-sm"
+            onClick={() => handlePickUp(reservation.id)}
+          >
+            Pick Up
+          </button>
+        );
+      case 'picked-up':
+        return reservation.dropOffPickUp?.finalCheckoutUrl ? (
+          <a 
+            href={reservation.dropOffPickUp.finalCheckoutUrl}
+            className="btn btn-primary btn-sm"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Complete Payment
+          </a>
+        ) : (
+          <span className="badge bg-secondary">No Payment Required</span>
+        );
+      default:
+        return <span className="badge bg-secondary">{status}</span>;
+    }
+  };
+
   const formatTableRow = (reservation) => {
     return (
       <tr key={reservation.id}>
@@ -187,6 +315,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
         )}
         <td>{formatTime(reservation.start)} - {formatTime(reservation.end)}</td>
         <td>{getReservationStatus(reservation)}</td>
+        <td>{renderActionButtons(reservation)}</td>
         <td>{reservation.userId || '--'}</td>
       </tr>
     )
@@ -275,6 +404,7 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
                         >
                           Status {getSortIcon('status')}
                         </th>
+                        <th scope="col">Actions</th>
                         <th scope="col">User ID</th>
                       </tr>
                     </thead>
@@ -331,6 +461,28 @@ const AdminReservations = ({ selectedDate = null, showReturnButton = false, onRe
           </div>
         </div>
       </div>
+      
+      <DropOffConfirmationModal
+        show={dropOffModal.show}
+        onHide={() => setDropOffModal({ show: false, reservationData: null })}
+        reservationData={dropOffModal.reservationData}
+        onConfirmDropOff={handleConfirmDropOff}
+      />
+      
+      <PickUpConfirmationModal
+        show={pickUpModal.show}
+        onHide={() => setPickUpModal({
+          show: false,
+          reservationId: null,
+          reservationData: null,
+          userData: null,
+          costBreakdown: null
+        })}
+        reservationData={pickUpModal.reservationData}
+        userData={pickUpModal.userData}
+        costBreakdown={pickUpModal.costBreakdown}
+        onConfirmPickUp={handleConfirmPickUp}
+      />
     </>
   );
 }

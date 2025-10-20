@@ -19,10 +19,16 @@ const StyledCalendarEvent = ({event, backgroundColor}) => {
             <i style={{ marginLeft: '5px' }}>Pending</i>
         )}
         {event.status === 'confirmed' && (
-            <i style={{ marginLeft: '5px' }}>Approved</i>
+            <i style={{ marginLeft: '5px' }}>Confirmed</i>
         )}
-        {event.status === 'unpaid' && (
-            <i style={{ marginLeft: '5px' }}>Unpaid</i>
+        {event.status === 'dropped-off' && (
+            <i style={{ marginLeft: '5px' }}>Dropped Off</i>
+        )}
+        {event.status === 'picked-up' && (
+            <i style={{ marginLeft: '5px' }}>Picked Up</i>
+        )}
+        {event.status === 'paid' && (
+            <i style={{ marginLeft: '5px' }}>Paid</i>
         )}
     </div>
   )

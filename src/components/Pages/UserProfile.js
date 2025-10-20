@@ -12,12 +12,15 @@ import { useContactsRQ } from '../../Hooks/query-related/useContactsRQ';
 import { useAlerts } from '../../Hooks/useAlerts';
 import ChangePasswordForm from '../ChangePasswordForm';
 import { set } from 'lodash';
+import { usePaymentHistoryRQ } from '../../Hooks/query-related/usePaymentHistoryRQ';
+import { useMemo } from 'react';
 
 
 const UserProfile = () => {
   const { currentUser } = useAuth();
   const { data: children = [] } = useChildrenRQ(true); // Force user mode to show only user's own children
   const { data: contacts = [] } = useContactsRQ(true); // Force user mode to show only user's own contacts
+  const { data: paymentHistory = [], isLoading: isLoadingPayments } = usePaymentHistoryRQ();
   const location = useLocation();
   const { alerts, addAlert, removeAlert } = useAlerts();
 
@@ -25,6 +28,7 @@ const UserProfile = () => {
   const [openContactsModal, setOpenContactsModal] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const [editingChild, setEditingChild] = useState(null);
+
 
   // Handle tab switching from navigation state
   useEffect(() => {
@@ -241,7 +245,31 @@ const UserProfile = () => {
                   <div className="col-12"><h4 className="mt-2">Payment Information</h4></div>
                 </div>
                 <h5 className="mt-5">Payment</h5>
-
+                
+                {/* Payment History */}
+                <h6 className="mt-4">Payment History</h6>
+                {paymentHistory.length > 0 ? (
+                  <div className="list-group">
+                    {paymentHistory.map((payment, index) => (
+                      <div key={index} className="list-group-item">
+                        <div className="d-flex w-100 justify-content-between">
+                          <h6 className="mb-1">
+                            {new Date(payment.serviceDate).toLocaleDateString()}
+                          </h6>
+                          <small className="text-success fw-bold">
+                            ${(payment.amount / 100).toFixed(2)}
+                          </small>
+                        </div>
+                        <p className="mb-1">{payment.childName}</p>
+                        <small className="text-muted">
+                          Paid: {new Date(payment.paymentDate).toLocaleDateString()} | Status: {payment.status} | Type: {payment.paymentType}
+                        </small>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted">No payment history yet.</p>
+                )}
               </div>
             </div>
             <div className={`tab-pane fade ${activeTab === 'security' ? 'show active' : ''}`} id="security-tab-pane" role="tabpanel" aria-labelledby="security-tab" tabIndex="0">
