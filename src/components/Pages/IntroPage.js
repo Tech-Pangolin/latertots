@@ -1,13 +1,28 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 function IntroPage() {
-    //   const [users, setUsers] = React.useState([]);
-    //   useEffect(() => {
-    //     fetchAllUsers().then((resp) => {
-    //       setUsers(resp);
-    //     });
-    //   }, []);
+    const [status, setStatus] = useState("");
+    const handleSubmit = async (event) => {
+        
+        event.preventDefault();
+        const formData = new FormData(event.target);
+
+        const data = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            subject: formData.get('subject'),
+            message: formData.get('message'),
+        };
+        fetch("https://sendcontactemail-eupp2jkaaq-uc.a.run.app/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error("Error:", error));
+    };
 
     return (
         <>
@@ -78,8 +93,8 @@ function IntroPage() {
                         </div>
                         <div className="row d-flex justify-content-center mt-5">
                             <div className='col text-center'><a className='signup-btn' href="/login">Sign Up Now</a></div>
-                         
-                            </div>
+
+                        </div>
 
                     </div>
                 </section>
@@ -97,9 +112,15 @@ function IntroPage() {
                                     <div className="address">
                                         <i className="bi bi-geo-alt"></i>
                                         <h4>Location:</h4>
-                                        <p>Concord, North Carolina</p>
+                                        <p>10007 Weddington Road</p>
+                                        <p>Concord, North Carolina 28027</p>
                                     </div>
 
+                                    <div className="phone">
+                                        <i className="bi bi-phone"></i>
+                                        <h4>Phone:</h4>
+                                        <p>(704) 794-4276</p>
+                                    </div>
                                     <div className="email">
                                         <i className="bi bi-envelope"></i>
                                         <h4>Email:</h4>
@@ -109,7 +130,7 @@ function IntroPage() {
                                     <div className="phone">
                                         <i className="bi bi-phone"></i>
                                         <h4>Hours:</h4>
-                                        <p>8:30am - 5:30pm</p>
+                                        <p>9am - 6pm</p>
                                     </div>
 
                                 </div>
@@ -118,7 +139,7 @@ function IntroPage() {
 
                             <div className="col-lg-8 my-5 mt-lg-0">
 
-                                <form action="forms/contact.php" method="post" role="form" className="php-email-form">
+                                <form onSubmit={handleSubmit} method="post" role="form" className="php-email-form">
                                     <div className="row">
                                         <div className="col-md-6 form-group">
                                             <input type="text" name="name" className="form-control" id="name" placeholder="Your Name" required />

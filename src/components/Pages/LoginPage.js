@@ -47,7 +47,7 @@ function LoginPage() {
         </div>
         <div className="row">
           <div className="col-12 d-flex justify-content-center">
-
+            {/* <h5 className='text-center registration' >Login Coming Soon</h5> */}
             <form onSubmit={handleSubmit(onSubmit)} className="login" style={{ width: '400px' }} >
               <div className="mb-2">
                 <label className="form-label">Email</label>
@@ -60,7 +60,7 @@ function LoginPage() {
                 <input type="password" className="form-control" id="password" placeholder="xxxxxxxxx"   {...register("password", { required: true })} />
                 {errors.password && <span>Password is required</span>}
               </div>
-              
+
               <div className="mb-2 text-end">
                 <Link to="/forgot-password" className="text-decoration-none small text-muted">
                   Forgot Password?

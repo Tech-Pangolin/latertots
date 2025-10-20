@@ -2,11 +2,12 @@ import React from 'react';
 
 function EventPage() {
     return (
-        <div className="bg-white" style={{ background: 'url("assets/img/events/eventsbg.png") repeat', backgroundSize: 'contain', width: '100%', }}>
-            
-                <div className="container">
-                    <div className="row justify-content-center">
-                        <div className="col-lg-12 pt-5 pt-lg-0 order-2 order-lg-1 d-flex align-items-center">
+        <>
+            <div className="bg-white" style={{ background: 'url("assets/img/events/eventsbg.png") repeat', backgroundSize: 'contain', width: '100%', }}>
+
+                <div className="container-fluid">
+                    <div className="row ">
+                        <div className="col-lg-12 d-flex justify-content-center">
                             <img src="./assets/img/events/eventsheader.png" className='img-fluid' alt='colorful hands' />
                         </div>
 
@@ -14,41 +15,55 @@ function EventPage() {
                 </div>
 
 
-
-            <section id="about" className="about container">
-                {/* <div class="section-title events-title" dataAos="fade-up">
+            </div><div>
+                <section id="about" className="container">
+                    {/* <div class="section-title events-title" dataAos="fade-up">
                     <h2>Special Days, Big Fun!</h2>
                     <p style={{ color: '#3B38DA' }}>Exciting Events at Later Tots</p>
                 </div> */}
 
-                <div className="row content">
-                    <div className="col">
-                        <p>From themed play dates, Tots night in, to birthday bashes, Later Tots is the place to be for all things fun and festive! Check out our upcoming events to see how we’re celebrating each day with creativity, joy, and lots of laughter. Make sure to mark your calendar so your little one doesn't miss out on the fun!</p>
+                    <div className="row content">
+                        <div className="col">
+                            <div className="event-highlights">
+                                <h5>Event Highlights</h5>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div className="row content">
-                    <div className="col-md-4" dataAos="fade-right">
-                        {/* <img src="assets/img/events/smileyhair.jpg" className="img-fluid" alt="" /> */}
-                        <img src="assets/img/momskids.png" className="img-fluid page-img" alt="" />
-                        {/* <img src="assets/img/kids3.jpg" className="img-fluid mt-5" alt="" /> */}
+                    <div className="row content">
+
+                        <div className="col-md-8" dataAos="fade-up">
+                            <div class="pink">
+                                <h3>Tots Night In </h3>
+                                <p>Tot & Me is the perfect class for caregivers and little ones to explore Later Tots side by side before jumping into drop-in play. Each session is filled with songs, crafts, bubbles, and themed adventures that spark creativity and connection.
+                                </p>
+                            </div>
+                            <div class="blue">
+                                <h3 className="mt-5">Tot & Me</h3>
+                                <p>Tots Night In gives caregivers a well-deserved break while little ones enjoy Later Tots after hours. With games, crafts, music, and movies, it's a night full of giggles, wiggles, and wonder.</p>
+                            </div>
+                            <div class="purple">
+                                <h3 className="mt-5">Funshops</h3>
+                                <p>Celebrate the seasons with our Seasonal & Holiday Funshops
+                                    These special events are all about tots and their loved ones making memories through crafts, play, and fun.</p>
+                                <ul>
+                                    <li>Valentine's Day: Make sweet cards, treats, and enjoy love-filled activities.</li>
+                                    <li>Mother's & Father's Day: Create keepsakes, personalized gifts, and celebrate your exceptional caregivers.</li>
+                                    <li>Summer Fun: Kick off summer with beach crafts, water play, and sunny adventures.</li>
+                                    <li>Holiday Season: Get festive with DIY ornaments, holiday crafts, and cheerful activities for the whole family.</li>
+                                </ul>
+                            </div>
+
+                        </div>
                     </div>
-                    <div className="col-md-8 mt-5" dataAos="fade-up">
+                    <div className="row content">
+                        <div className="col-md-12" dataAos="fade-up">
+                            <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&ctz=UTC&bgcolor=%23C0CA33&title=Later%20Tots&src=aW5mb0BsYXRlcnRvdHNkcm9waW4uY29t&src=YWRkcmVzc2Jvb2sjY29udGFjdHNAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&src=ZW4udXNhI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%23039BE5&color=%23B39DDB" style={{ border: "solid 1px #777" }} width="100%" height="700" frameborder="0" scrolling="no"></iframe>
 
-                        <h3>Tots Night In </h3>
-                        <p>We know how important it is for our Tot-tenders to enjoy a tot-free evening, and we’ve got you covered with our Tots Night In package! While you unwind, your little ones will be having a blast with a fun-filled night of music, games, crafts, and movies. We also provide a fun dinner, so you can relax knowing that your tots are in good hands, enjoying every moment. It’s the perfect way to treat yourself to a carefree evening while we take great care of your special little ones. Price:$75 for the first tot additional $10 per tot  (7:00 PM – 11:00 PM)
-                        </p>
-
-                        <h3 className="mt-5">Tot & Me</h3>
-                        <p>Tot & Me is the perfect introduction to Later Tots for caregivers who want to ease into the experience with their little ones by their side. This class is designed for Tot-minders who aren’t quite ready for a drop-off yet, offering a fun and engaging way to get comfortable with our space and services. Each class features a different theme, creating a new adventure every time! Together, we’ll dive into stories, blow bubbles, sing songs, and explore creative activities that encourage key developmental skills. Whether it’s exploring colors, counting, or simple crafts, Tot & Me is all about bonding, learning, and having fun in a supportive environment. </p>
-                        <p>Join us for an exciting way to connect with your tot while getting familiar with everything Later Tots has to offer!</p>
+                        </div>
                     </div>
-                </div>
-                
-
-            </section>
-
-
-        </div>
+                </section>
+            </div>
+        </>
     );
 }
 
