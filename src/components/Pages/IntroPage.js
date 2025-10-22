@@ -1,27 +1,78 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { generatePublicContactSchema } from '../../schemas/PublicContactSchema';
 
 function IntroPage() {
     const [status, setStatus] = useState("");
-    const handleSubmit = async (event) => {
-        
-        event.preventDefault();
-        const formData = new FormData(event.target);
+    const [errors, setErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const validateForm = (data) => {
+        const schema = generatePublicContactSchema();
+        const { error } = schema.validate(data, { abortEarly: false });
+        
+        if (error) {
+            const newErrors = {};
+            error.details.forEach(detail => {
+                newErrors[detail.path[0]] = detail.message;
+            });
+            setErrors(newErrors);
+            return false;
+        }
+        
+        setErrors({});
+        return true;
+    };
+
+    const handleFieldChange = (fieldName) => {
+        // Clear error for this field when user starts typing
+        if (errors[fieldName]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[fieldName];
+                return newErrors;
+            });
+        }
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        
+        const formData = new FormData(event.target);
         const data = {
             name: formData.get('name'),
             email: formData.get('email'),
             subject: formData.get('subject'),
             message: formData.get('message'),
         };
-        fetch("https://sendcontactemail-eupp2jkaaq-uc.a.run.app/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-        })
-            .then(response => response.json())
-            .then(data => console.log(data))
-            .catch(error => console.error("Error:", error));
+
+        // Validate form data
+        if (!validateForm(data)) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        
+        try {
+            const response = await fetch("https://sendcontactemail-eupp2jkaaq-uc.a.run.app/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            console.log(result);
+            
+            // Show success message
+            setStatus("success");
+            event.target.reset();
+            setErrors({});
+            
+        } catch (error) {
+            console.error("Error:", error);
+            setStatus("error");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -142,24 +193,63 @@ function IntroPage() {
                                 <form onSubmit={handleSubmit} method="post" role="form" className="php-email-form">
                                     <div className="row">
                                         <div className="col-md-6 form-group">
-                                            <input type="text" name="name" className="form-control" id="name" placeholder="Your Name" required />
+                                            <input 
+                                                type="text" 
+                                                name="name" 
+                                                className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                                                id="name" 
+                                                placeholder="Your Name" 
+                                                onChange={() => handleFieldChange('name')}
+                                            />
+                                            {errors.name && <div className="invalid-feedback">{errors.name}</div>}
                                         </div>
                                         <div className="col-md-6 form-group mt-3 mt-md-0">
-                                            <input type="email" className="form-control" name="email" id="email" placeholder="Your Email" required />
+                                            <input 
+                                                type="email" 
+                                                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                                                name="email" 
+                                                id="email" 
+                                                placeholder="Your Email" 
+                                                onChange={() => handleFieldChange('email')}
+                                            />
+                                            {errors.email && <div className="invalid-feedback">{errors.email}</div>}
                                         </div>
                                     </div>
                                     <div className="form-group mt-3">
-                                        <input type="text" className="form-control" name="subject" id="subject" placeholder="Subject" required />
+                                        <input 
+                                            type="text" 
+                                            className={`form-control ${errors.subject ? 'is-invalid' : ''}`}
+                                            name="subject" 
+                                            id="subject" 
+                                            placeholder="Subject" 
+                                            onChange={() => handleFieldChange('subject')}
+                                        />
+                                        {errors.subject && <div className="invalid-feedback">{errors.subject}</div>}
                                     </div>
                                     <div className="form-group mt-3">
-                                        <textarea className="form-control" name="message" rows="5" placeholder="Message" required></textarea>
+                                        <textarea 
+                                            className={`form-control ${errors.message ? 'is-invalid' : ''}`}
+                                            name="message" 
+                                            rows="5" 
+                                            placeholder="Message" 
+                                            onChange={() => handleFieldChange('message')}
+                                        ></textarea>
+                                        {errors.message && <div className="invalid-feedback">{errors.message}</div>}
                                     </div>
                                     <div className="my-3">
-                                        <div className="loading">Loading</div>
-                                        <div className="error-message"></div>
-                                        <div className="sent-message">Your message has been sent. Thank you!</div>
+                                        <div className="loading" style={{ display: isSubmitting ? 'block' : 'none' }}>Loading</div>
+                                        <div className="error-message" style={{ display: status === 'error' ? 'block' : 'none' }}>
+                                            There was an error sending your message. Please try again.
+                                        </div>
+                                        <div className="sent-message" style={{ display: status === 'success' ? 'block' : 'none' }}>
+                                            Your message has been sent. Thank you!
+                                        </div>
                                     </div>
-                                    <div className="text-center"><button type="submit">Send Message</button></div>
+                                    <div className="text-center">
+                                        <button type="submit" disabled={isSubmitting}>
+                                            {isSubmitting ? 'Sending...' : 'Send Message'}
+                                        </button>
+                                    </div>
                                 </form>
 
                             </div>
