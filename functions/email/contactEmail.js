@@ -22,7 +22,7 @@ exports.sendContactEmail = onRequest({
     const { name, email, subject, message } = req.body;
 
     // Create transporter inside the function where secrets are available
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: latertotsEmail.value(),

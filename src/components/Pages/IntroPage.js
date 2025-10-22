@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { generatePublicContactSchema } from '../../schemas/PublicContactSchema';
+import { generatePublicContactSchema } from '../../schemas/PublicContactSchema.js';
 
 function IntroPage() {
     const [status, setStatus] = useState("");
