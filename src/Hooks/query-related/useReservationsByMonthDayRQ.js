@@ -15,6 +15,7 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
   const isAdmin = currentUser?.Role === 'admin';
 
 
+
   const queryKey = useMemo(() => {
     if (monthYear.day != null && !monthYear.week) {
       // Fetch reservations for a specific day
@@ -38,7 +39,7 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
         newMonthYear.week = false;
       }
       setMonthYearRaw(newMonthYear)
-    } 
+    }
   }, [JSON.stringify(monthYear)]);
 
   const reservationQuery = useMemo(() => {
@@ -80,14 +81,14 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
   const transformReservationData = (res) => {
     // Note: After migration, all data will be in the new format
     // This check is no longer needed but kept for backward compatibility
-    
+
     // Hide orphaned PENDING reservations that have formDraftId but no payment info
-    if (res.status === 'pending' && 
-        res.formDraftId && 
-        (!res.stripePayments?.minimum && !res.stripePayments?.full)) {
+    if (res.status === 'pending' &&
+      res.formDraftId &&
+      (!res.stripePayments?.minimum && !res.stripePayments?.full)) {
       return null; // Don't show orphaned reservations
     }
-    
+
     return {
       id: res.id,
       status: res.status, // FIXED: Now using res.status instead of res.extendedProps.status
@@ -106,7 +107,7 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
     queryKey,
     queryFn: async () => {
       // Additional security check: ensure query filters are applied correctly
-      if (!isAdmin && !reservationQuery._query.filters.some(f => 
+      if (!isAdmin && !reservationQuery._query.filters.some(f =>
         f.field.segments.includes('User')
       )) {
         throw new Error("Unauthorized access to reservation data.");
@@ -129,20 +130,20 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
 
   useEffect(() => {
     if (!enabled) return;
-    
+
     let unsubscribe;
     let isSubscribed = true;
-    
+
     const setupSubscription = async () => {
       if (isSubscribed) {
         unsubscribe = await dbService.subscribeDocs(reservationQuery, fresh => {
           if (isSubscribed) {
-            queryClient.setQueryData(queryKey, fresh.map(transformReservationData).filter(Boolean)); 
+            queryClient.setQueryData(queryKey, fresh.map(transformReservationData).filter(Boolean));
           }
         });
       }
     };
-    
+
     setupSubscription();
     return () => {
       isSubscribed = false;
@@ -150,7 +151,7 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
         unsubscribe();
       }
     };
-  }, [queryKey, reservationQuery, queryClient, enabled]);
+  }, [queryKey, queryClient, enabled]); // Removed reservationQuery from dependencies
 
   return {
     ...queryResult,
