@@ -68,7 +68,6 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
     ];
 
     if (currentUser.Role !== "admin") {
-      // If the user is not an admin, filter by the current user's ID
       filters.push(where("User", "==", doc(collection(db, "Users"), currentUser.uid)));
     }
 
@@ -91,22 +90,21 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
 
     return {
       id: res.id,
-      status: res.status, // FIXED: Now using res.status instead of res.extendedProps.status
+      status: res.status,
       childId: res.childId,
       title: res.title || "",
-      userId: res.userId, // Include userId field
+      userId: res.userId, 
       start: luxonDateTimeFromFirebaseTimestamp(res.start).toISO(),
       end: luxonDateTimeFromFirebaseTimestamp(res.end).toISO(),
       startDT: luxonDateTimeFromFirebaseTimestamp(res.start),
       endDT: luxonDateTimeFromFirebaseTimestamp(res.end),
-      dropOffPickUp: res.dropOffPickUp, // Include dropOffPickUp object for payment buttons
+      dropOffPickUp: res.dropOffPickUp, 
     };
   };
 
   const queryResult = useQuery({
     queryKey,
     queryFn: async () => {
-      // Additional security check: ensure query filters are applied correctly
       if (!isAdmin && !reservationQuery._query.filters.some(f =>
         f.field.segments.includes('User')
       )) {
@@ -121,12 +119,6 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
       console.error("Error fetching monthly reservations:", error);
     },
   })
-
-  logger.info(
-    "useReservationsByMonthRQ – queryKey:", queryKey,
-    " status:", queryResult.status,
-    " data:", queryResult.data
-  );
 
   useEffect(() => {
     if (!enabled) return;
