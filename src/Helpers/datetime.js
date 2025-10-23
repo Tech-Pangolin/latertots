@@ -6,7 +6,25 @@ export const luxonDateTimeFromFirebaseTimestamp = (() => {
   const luxonFBCache = new Map();
 
   return (ts) => {
-    const key = ts.toMillis();
+    // Handle different input types
+    let key;
+    if (ts && typeof ts.toMillis === 'function') {
+      // Firebase Timestamp object
+      key = ts.toMillis();
+    } else if (ts && typeof ts.getTime === 'function') {
+      // JavaScript Date object
+      key = ts.getTime();
+    } else if (typeof ts === 'string') {
+      // ISO string
+      key = new Date(ts).getTime();
+    } else if (typeof ts === 'number') {
+      // Already a timestamp
+      key = ts;
+    } else {
+      console.warn('Unknown timestamp format:', ts);
+      return null;
+    }
+
     if (!luxonFBCache.has(key)) {
       const dt = DateTime.fromMillis(key);
       luxonFBCache.set(key, dt);
