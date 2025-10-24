@@ -14,6 +14,7 @@ import ChangePasswordForm from '../ChangePasswordForm';
 import { set } from 'lodash';
 import { usePaymentHistoryRQ } from '../../Hooks/query-related/usePaymentHistoryRQ';
 import { useUnpaidPickupPaymentsRQ } from '../../Hooks/query-related/useUnpaidPickupPaymentsRQ';
+import { usePaymentMethodsRQ } from '../../Hooks/query-related/usePaymentMethodsRQ';
 import { formatFirestoreTimestamp, formatUnixTimestamp } from '../../Helpers/dateHelpers';
 import { useMemo } from 'react';
 
@@ -24,6 +25,7 @@ const UserProfile = () => {
   const { data: contacts = [] } = useContactsRQ(true); // Force user mode to show only user's own contacts
   const { data: paymentHistory = [], isLoading: isLoadingPayments } = usePaymentHistoryRQ();
   const { data: unpaidPickupPayments = [], isLoading: isLoadingUnpaid } = useUnpaidPickupPaymentsRQ();
+  const { data: paymentMethods = [], isLoading: isLoadingPaymentMethods } = usePaymentMethodsRQ();
   const location = useLocation();
   const { alerts, addAlert, removeAlert } = useAlerts();
 
@@ -244,11 +246,40 @@ const UserProfile = () => {
             </div>
             <div className={`tab-pane fade ${activeTab === 'payment' ? 'show active' : ''}`} id="payment-tab-pane" role="tabpanel" aria-labelledby="payment-tab" tabIndex="0">
               <div className='px-5 py-5'>
-                <div className=" row"  >
-                  <div className="col-12"><h4 className="mt-2">Payment Information</h4></div>
-                </div>
-                <h5 className="mt-5">Payment Due</h5>
+                <div className="col-12"><h4 className="mt-2">Payment Information</h4></div>
+                
 
+                {/* Saved Payment Methods */}
+                <h6 className="mt-3">Saved Payment Methods</h6>
+                {isLoadingPaymentMethods ? (
+                  <p className="text-muted">Loading payment methods...</p>
+                ) : paymentMethods.length > 0 ? (
+                  <div className="list-group mb-4">
+                    {paymentMethods.map((method) => (
+                      <div key={method.id} className="list-group-item">
+                        <div className="d-flex w-100 justify-content-between align-items-center">
+                          <div>
+                            <h6 className="mb-1">
+                              {method.card.brand.charAt(0).toUpperCase() + method.card.brand.slice(1)} •••• {method.card.last4}
+                            </h6>
+                            <small className="text-muted">
+                              Expires {method.card.expMonth}/{method.card.expYear}
+                            </small>
+                          </div>
+                          <div className="text-end">
+                            <small className="text-muted text-capitalize">
+                              {method.card.funding}
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted">No saved payment methods.</p>
+                )}
+
+                <h5 className="mt-3">Payment Due</h5>
                 {/* Unpaid Pickup Payments */}
                 {unpaidPickupPayments.length > 0 && (
                   <div className="mb-4">
@@ -285,7 +316,7 @@ const UserProfile = () => {
                 )}
 
                 {/* Payment History */}
-                <h6 className="mt-4">Payment History</h6>
+                <h5 className="mt-3">Payment History</h5>
                 {paymentHistory.length > 0 ? (
                   <div className="list-group">
                     {paymentHistory.map((payment, index) => (
