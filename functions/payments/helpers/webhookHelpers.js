@@ -209,6 +209,8 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
         updateData['stripePayments.full'] = session.payment_intent;
       } else if (paymentType === 'remainder') {
         updateData['stripePayments.remainder'] = session.payment_intent;
+        updateData['dropOffPickUp.finalCheckoutUrl'] = FieldValue.delete();
+        updateData['dropOffPickUp.finalCheckoutSessionId'] = FieldValue.delete();
       }
       
       // Only delete formDraftId for non-remainder payments
