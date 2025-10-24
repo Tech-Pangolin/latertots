@@ -13,6 +13,8 @@ import { useAlerts } from '../../Hooks/useAlerts';
 import ChangePasswordForm from '../ChangePasswordForm';
 import { set } from 'lodash';
 import { usePaymentHistoryRQ } from '../../Hooks/query-related/usePaymentHistoryRQ';
+import { useUnpaidPickupPaymentsRQ } from '../../Hooks/query-related/useUnpaidPickupPaymentsRQ';
+import { formatFirestoreTimestamp, formatUnixTimestamp } from '../../Helpers/dateHelpers';
 import { useMemo } from 'react';
 
 
@@ -21,6 +23,7 @@ const UserProfile = () => {
   const { data: children = [] } = useChildrenRQ(true); // Force user mode to show only user's own children
   const { data: contacts = [] } = useContactsRQ(true); // Force user mode to show only user's own contacts
   const { data: paymentHistory = [], isLoading: isLoadingPayments } = usePaymentHistoryRQ();
+  const { data: unpaidPickupPayments = [], isLoading: isLoadingUnpaid } = useUnpaidPickupPaymentsRQ();
   const location = useLocation();
   const { alerts, addAlert, removeAlert } = useAlerts();
 
@@ -244,8 +247,43 @@ const UserProfile = () => {
                 <div className=" row"  >
                   <div className="col-12"><h4 className="mt-2">Payment Information</h4></div>
                 </div>
-                <h5 className="mt-5">Payment</h5>
-                
+                <h5 className="mt-5">Payment Due</h5>
+
+                {/* Unpaid Pickup Payments */}
+                {unpaidPickupPayments.length > 0 && (
+                  <div className="mb-4">
+                    <div className="list-group">
+                      {unpaidPickupPayments.map((reservation) => (
+                        <div key={reservation.id} className="list-group-item">
+                          <div className="d-flex w-100 justify-content-between align-items-center">
+                            <div>
+                              <h6 className="mb-1">
+                                {reservation.title || 'Unknown Child'}
+                              </h6>
+                              <small className="text-muted">
+                                Service completed: {reservation.dropOffPickUp?.actualEndTime ? formatFirestoreTimestamp(reservation.dropOffPickUp.actualEndTime) : 'Date not available'}
+                              </small>
+                            </div>
+                            <div className="text-end">
+                              <div className="text-warning fw-bold mb-2">
+                                ${(reservation.dropOffPickUp.finalAmount / 100).toFixed(2)}
+                              </div>
+                              <a
+                                href={reservation.dropOffPickUp.finalCheckoutUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-warning btn-sm"
+                              >
+                                Pay Now
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Payment History */}
                 <h6 className="mt-4">Payment History</h6>
                 {paymentHistory.length > 0 ? (
@@ -254,7 +292,7 @@ const UserProfile = () => {
                       <div key={index} className="list-group-item">
                         <div className="d-flex w-100 justify-content-between">
                           <h6 className="mb-1">
-                            {new Date(payment.serviceDate).toLocaleDateString()}
+                            {formatFirestoreTimestamp(payment.serviceDate)}
                           </h6>
                           <small className="text-success fw-bold">
                             ${(payment.amount / 100).toFixed(2)}
@@ -262,7 +300,7 @@ const UserProfile = () => {
                         </div>
                         <p className="mb-1">{payment.childName}</p>
                         <small className="text-muted">
-                          Paid: {new Date(payment.paymentDate).toLocaleDateString()} | Status: {payment.status} | Type: {payment.paymentType}
+                          Paid: {formatUnixTimestamp(payment.paymentDate)} | Status: {payment.status} | Type: {payment.paymentType}
                         </small>
                       </div>
                     ))}
