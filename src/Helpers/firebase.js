@@ -824,7 +824,7 @@ export class FirebaseDbService {
   getPaymentAmountsFromStripe = async (paymentIntentIds) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/latertots-a6694/us-central1/getPaymentAmounts`,
+        `${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/getPaymentAmounts`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -912,7 +912,7 @@ export class FirebaseDbService {
       }
 
       // Call existing createCheckoutSession cloud function
-      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/latertots-a6694/us-central1/createCheckoutSession`, {
+      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/createCheckoutSession`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

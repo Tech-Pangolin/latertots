@@ -138,7 +138,7 @@ const UnifiedReservationModal = ({
     };
     
     // Use Cloud Function to upsert the form draft (bypasses security rules)
-    const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/latertots-a6694/us-central1/upsertFormDraft`, {
+    const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/upsertFormDraft`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -270,7 +270,7 @@ const UnifiedReservationModal = ({
         cancelUrl: `${window.location.origin}/schedule?payment=failed`
       };
       
-      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/latertots-a6694/us-central1/createCheckoutSession`, {
+      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/createCheckoutSession`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(stripePayload),
