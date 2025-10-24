@@ -39,7 +39,8 @@ export function useNotificationsRQ() {
       logger.error("Error fetching notifications:", error);
     },
     enabled: !!currentUser,
-    initialData: []
+    placeholderData: [],
+    staleTime: 15 * 1000,
   });
   
   // Follow existing pattern with real-time subscription

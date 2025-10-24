@@ -34,7 +34,8 @@ export function useContactsRQ(forceUserMode = false) {
     queryFn: () => dbService.fetchDocs(isAdmin ? allContacts : myContacts),
     onError: (error) => logger.error("Error fetching /Contacts data:", error),
     enabled: currentUser.Contacts.length > 0 || isAdmin, 
-    initialData: []
+    placeholderData: [],
+    staleTime: 15 * 1000,
   })
 
   useEffect(() => {

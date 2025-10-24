@@ -79,7 +79,8 @@ export function useAllReservationsRQ({
       return pageDocs;
     },
     enabled: enabled && isAdmin, // Only enable for admin users
-    staleTime: 15000, // 15 seconds between refetches
+    placeholderData: [],
+    staleTime: 15 * 1000, // 15 seconds between refetches
     onError: (error) => {
       console.error("Error fetching /Reservations data:", error);
     },

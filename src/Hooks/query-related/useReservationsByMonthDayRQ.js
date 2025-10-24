@@ -118,6 +118,8 @@ export function useReservationsByMonthDayRQ({ enabled = true } = {}) {
     onError: (error) => {
       console.error("Error fetching monthly reservations:", error);
     },
+    placeholderData: [],
+    staleTime: 15 * 1000,
   })
 
   useEffect(() => {
