@@ -23,7 +23,7 @@ export function useServicePricesRQ() {
       logger.error("Error fetching service prices:", error);
     },
     enabled: !!currentUser,
-    initialData: [],
+    placeholderData: [],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
   

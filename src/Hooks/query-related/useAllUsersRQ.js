@@ -41,7 +41,8 @@ export function useAllUsersRQ() {
       console.error("❌ HOOK: Error fetching users data", error);
     },
     enabled: !!dbService && !!currentUser && isAdmin, // Only enable for admin users
-    initialData: []
+    placeholderData: [],
+    staleTime: 15 * 1000,
   })
 
 

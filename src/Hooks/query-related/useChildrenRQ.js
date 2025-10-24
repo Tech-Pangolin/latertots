@@ -39,7 +39,8 @@ export function useChildrenRQ(forceUserMode = false) {
       logger.error("Error fetching /Children data:", error);
     },
     enabled: currentUser.Children.length > 0 || isAdmin, // Only run if the user has children or is an admin
-    initialData: []
+    placeholderData: [],
+    staleTime: 15 * 1000,
   })
 
   // Third, set up a real-time listener for changes

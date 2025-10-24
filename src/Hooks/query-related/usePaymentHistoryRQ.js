@@ -37,8 +37,8 @@ export function usePaymentHistoryRQ() {
       logger.error("Error fetching payment history:", error);
     },
     enabled: !!currentUser,
-    initialData: [],
-    staleTime: 5 * 60 * 1000, // 5 minutes - similar to useServicePricesRQ
+    placeholderData: [],
+    staleTime: 15 * 1000, // 5 minutes - similar to useServicePricesRQ
   });
   
   return {
