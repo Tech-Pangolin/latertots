@@ -247,7 +247,7 @@ const UserProfile = () => {
             <div className={`tab-pane fade ${activeTab === 'payment' ? 'show active' : ''}`} id="payment-tab-pane" role="tabpanel" aria-labelledby="payment-tab" tabIndex="0">
               <div className='px-5 py-5'>
                 <div className="col-12"><h4 className="mt-2">Payment Information</h4></div>
-                
+
 
                 {/* Saved Payment Methods */}
                 <h6 className="mt-3">Saved Payment Methods</h6>
@@ -279,40 +279,42 @@ const UserProfile = () => {
                   <p className="text-muted">No saved payment methods.</p>
                 )}
 
-                <h5 className="mt-3">Payment Due</h5>
                 {/* Unpaid Pickup Payments */}
                 {unpaidPickupPayments.length > 0 && (
-                  <div className="mb-4">
-                    <div className="list-group">
-                      {unpaidPickupPayments.map((reservation) => (
-                        <div key={reservation.id} className="list-group-item">
-                          <div className="d-flex w-100 justify-content-between align-items-center">
-                            <div>
-                              <h6 className="mb-1">
-                                {reservation.title || 'Unknown Child'}
-                              </h6>
-                              <small className="text-muted">
-                                Service completed: {reservation.dropOffPickUp?.actualEndTime ? formatFirestoreTimestamp(reservation.dropOffPickUp.actualEndTime) : 'Date not available'}
-                              </small>
-                            </div>
-                            <div className="text-end">
-                              <div className="text-warning fw-bold mb-2">
-                                ${(reservation.dropOffPickUp.finalAmount / 100).toFixed(2)}
+                  <>
+                    <h5 className="mt-3">Payment Due</h5>
+                    <div className="mb-4">
+                      <div className="list-group">
+                        {unpaidPickupPayments.map((reservation) => (
+                          <div key={reservation.id} className="list-group-item">
+                            <div className="d-flex w-100 justify-content-between align-items-center">
+                              <div>
+                                <h6 className="mb-1">
+                                  {reservation.title || 'Unknown Child'}
+                                </h6>
+                                <small className="text-muted">
+                                  Service completed: {reservation.dropOffPickUp?.actualEndTime ? formatFirestoreTimestamp(reservation.dropOffPickUp.actualEndTime) : 'Date not available'}
+                                </small>
                               </div>
-                              <a
-                                href={reservation.dropOffPickUp.finalCheckoutUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn btn-warning btn-sm"
-                              >
-                                Pay Now
-                              </a>
+                              <div className="text-end">
+                                <div className="text-warning fw-bold mb-2">
+                                  ${(reservation.dropOffPickUp.finalAmount / 100).toFixed(2)}
+                                </div>
+                                <a
+                                  href={reservation.dropOffPickUp.finalCheckoutUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-warning btn-sm"
+                                >
+                                  Pay Now
+                                </a>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  </>
                 )}
 
                 {/* Payment History */}
