@@ -14,14 +14,18 @@ const db = getFirestore();
  * @param {Object} context - Firebase function context with auth
  * @returns {Promise<Object>} - Payment history array
  */
-exports.getPaymentHistory = onCall(async (request) => {
-  // Debug: Log the request structure (Firebase Functions v2 uses request object)
-  logger.info('🔍 [getPaymentHistory] Request structure:', {
-    hasAuth: !!request.auth,
-    authKeys: request.auth ? Object.keys(request.auth) : 'auth is undefined',
-    requestKeys: Object.keys(request),
-    data: request.data
-  });
+exports.getPaymentHistory = onCall(
+  {
+    secrets: [stripeSecretKey]
+  },
+  async (request) => {
+    // Debug: Log the request structure (Firebase Functions v2 uses request object)
+    logger.info('🔍 [getPaymentHistory] Request structure:', {
+      hasAuth: !!request.auth,
+      authKeys: request.auth ? Object.keys(request.auth) : 'auth is undefined',
+      requestKeys: Object.keys(request),
+      data: request.data
+    });
   
   // Try to get user ID from request.auth.uid first, then fall back to data parameter
   let userId = request.auth?.uid;
@@ -56,7 +60,7 @@ exports.getPaymentHistory = onCall(async (request) => {
     }
     
     // 2. Query Stripe for payment intents
-    const stripe = new Stripe(await stripeSecretKey());
+    const stripe = new Stripe(stripeSecretKey.value());
     const paymentIntents = await stripe.paymentIntents.list({
       customer: stripeCustomerId,
       limit: 100 // Stripe's default limit
