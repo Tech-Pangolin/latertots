@@ -229,11 +229,6 @@ const handleCheckoutSessionCompleted = async (stripeEvent) => {
       await performCleanup({ specificDraftId: userId, userId });
     }
 
-    // Update user's saved payment methods if any
-    if (session.payment_method) {
-      const { updateUserPaymentMethods } = require('./customerHelpers');
-      await updateUserPaymentMethods(appUserId, session.payment_method);
-    }
 
     logger.info('✅ [handleCheckoutSessionCompleted] Checkout session processing completed:', {
       sessionId: session.id,
@@ -375,9 +370,6 @@ const handleCustomerCreated = async (stripeEvent) => {
       updatedAt: Timestamp.now()
     });
 
-    // Sync payment methods - pass userId, not appUserId
-    const { updateUserPaymentMethods } = require('./customerHelpers');
-    await updateUserPaymentMethods(userId, customer.id);
   }
 
   logger.info('👤 [handleCustomerCreated] Customer created:', {
@@ -407,9 +399,6 @@ const handleCustomerUpdated = async (stripeEvent) => {
       updatedAt: Timestamp.now()
     });
 
-    // Sync payment methods
-    const { updateUserPaymentMethods } = require('./customerHelpers');
-    await updateUserPaymentMethods(appUserId, customer.id);
   }
 
   logger.info('👤 [handleCustomerUpdated] Customer updated:', {
@@ -479,10 +468,6 @@ const handlePaymentMethodAttached = async (stripeEvent) => {
     const userDoc = usersQuery.docs[0];
     const userId = userDoc.id;
 
-    // Sync payment methods for the user
-    const { updateUserPaymentMethods } = require('./customerHelpers');
-    await updateUserPaymentMethods(userId, paymentMethod.id);
-
     logger.info('💳 [handlePaymentMethodAttached] Payment method attached:', {
       paymentMethodId: paymentMethod.id,
       customerId: paymentMethod.customer
@@ -524,10 +509,6 @@ const handlePaymentMethodDetached = async (stripeEvent) => {
 
     const userDoc = usersQuery.docs[0];
     const userId = userDoc.id;
-
-    // Sync payment methods for the user
-    const { updateUserPaymentMethods } = require('./customerHelpers');
-    await updateUserPaymentMethods(userId, paymentMethod.id);
 
     logger.info('💳 [handlePaymentMethodDetached] Payment method detached:', {
       paymentMethodId: paymentMethod.id,

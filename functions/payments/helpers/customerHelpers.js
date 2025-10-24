@@ -90,35 +90,6 @@ const getOrCreateStripeCustomer = async (latertotsUserId, secretKey) => {
   }
 };
 
-/**
- * Update user's saved payment methods
- * @param {string} latertotsUserId - The app user ID
- * @param {string} paymentMethodId - Stripe payment method ID
- * @returns {Promise<void>}
- */
-const updateUserPaymentMethods = async (latertotsUserId, paymentMethodId) => {
-  try {
-    // Save payment method reference to user record
-    await db.collection('Users').doc(latertotsUserId).update({
-      savedPaymentMethods: FieldValue.arrayUnion({
-        id: paymentMethodId,
-        savedAt: Timestamp.now()
-      })
-    });
-    
-    logger.info('✅ [CUSTOMER] Updated user payment methods:', {
-      latertotsUserId,
-      paymentMethodId
-    });
-  } catch (error) {
-    logger.error('❌ [CUSTOMER] Failed to update user payment methods:', {
-      latertotsUserId,
-      paymentMethodId,
-      error: error.message
-    });
-    throw error;
-  }
-};
 
 /**
  * Get Stripe customer ID for an app user
@@ -140,6 +111,5 @@ const getStripeCustomer = async (latertotsUserId) => {
 
 module.exports = {
   getOrCreateStripeCustomer,
-  updateUserPaymentMethods,
   getStripeCustomer
 };
