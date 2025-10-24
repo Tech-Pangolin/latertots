@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useContactsRQ } from "../../Hooks/query-related/useContactsRQ";
 
 const AdminContacts = () => {
   const { data: allContacts = [], isLoading, isError } = useContactsRQ();
+  
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [contactList, setContactList] = React.useState([allContacts]);
-
+  const [contactList, setContactList] = React.useState([]);
 
   useEffect(() => {
     if (searchTerm !== "" && contactList.length > 0) {
@@ -15,10 +15,10 @@ const AdminContacts = () => {
       });
       setContactList(filteredContacts);
     } else {
-      // If search term is empty, refetch all contacts
+      // If search term is empty, restore all contacts
       setContactList(allContacts);
     }
-  }, [searchTerm]);
+  }, [searchTerm, allContacts]);
 
   const formatTableRow = (user) => {
     return (
