@@ -145,7 +145,7 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
       
       console.log('Sending payment request:', stripeReservationPaymentAttemptPayload);
       
-      const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/createCheckoutSession`, {
+      const response = await fetch(`${process.env.LATERTOTS_APP_FIREBASE_FUNCTION_URL}/createCheckoutSession`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

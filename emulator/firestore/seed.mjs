@@ -69,7 +69,7 @@ function startEnd(past = true) {
 // -------------------------------------------------------
 
 const testEnv = await initializeTestEnvironment({
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  projectId: process.env.LATERTOTS_APP_FIREBASE_PROJECT_ID,
   firestore: { host: 'localhost', port: 8080 },
 });
 
