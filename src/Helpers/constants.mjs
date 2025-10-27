@@ -135,6 +135,13 @@ export const ERROR_MESSAGES = Object.freeze({
   UNAUTHORIZED_ACCESS: 'Unauthorized access.',
 })
 
+export const LOGGER_ERROR_MESSAGES = Object.freeze({
+  NETWORK_ERROR: 'A network error occurred. Please check your connection and try again.',
+  SYSTEM_ERROR: 'An unexpected error occurred. Please try again later.',
+  AUTHENTICATION_ERROR: 'Authentication failed. Please log in and try again.',
+  VALIDATION_ERROR: 'There was a problem with your request.',
+})
+
 export const SERVICE_PRICE_LOOKUP_UIDS = Object.freeze({
   TOTIVITY_NIGHT_IN_ADDITIONAL_CHILD_FLAT: 'prod_TAc8LkawAJmG3b',
   TOTIVITY_NIGHT_IN_FIRST_CHILD_FLAT: 'prod_TAbA653bZmWGWo',
@@ -182,6 +189,7 @@ if (typeof module !== 'undefined' && module.exports) {
     ALERT_TYPES,
     IMAGE_UPLOAD,
     ERROR_MESSAGES,
+    LOGGER_ERROR_MESSAGES,
     SERVICE_PRICE_LOOKUP_UIDS,
     PAYMENT_PRICING
   };
