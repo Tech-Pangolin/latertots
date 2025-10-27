@@ -11,12 +11,10 @@ import { useChildrenRQ } from '../../Hooks/query-related/useChildrenRQ';
 import { useContactsRQ } from '../../Hooks/query-related/useContactsRQ';
 import { useAlerts } from '../../Hooks/useAlerts';
 import ChangePasswordForm from '../ChangePasswordForm';
-import { set } from 'lodash';
 import { usePaymentHistoryRQ } from '../../Hooks/query-related/usePaymentHistoryRQ';
 import { useUnpaidPickupPaymentsRQ } from '../../Hooks/query-related/useUnpaidPickupPaymentsRQ';
 import { usePaymentMethodsRQ } from '../../Hooks/query-related/usePaymentMethodsRQ';
 import { formatFirestoreTimestamp, formatUnixTimestamp } from '../../Helpers/dateHelpers';
-import { useMemo } from 'react';
 
 
 const UserProfile = () => {
@@ -187,7 +185,7 @@ const UserProfile = () => {
             <div className={`tab-pane fade ${activeTab === 'children' ? 'show active' : ''}`} id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabIndex="0">
               <div className='px-5 py-5'>
                 <div className='row'>
-                  <div className="col-12 col-lg-2"> <h3 className="mt-2">Children</h3></div>
+                  <div className="col-12 col-lg-9"> <h3 className="mt-2">Children</h3></div>
                   <div className="col-9">
                     <button type="button" className="btn btn-outline-primary btn-lg" onClick={() => setOpenChildModal(true)}>
                       Add Children&nbsp;<i className="bi bi-person-plus-fill"></i>
