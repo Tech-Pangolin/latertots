@@ -80,7 +80,7 @@ async function performCleanup(options = {}) {
  * Scheduled cleanup job - runs automatically
  */
 exports.cleanupFailedReservations = onSchedule({
-  schedule: '* * * * *', // Every minute (for testing in emulator) TODO: Change to hourly
+  schedule: '*/15 * * * *', // every 15 minutes
   timeZone: 'America/New_York',
   memory: '256MiB',
   timeoutSeconds: 540,
