@@ -37,7 +37,6 @@ const HeaderBar = () => {
 
 
   }
-  console.log(currentUser)
 
   const dropdownActiveTeam = () => {
     const path = location.pathname;
