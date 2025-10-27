@@ -8,18 +8,12 @@ const db = getFirestore();
  * Upsert form draft - creates or updates a form draft for a user
  * Uses Admin SDK to bypass security rules
  */
-exports.upsertFormDraft = onRequest(async (request, response) => {
-  try {
-    // Set CORS headers
-    response.set('Access-Control-Allow-Origin', '*');
-    response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    
-    // Handle preflight requests
-    if (request.method === 'OPTIONS') {
-      response.status(204).send('');
-      return;
-    }
+exports.upsertFormDraft = onRequest(
+  {
+    cors: true
+  },
+  async (request, response) => {
+    try {
     
     if (request.method !== 'POST') {
       response.status(405).json({ error: 'Method not allowed' });
