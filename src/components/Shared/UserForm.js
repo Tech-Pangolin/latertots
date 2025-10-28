@@ -47,7 +47,6 @@ const UserForm = ({ addAlert }) => {
       });
       
       // Redirect authenticated users from registration page to profile page
-      logger.info("User is authenticated, redirecting to profile page");
       navigate('/profile');
     } else {
       setDbService(new FirebaseDbService({}));
