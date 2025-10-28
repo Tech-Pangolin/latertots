@@ -103,10 +103,6 @@ const ScheduleChildSitterPage = () => {
     }
   }, [isLoadingChildren, children, currentUser, navigate, dbService]);
 
-  useEffect(() => {
-    logger.info('Events:', events);
-    logger.info("children:", children);
-  }, [events]);
   const formatDateTime = (dt) => {
     const options = {
       weekday: 'long',
