@@ -18,14 +18,15 @@ export const setLogLevel = (level) => {
 const sendToCloudLogs = async (logData) => {
   try {
     const auth = getAuth();
-    const token = await auth.currentUser?.getIdToken();
+    const user = auth.currentUser;
+    const token = await user?.getIdToken();
     
     if (!token) {
       // No auth token available - silently skip cloud logging
       return;
     }
 
-    await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/writeLogs`, {
+    const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/writeLogs`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -33,8 +34,13 @@ const sendToCloudLogs = async (logData) => {
       },
       body: JSON.stringify(logData)
     });
+    
+    if (!response.ok) {
+      // Silent failure for cloud logging - don't spam console
+      console.error(LOGGER_ERROR_MESSAGES.SYSTEM_ERROR);
+    }
   } catch (error) {
-    // Fallback to console if cloud logging fails - use generic error message
+    // Silent failure for cloud logging - don't spam console
     console.error(LOGGER_ERROR_MESSAGES.SYSTEM_ERROR);
   }
 };

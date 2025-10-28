@@ -1,5 +1,12 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
+const { initializeApp, getApps } = require('firebase-admin/app');
+const { getAuth } = require('firebase-admin/auth');
+
+// Initialize Firebase Admin SDK if not already initialized
+if (getApps().length === 0) {
+  initializeApp();
+}
 
 /**
  * Write client-side logs to Google Cloud Logging
@@ -7,13 +14,29 @@ const { logger } = require('firebase-functions');
  */
 exports.writeLogs = onRequest(
   {
-    cors: true
+    cors: true,
+    region: 'us-central1',
+    invoker: 'public'
   },
   async (request, response) => {
+    
     try {
-      // Check authentication - only authenticated users can send logs
-      const userId = request.auth?.uid;
-      if (!userId) {
+      // Check authentication - manually verify the token
+      const authHeader = request.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        response.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      const token = authHeader.split('Bearer ')[1];
+      let userId;
+      
+      try {
+        // Verify the token using Firebase Admin SDK
+        const auth = getAuth();
+        const decodedToken = await auth.verifyIdToken(token);
+        userId = decodedToken.uid;
+      } catch (error) {
         response.status(401).json({ error: 'Unauthorized' });
         return;
       }
