@@ -1329,6 +1329,7 @@ export class FirebaseDbService {
           status: 'pending',
           start: Timestamp.fromDate(new Date(reservationData.start)),
           end: Timestamp.fromDate(new Date(reservationData.end)),
+          createdAt: Timestamp.now(),
           title: reservationData.title,
           childId: reservationData.childId,
           userId: userId,

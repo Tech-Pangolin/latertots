@@ -22,6 +22,7 @@ import PaymentStep from './ReservationSteps/PaymentStep';
 import ProcessingStep from './ReservationSteps/ProcessingStep';
 import PaymentSuccessStep from './ReservationSteps/PaymentSuccessStep';
 import PaymentFailedStep from './ReservationSteps/PaymentFailedStep';
+import { logger } from '../../Helpers/logger';
 
 const UnifiedReservationModal = ({ 
   modalOpenState = false, 
@@ -114,7 +115,7 @@ const UnifiedReservationModal = ({
       }
     } catch (error) {
       if (error.code !== 'not-found') {
-        console.error('Error loading form draft:', error);
+        logger.error('Error loading form draft:', error);
       }
       // If we can't load the draft, just show the payment failed step
       updateState({ currentStep: 'payment_failed' });
@@ -171,7 +172,7 @@ const UnifiedReservationModal = ({
   const handleFormSubmit = async (formData) => {
     // Safety check to ensure selectedChild is defined and is an array
     if (!formData.selectedChild || !Array.isArray(formData.selectedChild)) {
-      console.error('selectedChild is not defined or not an array:', formData.selectedChild);
+      logger.error('selectedChild is not defined or not an array:', formData.selectedChild);
       return;
     }
     
@@ -231,7 +232,6 @@ const UnifiedReservationModal = ({
         state.reservations, 
         currentUser.uid // formDraftId
       );
-      
       // Update reservations with document UIDs for PaymentStep
       const reservationsWithUids = state.reservations.map((reservation, index) => ({
         ...reservation,
@@ -283,7 +283,7 @@ const UnifiedReservationModal = ({
         throw new Error(session.error || 'Failed to create checkout session');
       }
     } catch (error) {
-      console.error('Payment processing error:', error);
+      logger.error('Payment processing error:', error);
       updateState({
         currentStep: 'payment_failed',
         isProcessing: false,
@@ -311,7 +311,7 @@ const UnifiedReservationModal = ({
       const cleanupFunction = httpsCallable(functions, 'cleanupFailedReservationsManual');
       await cleanupFunction();
     } catch (error) {
-      console.warn('[e93944e9] An error occurred');
+      logger.error('[e93944e9] An error occurred', error);
     }
     
     updateState({
