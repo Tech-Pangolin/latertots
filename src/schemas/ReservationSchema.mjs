@@ -32,6 +32,9 @@ const ReservationSchema = Joi.object({
   end: Joi.object().instance(Timestamp).required().messages({
     'object.instance': 'End time must be a valid Timestamp object.'
   }),
+  createdAt: Joi.object().instance(Timestamp).required().messages({
+    'object.instance': 'Created time must be a valid Timestamp object.'
+  }),
   title: Joi.string().required(),
   childId: Joi.string().required(),
   userId: Joi.string().required(),
