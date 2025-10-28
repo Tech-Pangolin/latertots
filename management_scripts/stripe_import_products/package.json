@@ -1,0 +1,13 @@
+{
+  "name": "stripe-import-products",
+  "version": "1.0.0",
+  "description": "Import products from CSV to Stripe",
+  "main": "import_products.js",
+  "scripts": {
+    "start": "node import_products.js"
+  },
+  "dependencies": {
+    "stripe": "^14.21.0",
+    "csv-parser": "^3.0.0"
+  }
+}

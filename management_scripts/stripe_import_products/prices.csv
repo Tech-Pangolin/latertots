@@ -1,0 +1,17 @@
+Price ID,Product ID,Product Name,Product Statement Descriptor,Product Tax Code,Description,Created (UTC),Amount,Currency,Interval,Interval Count,Usage Type,Aggregate Usage,Billing Scheme,Trial Period Days,Tax Behavior
+price_1SEGuHBHPjHackIT3SeHsvj2,prod_TAc8LkawAJmG3b,Event: Tots Night In (additional child),,txcd_20040004,,2025-10-03 21:52,10.00,usd,,,,,per_unit,,unspecified
+price_1SEGoiBHPjHackITKDQBnPuv,prod_TAc2CxkqCnOXRd,Late Fee (per hour),,txcd_20040004,,2025-10-03 21:47,900.00,usd,,,,,per_unit,,unspecified
+price_1SEGSoBHPjHackITCC8rwPRC,prod_TAbgVKaXG3OWst,Deals: Month of Saturday Funshops!,,txcd_20040004,,2025-10-03 21:24,270.00,usd,,,,,per_unit,,unspecified
+price_1SEGOdBHPjHackITsGZbh2lz,prod_TAbbYn4KgpqMXn,Deals: Month of Weekday Funshops!,,txcd_20040004,,2025-10-03 21:20,704.00,usd,,,,,per_unit,,unspecified
+price_1SEGGqBHPjHackITVfwEenOM,prod_TAbTS3BnkYIUqe,Deals: Big Saver Package,,txcd_20040004,,2025-10-03 21:12,650.00,usd,,,,,per_unit,,unspecified
+price_1SEGFABHPjHackITUeKIdXw4,prod_TAbSlZJgrVKdnW,Deals: Little Saver Package,,txcd_20040004,,2025-10-03 21:10,350.00,usd,,,,,per_unit,,unspecified
+price_1SEGAIBHPjHackITI9QnGQoe,prod_TAbNO8kRNTWYDy,Standard Supervised Playcare Services (additional child),,txcd_20040004,,2025-10-03 21:05,7.00,usd,,,,,per_unit,,unspecified
+price_1SEG7wBHPjHackITjIS5Yt39,prod_TAbKQEZC23Jieb,Party: Tot's Ultimate Party,,txcd_20040004,,2025-10-03 21:02,350.00,usd,,,,,per_unit,,unspecified
+price_1SEG7LBHPjHackITB7XyxYeM,prod_TAbJYrUDzvEAKM,Party: Tot's Celebration Bash Party,,txcd_20040004,,2025-10-03 21:02,280.00,usd,,,,,per_unit,,unspecified
+price_1SEG65BHPjHackITEpusXzjN,prod_TAbILXTre9dqi9,Party: Express Tot Party,,txcd_20040004,,2025-10-03 21:01,200.00,usd,,,,,per_unit,,unspecified
+price_1SEG4wBHPjHackITG7ut79LK,prod_TAbHOJsTmasu0q,Tot-tivity: Tot-ally Fun Saturdays Funshop,,txcd_20040004,,2025-10-03 20:59,25.00,usd,,,,,per_unit,,unspecified
+price_1SEG45BHPjHackITlBpXbjay,prod_TAbG1y3F5tNhnK,"Tot-tivity: Ready, Set, Pre-K! Funshop",,txcd_20040004,,2025-10-03 20:58,25.00,usd,,,,,per_unit,,unspecified
+price_1SEG2ZBHPjHackITLpkTa0OQ,prod_TAbFDQSJWCsOC3,Tot-tivity: Tiny Tot Explorers Funshop,,txcd_20040004,,2025-10-03 20:57,25.00,usd,,,,,per_unit,,unspecified
+price_1SEFzzBHPjHackITHjhhjrIO,prod_TAbCsynUPM6BBP,Event: Tot & Me Class,,txcd_20040004,,2025-10-03 20:54,20.00,usd,,,,,per_unit,,unspecified
+price_1SEFybBHPjHackITxSWAK0aO,prod_TAbA653bZmWGWo,Event: Tots Night In (first child),,txcd_20040004,,2025-10-03 20:53,75.00,usd,,,,,per_unit,,unspecified
+price_1SEFssBHPjHackITgFAaH7Ki,prod_TAb5YS29FcZ4N4,Standard Supervised Playcare Services (first child),,txcd_20040004,,2025-10-03 20:47,20.00,usd,,,,,per_unit,,unspecified

@@ -1,0 +1,17 @@
+id,Name,Date (UTC),Description,Url,Tax Code,minAge (metadata),ageCutoff (metadata),endTime (metadata),daysOfWeek (metadata),startTime (metadata)
+prod_TAc8LkawAJmG3b,Event: Tots Night In (additional child),2025-10-03 21:52,Admittance for one child at reduced rate to Tots Night In event,,txcd_20040004,,,23:00,Saturday,19:00
+prod_TAc2CxkqCnOXRd,Late Fee (per hour),2025-10-03 21:47,"A late fee of $15.00 per minute, or any portion thereof, will be charged immediately for every minute a child remains at the center after their 4-hour limit has been reached. This fee is non-negotiable and is due upon pickup. Your child will not be released until the full balance is paid.",,txcd_20040004,,,,,
+prod_TAbgVKaXG3OWst,Deals: Month of Saturday Funshops!,2025-10-03 21:24,Includes FULL access to 4 sessions (1 month) at a reduced (-10%) rate ($22.50 USD) per hour for 1 child. Can be used for any child registered with this account. (4 events x 3  hours = 12h),,txcd_20040004,,,,,
+prod_TAbbYn4KgpqMXn,Deals: Month of Weekday Funshops!,2025-10-03 21:20,Includes FULL access to 8 sessions (1 month) at a reduced rate ($22.00 USD) per hour for 1 child. Can be used for any child registered with this account. (8 events x 4 hours = 32h),,txcd_20040004,,,,,
+prod_TAbTS3BnkYIUqe,Deals: Big Saver Package,2025-10-03 21:12,Includes 40 hours of Playcare services at a reduced rate ($16.25 USD).,,txcd_20040004,,,,,
+prod_TAbSlZJgrVKdnW,Deals: Little Saver Package,2025-10-03 21:10,Includes 20 hours of Playcare services at a reduced rate ($17.50 USD). ,,txcd_20040004,,,,,
+prod_TAbNO8kRNTWYDy,Standard Supervised Playcare Services (additional child),2025-10-03 21:05,Price displayed represents 1 hour (60 minutes) of service,,txcd_20040004,,,,,
+prod_TAbKQEZC23Jieb,Party: Tot's Ultimate Party,2025-10-03 21:02,Max Duration: 2.5 hours,,txcd_20040004,,,,,
+prod_TAbJYrUDzvEAKM,Party: Tot's Celebration Bash Party,2025-10-03 21:02,Max Duration: 2 hours,,txcd_20040004,,,,,
+prod_TAbILXTre9dqi9,Party: Express Tot Party,2025-10-03 21:01,Max Duration: 1.5 hours,,txcd_20040004,,,,,
+prod_TAbHOJsTmasu0q,Tot-tivity: Tot-ally Fun Saturdays Funshop,2025-10-03 20:59,Price represents per-hour price of attendance for one child to take part in Funshop activity.,,txcd_20040004,,,,Saturday,
+prod_TAbG1y3F5tNhnK,"Tot-tivity: Ready, Set, Pre-K! Funshop",2025-10-03 20:58,Price represents per-hour price of attendance for one child to take part in Funshop activity.,,txcd_20040004,4,6,14:00,"Monday, Wednesday",10:00
+prod_TAbFDQSJWCsOC3,Tot-tivity: Tiny Tot Explorers Funshop,2025-10-03 20:57,Price represents per-hour price of attendance for one child to take part in Funshop activity. ,,txcd_20040004,2,4,14:00,"Tuesday, Thursday",10:00
+prod_TAbCsynUPM6BBP,Event: Tot & Me Class,2025-10-03 20:54,Admittance for 1 child and 1 adult to Tot & Me class,,txcd_20040004,,,,,
+prod_TAbA653bZmWGWo,Event: Tots Night In (first child),2025-10-03 20:53,Price represents flat rate for attendance of Tots Night In event. Any additional child's admittance at reduced rate.,,txcd_20040004,,,23:00,Saturday,19:00
+prod_TAb5YS29FcZ4N4,Standard Supervised Playcare Services (first child),2025-10-03 20:47,Price displayed represents 1 hour (60 minutes) of service,,txcd_20040004,,,,,
