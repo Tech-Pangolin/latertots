@@ -80,9 +80,6 @@ const ManageReservationsPage = ({ enableAggregates = false }) => {
     return () => clearTimeout(handle);
   }, [selectedDate]);
 
-  useEffect(() => {
-    logger.info('Events:', events);
-  }, [events]);
 
   // Set the dialog value when the dialog is opened
   useEffect(() => {
