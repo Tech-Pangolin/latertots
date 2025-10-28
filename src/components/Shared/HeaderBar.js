@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
 import Avatar from '@mui/material/Avatar';
-import { logger } from '../../Helpers/logger';
 
 const HeaderBar = () => {
   const { currentUser, logout } = useAuth();
@@ -31,13 +30,11 @@ const HeaderBar = () => {
       case 'bigtots':
         setShowBigTots(!showBigTots);
         break;
+
       default:
         break;
     }
-
-
   }
-  console.log(currentUser)
 
   const dropdownActiveTeam = () => {
     const path = location.pathname;
@@ -63,7 +60,6 @@ const HeaderBar = () => {
       default:
         return ''
     }
-
   }
 
 
@@ -144,21 +140,3 @@ const HeaderBar = () => {
 };
 
 export default HeaderBar;
-
-
-{/* <AppBar position="static">
-      <Toolbar>
-        <img src="/assets/img/logo.png" className="img-fluid" style={{width:'100px'}}/>
-        <Button color="inherit" component={Link} to="/" className='nav-link' >Home</Button>
-        <Button color="inherit" component={Link} to="/profile" className='nav-link'>Profile</Button>
-        <Button color="inherit" component={Link} to="/schedule" className='nav-link'>Schedule</Button>
-
-        <Box sx={{ flexGrow: 1 }} />  
-        
-        {currentUser ? (
-          <Button color="inherit" onClick={logout} className='nav-link'>Logout</Button>
-        ) : (
-          <Button color="inherit" component={Link} to="/login" className='nav-link'>Login</Button>
-        )}
-      </Toolbar>
-    </AppBar> */}

@@ -33,6 +33,9 @@ const { checkPickupPaymentReminders } = require('./email/checkPickupPaymentRemin
 // Form draft functions
 const { upsertFormDraft } = require('./formDrafts/upsertFormDraft');
 
+// Logging functions
+const { writeLogs } = require('./logging/writeLogs');
+
 // Cleanup functions
 const { cleanupFailedReservations, cleanupFailedReservationsManual } = require('./cleanup/cleanupFailedReservations');
 
@@ -61,6 +64,7 @@ exports.sendContactEmail = sendContactEmail;
 exports.sendPickupPaymentNotification = sendPickupPaymentNotification;
 exports.checkPickupPaymentReminders = checkPickupPaymentReminders;
 exports.upsertFormDraft = upsertFormDraft;
+exports.writeLogs = writeLogs;
 exports.cleanupFailedReservations = cleanupFailedReservations;
 exports.cleanupFailedReservationsManual = cleanupFailedReservationsManual;
 exports.getPaymentHistory = getPaymentHistory;

@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { MIN_RESERVATION_DURATION_MS, DEPOSIT_TYPES, RESERVATION_STATUS } from '../../Helpers/constants';
 import useDebouncedValidateField from '../../Hooks/useDebouncedValidateField';
 import PaymentModal from './PaymentModal';
+import { logger } from '../../Helpers/logger';
 
 
 // Remember to create state for the open/closed state of the modal and the form data
@@ -102,8 +103,6 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
     setPaymentError(false);
     
     try {
-      console.log('Creating reservations with PENDING status...', reservationsToPay, currentUser);
-      
       // Step 1: Create reservations with PENDING status
       const pendingReservations = [];
       for (const reservation of reservationsToPay) {
@@ -129,8 +128,6 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
         pendingReservations.push(pendingReservation);
       }
       
-      console.log('Reservations created, proceeding with payment...');
-      
       // Step 2: Create checkout session with reservation IDs
       const stripeReservationPaymentAttemptPayload = {
         reservations: pendingReservations.map(({id, groupActivity, title}) => ({
@@ -142,8 +139,6 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
         paymentType: paymentType,
         latertotsUserId: currentUser.uid
       };
-      
-      console.log('Sending payment request:', stripeReservationPaymentAttemptPayload);
       
       const response = await fetch(`${process.env.REACT_APP_FIREBASE_FUNCTION_URL}/createCheckoutSession`, {
         method: 'POST',
@@ -159,13 +154,11 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
         throw new Error(session.error || 'Failed to create checkout session');
       }
       
-      console.log('Checkout session created, redirecting to Stripe...');
-      
       // Step 3: Simple redirect to Stripe checkout
       window.location.href = session.url;
       
     } catch (error) {
-      console.error('Payment processing error:', error);
+      logger.error('Payment processing error:', error);
       setPaymentError(error.message);
     } finally {
       setIsProcessingPayment(false);
@@ -204,10 +197,9 @@ const ReservationFormModal = ({ modalOpenState = false, setModalOpenState, child
       alert('No more than 5 reservations can take place simultaneously. Please check available time slots and try again.');
       return;
     }
-    console.log(newEvents)
+   
     const totalTime = newEvents.reduce((sum, event) => sum + parseFloat(event.totalTime), 0);
     const totalBill = newEvents.reduce((sum, event) => sum + (event.totalTime * hourlyRate), 0);
-    console.log(newEvents, totalTime, totalBill)
 
     setGrandTotalBill(totalBill);
     setGrandTotalTime(totalTime);

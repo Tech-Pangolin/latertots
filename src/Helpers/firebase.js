@@ -554,6 +554,7 @@ export class FirebaseDbService {
       // Convert the start and end dates to Firestore Timestamps
       dataWithoutId.start = Timestamp.fromDate(new Date(dataWithoutId.start));
       dataWithoutId.end = Timestamp.fromDate(new Date(dataWithoutId.end));
+      dataWithoutId.createdAt = Timestamp.now();
 
       const userRef = doc(collection(db, "Users"), userId);
       const childRef = doc(collection(db, "Children"), reservationData.childId);
@@ -1328,6 +1329,7 @@ export class FirebaseDbService {
           status: 'pending',
           start: Timestamp.fromDate(new Date(reservationData.start)),
           end: Timestamp.fromDate(new Date(reservationData.end)),
+          createdAt: Timestamp.now(),
           title: reservationData.title,
           childId: reservationData.childId,
           userId: userId,
