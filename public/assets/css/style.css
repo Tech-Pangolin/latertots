@@ -2523,3 +2523,11 @@ blockquote p {
 .purple {
   color: #DC85FF;
 }
+
+.totender-photo{
+  border-radius: 50%;
+  overflow: hidden;
+  width:180px!important;
+  height:180px!important;
+
+}

@@ -26,19 +26,37 @@ function AboutPage() {
                         </div>
                     </div>
                 </div>
-              
+
                 <div className="row mt-5">
                     <div className="col-12">
                         <h3 className='text-center'>Amber Brown, Owner & Lead Tot-Tender</h3>
                         <div className="d-flex justify-content-center"><img src="assets/img/about/ambercir.png" className='text-center amber-photo img-fluid' /></div>
                         <div className="subcontainer">
                             <p className="text-center mt-3">
-                            Hey there, I'm Amber Brown—the big tot behind Later Tots! With over 20 years of experience in caring for children and a degree in Early Childhood Development, I’ve spent my life creating spaces where little ones can giggle, grow, and explore. From my years as a dedicated nanny to now running Later Tots, play has always been my passion! I dreamed of building a place where tots can dive into endless fun while their grown-ups feel at ease. Later Tots isn’t just a play space—it’s a community, a place where curiosity runs wild, friendships bloom, and every visit is an adventure.
-</p>
+                                Hey there, I'm Amber Brown—the big tot behind Later Tots! With over 20 years of experience in caring for children and a degree in Early Childhood Development, I’ve spent my life creating spaces where little ones can giggle, grow, and explore. From my years as a dedicated nanny to now running Later Tots, play has always been my passion! I dreamed of building a place where tots can dive into endless fun while their grown-ups feel at ease. Later Tots isn’t just a play space—it’s a community, a place where curiosity runs wild, friendships bloom, and every visit is an adventure.
+                            </p>
                             <p className="text-center">
-                            I can’t wait to welcome you and your tot—let's make some playful memories together! 
-    </p>
-                        
+                                I can’t wait to welcome you and your tot—let's make some playful memories together!
+                            </p>
+
+                        </div>
+                    </div>
+                    <div className="col-2 d-flex justify-content-center">
+
+                    </div>
+                </div>
+                <div className="row mt-5">
+                    <div className="col-12">
+                        <h3 className='text-center'>Kaylah, Tot-Tender</h3>
+                        <div className="d-flex justify-content-center"><img src="assets/img/about/kaylah.jpg" className='totender-photo text-center amber-photo img-fluid' /></div>
+                        <div className="subcontainer">
+                            <p className="text-center mt-3">
+                                 Hi there! I’m Kaylah, one of the Tot-tenders here at Later Tots. With over 5 years of experience caring for tots from tiny newborns to energetic 10-year-olds, I’ve mastered the art of turning everyday moments into giggle-filled adventures! I may be a BIG tot on the outside, but inside I’m still a playful tot at heart. My favorite part of every day is watching our tots laugh, learn, and explore through play. I’m looking forward to meeting you and your little tots. 
+                            </p>
+                            <p className="text-center">
+                              Let's make some tot-tally unforgettable memories together!  
+                            </p>
+
                         </div>
                     </div>
                     <div className="col-2 d-flex justify-content-center">
