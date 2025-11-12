@@ -1165,6 +1165,8 @@ export class FirebaseDbService {
       if (status === 'pending' || status === 'confirmed') {
         // Archive the document by updating the "archived" field
         await updateDoc(reservationRef, { archived: true });
+        // Document the archive
+        logger.info(`Reservation ${reservationId} archived successfully`);
       } else {
         throw new Error("Cannot archive reservation with status: " + status);
       }

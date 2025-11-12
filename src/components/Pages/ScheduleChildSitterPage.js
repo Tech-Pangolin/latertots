@@ -197,7 +197,7 @@ const ScheduleChildSitterPage = () => {
         selectedDate.getUTCFullYear()
       )
     },
-    onError: (err) => console.error("Error archiving reservation: ", err)
+    onError: (err) => { if (process.env.NODE_ENV === 'development') { console.error("Error: ", err) } }
   })
   const handleEventClick = useCallback(({ event }) => {
     // Only allow deletion of children reservations that belong to the current user
