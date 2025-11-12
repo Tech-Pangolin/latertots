@@ -188,12 +188,13 @@ const ScheduleChildSitterPage = () => {
 
 
   const archiveReservationMutation = useMutation({
+    mutationKey: ['archiveReservation'],
     mutationFn: async (eventId) => dbService.archiveReservationDocument(eventId),
     onSuccess: () => {
       queryClient.invalidateQueries(
-        ['calendarReservationsByWeek'],
-        selectedDate.getUTCDate(),
-        selectedDate.getUTCMonth(),
+        selectedDate.toUTC().day,
+        selectedDate.toUTC().month - 1,
+        selectedDate.toUTC().year
         selectedDate.getUTCFullYear()
       )
     },
