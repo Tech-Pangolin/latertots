@@ -9,6 +9,7 @@
 // Constants used by billing machine
 const RESERVATION_STATUS = {
   PENDING: 'pending',
+  CONFIRMED: 'confirmed',
   PROCESSING: 'processing',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
