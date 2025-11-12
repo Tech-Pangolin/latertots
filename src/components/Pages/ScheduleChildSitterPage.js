@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
 import { checkAgainstBusinessHours, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import UnifiedReservationModal from '../Shared/UnifiedReservationModal';
-import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
+import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS, RESERVATION_STATUS } from '../../Helpers/constants';
 import { getProfileIncompleteMessage } from '../../Helpers/util';
 import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -192,32 +192,36 @@ const ScheduleChildSitterPage = () => {
     mutationFn: async (eventId) => dbService.archiveReservationDocument(eventId),
     onSuccess: () => {
       queryClient.invalidateQueries(
-        selectedDate.toUTC().day,
-        selectedDate.toUTC().month - 1,
-        selectedDate.toUTC().year
-        selectedDate.getUTCFullYear()
+        ['calendarReservationsByWeek',
+          selectedDate.toUTC().startOf('week').day,
+          selectedDate.toUTC().month - 1,
+          selectedDate.toUTC().year
+        ]
       )
     },
     onError: (err) => { if (process.env.NODE_ENV === 'development') { console.error("Error: ", err) } }
   })
+
+  const formatConfirmationMessage = useCallback((event) => {
+    if (currentUser.Role === 'admin') {
+      return `Are you sure you want to remove the reservation for ${event.title}?`;
+    } else if (event.status !== RESERVATION_STATUS.PENDING) {
+      return `Would you like to${ event.start > DateTime.now().toJSDate() ? " cancel and" : ""} request a refund for the reservation for ${event.title}?`;
+    } else {
+      return `Are you sure you want to cancel your reservation for ${event.title} on ${formatDateTime(event.start)}?`;
+    }
+  }, [currentUser.Role]);
+
   const handleEventClick = useCallback(({ event }) => {
     // Only allow deletion of children reservations that belong to the current user
-    const belongsToCurrentUser = children.some(child => child.id === event.childId);
+    const belongsToCurrentUser = children.some(child => child.id === event.extendedProps?.childId);
 
-    if (currentUser.Role === 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
+    if ((currentUser.Role === 'admin' || belongsToCurrentUser) && window.confirm(formatConfirmationMessage(event))) {
       archiveReservationMutation.mutate(event.id);
     }
   }, [children, currentUser, archiveReservationMutation]);
 
-  const handleEventClickMobile = useCallback(({ event }) => {
-    // Only allow deletion of children reservations that belong to the current user
-    const belongsToCurrentUser = children.some(child => child.id === event.childId);
-
-    if (currentUser.Role === 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
-      archiveReservationMutation.mutate(event.id);
-    }
-  }, [children, currentUser, archiveReservationMutation]);
-  // Enforce rules for where events can be dropped or resized
+  // Enforce rules for where events can be resized
   const eventAllow = useCallback((dropInfo) => {
     if (!checkAgainstBusinessHours(dropInfo) || !checkFutureStartTime(dropInfo)) {
       return false;
@@ -317,7 +321,7 @@ const ScheduleChildSitterPage = () => {
                   <h5 className="card-title">{event.title}</h5>
                   <p className="card-text">{formatDateTime(event.start)} - {formatDateTime(event.end)}</p>
                 </div>
-                <button className="btn btn-danger btn-sm" onClick={() => handleEventClickMobile({ event })}>Cancel</button>
+                <button className="btn btn-danger btn-sm" onClick={() => handleEventClick({ event })}>Cancel</button>
               </div>
             </div>
           ))}
