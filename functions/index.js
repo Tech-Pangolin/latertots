@@ -12,7 +12,7 @@ const { createUserProfile } = require('./auth/userCreation');
 const { updateAdminClaims } = require('./auth/adminClaims');
 
 // Notification functions
-const { createReservationNotification } = require('./notifications/triggers/reservationNotifications');
+const { createReservationNotifications } = require('./notifications/triggers/reservationNotifications');
 const { createUserAccountProblemNotification } = require('./notifications/triggers/userAccountNotifications');
 const { cleanupExpiredNotifications } = require('./notifications/cleanup');
 
@@ -47,7 +47,7 @@ const { getPaymentMethods } = require('./payments/getPaymentMethods');
 // Export all functions
 exports.createUserProfile = createUserProfile;
 exports.updateAdminClaims = updateAdminClaims;
-exports.createReservationNotification = createReservationNotification;
+exports.createReservationNotifications = createReservationNotifications;
 exports.createUserAccountProblemNotification = createUserAccountProblemNotification;
 exports.cleanupExpiredNotifications = cleanupExpiredNotifications;
 exports.stripeWebhook = stripeWebhook;

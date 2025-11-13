@@ -32,7 +32,8 @@ exports.createReservationNotifications = functions.firestore
       await createNotification({
         message: `Refund requested for future reservation for ${after.title} on ${after.start.toDate().toLocaleDateString()}`,
         type: 'admin',
-        isAdminMessage: true
+        isAdminMessage: true,
+        reservationId: context.params.reservationId
       });
     }
 
@@ -42,7 +43,8 @@ exports.createReservationNotifications = functions.firestore
       await createNotification({
         message: `Refund requested for past reservation for ${after.title} on ${after.start.toDate().toLocaleDateString()}`,
         type: 'admin',
-        isAdminMessage: true
+        isAdminMessage: true,
+        reservationId: context.params.reservationId
       });
     }
   });
