@@ -82,7 +82,7 @@ const ReservationActionModal = ({
     // Determine the action to take (for parent users, use the first available action)
     const actionToTake = isAdmin ? selectedAction : availableActions[0];
 
-    if ((actionToTake === 'cancel-refund' || actionToTake === 'refund') && (!refundReason || refundReason.trim() === '')) {
+    if ( actionToTake === 'refund' && (!refundReason || refundReason.trim() === '')) {
       setError('Refund reason is required');
       return;
     }
@@ -93,8 +93,7 @@ const ReservationActionModal = ({
       if (actionToTake === 'archive') {
         await onArchive(event.id);
       } else if (actionToTake === 'cancel-refund') {
-        // Pass refund reason to cancelReservation for future reservations
-        await onCancel(event.id, refundReason);
+        await onCancel(event.id);
       } else if (actionToTake === 'refund') {
         // Use requestRefund for past services
         await onRefund(event.id, refundReason);
@@ -122,7 +121,7 @@ const ReservationActionModal = ({
             <br />
             {new Date(event.start).toLocaleString()} - {new Date(event.end).toLocaleString()}
             <br /><br />
-            <strong>Status:</strong> {event.extendedProps?.status}
+            <strong>Status:</strong> {eventStatus}
           </Typography>
 
           {isAdmin ? (

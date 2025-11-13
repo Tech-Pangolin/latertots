@@ -94,7 +94,10 @@ export const INVOICE_STATUS = Object.freeze({
 export const LINE_ITEM_TAGS = Object.freeze({
   BASE: 'BASE',
   LATE_PICKUP: 'LATE_PICKUP',
-  LATE_FEE: 'LATE_FEE'
+  LATE_FEE: 'LATE_FEE',
+  MINIMUM_DEPOSIT: 'MINIMUM_DEPOSIT',    // New: for minimum payments
+  REMAINDER: 'REMAINDER',                 // New: for remainder payments
+  GROUP_ACTIVITY: 'GROUP_ACTIVITY'       // New: for group activity fees
 })
 
 export const DISCOUNT_TYPES = Object.freeze({

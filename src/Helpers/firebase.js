@@ -1178,13 +1178,11 @@ export class FirebaseDbService {
 
   /**
    * Cancels a reservation (service not yet rendered)
-   * If refundReason is provided, sets status to REFUND_REQUESTED instead of CANCELLED
    * Only CONFIRMED reservations can be cancelled. PENDING reservations should be archived.
    * @param {string} reservationId - The ID of the reservation
-   * @param {string} refundReason - Optional refund reason. If provided, status becomes REFUND_REQUESTED
    * @returns {Promise<void>}
    */
-  cancelReservation = async (reservationId, refundReason = null) => {
+  cancelReservation = async (reservationId) => {
     await this.validateAuth();
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
