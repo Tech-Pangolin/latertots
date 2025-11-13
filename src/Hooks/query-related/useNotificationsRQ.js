@@ -19,7 +19,8 @@ export function useNotificationsRQ() {
       return query(
         collection(db, COLLECTIONS.NOTIFICATIONS),
         where('isAdminMessage', '==', true),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        where('archived', '==', false)
       );
     } else {
       // Users see their own notifications
@@ -27,7 +28,8 @@ export function useNotificationsRQ() {
         collection(db, COLLECTIONS.NOTIFICATIONS),
         where('userId', '==', currentUser.uid),
         where('isAdminMessage', '==', false),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        where('archived', '==', false)
       );
     }
   }, [currentUser.uid, isAdmin]);

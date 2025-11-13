@@ -9,11 +9,15 @@
 // Constants used by billing machine
 const RESERVATION_STATUS = {
   PENDING: 'pending',
+  CONFIRMED: 'confirmed',
   PROCESSING: 'processing',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
   DROPPED_OFF: 'dropped-off',
-  PICKED_UP: 'picked-up'
+  PICKED_UP: 'picked-up',
+  REFUND_REQUESTED: 'refund-requested',
+  REFUNDED: 'refunded',
+  PAID: 'paid'
 };
 
 // Legacy invoice and payment activity constants removed

@@ -13,7 +13,8 @@ const createNotification = async (notificationData) => {
       createdAt: Timestamp.now(),
       expiresAt: notificationData.expiresAt || Timestamp.fromDate(
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
-      )
+      ),
+      archived: false
     };
 
     // Validate notification data before saving

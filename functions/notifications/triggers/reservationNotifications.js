@@ -1,34 +1,50 @@
 const functions = require('firebase-functions/v1');
 const { createNotification } = require('../helpers/notificationHelpers');
+const { RESERVATION_STATUS } = require('../../constants');
 
-// 1. New reservation requests
-exports.createReservationRequestNotification = functions.firestore
+// Consolidated reservation notification handler
+exports.createReservationNotifications = functions.firestore
   .document('Reservations/{reservationId}')
-  .onCreate(async (snapshot, context) => {
-    const reservation = snapshot.data();
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();  
+    const after = change.after.data();
+    const beforeStatus = before.status;
+    const afterStatus = after.status;
 
-    if (reservation.status === 'pending') {
+    // Only proceed if status actually changed
+    if (beforeStatus === afterStatus) {
+      return;
+    }
+
+    // Case 1: PENDING → CONFIRMED (new confirmed reservation)
+    if (beforeStatus === RESERVATION_STATUS.PENDING && 
+        afterStatus === RESERVATION_STATUS.CONFIRMED) {
       await createNotification({
-        message: `New reservation pending approval for ${reservation.title}`,
+        message: `New confirmed reservation for ${after.title} on ${after.start.toDate().toLocaleDateString()}`,
         type: 'admin',
         isAdminMessage: true
       });
     }
-  });
 
-// 2. Reservation cancellations
-exports.createReservationCancellationNotification = functions.firestore
-  .document('Reservations/{reservationId}')
-  .onUpdate(async (change, context) => {
-    const before = change.before.data();
-    const after = change.after.data();
-
-    if (before.status !== 'cancelled' &&
-      after.status === 'cancelled') {
+    // Case 2: Any status → CANCELLED (cancellation/refund for future reservation)
+    if (beforeStatus !== RESERVATION_STATUS.CANCELLED && 
+        afterStatus === RESERVATION_STATUS.CANCELLED) {
       await createNotification({
-        message: `Reservation cancelled by user: ${after.title}`,
+        message: `Refund requested for future reservation for ${after.title} on ${after.start.toDate().toLocaleDateString()}`,
         type: 'admin',
-        isAdminMessage: true
+        isAdminMessage: true,
+        reservationId: context.params.reservationId
+      });
+    }
+
+    // Case 3: Any status → REFUND_REQUESTED (refund request for past reservation)
+    if (beforeStatus !== RESERVATION_STATUS.REFUND_REQUESTED && 
+        afterStatus === RESERVATION_STATUS.REFUND_REQUESTED) {
+      await createNotification({
+        message: `Refund requested for past reservation for ${after.title} on ${after.start.toDate().toLocaleDateString()}`,
+        type: 'admin',
+        isAdminMessage: true,
+        reservationId: context.params.reservationId
       });
     }
   });
