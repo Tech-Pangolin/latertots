@@ -7,7 +7,7 @@ import { DocumentReferenceOrCompatible } from '../Helpers/validationHelpers.mjs'
 const ReservationSchema = Joi.object({
   // Administrative fields
   archived: Joi.boolean().default(false).required(),
-  formDraftId: Joi.string().required(),
+  formDraftId: Joi.string().optional(),
 
   // Billing integration fields
   stripePayments: Joi.object()
@@ -35,12 +35,24 @@ const ReservationSchema = Joi.object({
   createdAt: Joi.object().instance(Timestamp).required().messages({
     'object.instance': 'Created time must be a valid Timestamp object.'
   }),
+  updatedAt: Joi.object().instance(Timestamp).optional().messages({
+    'object.instance': 'Updated time must be a valid Timestamp object.'
+  }),
   title: Joi.string().required(),
   childId: Joi.string().required(),
   userId: Joi.string().required(),
   Child: DocumentReferenceOrCompatible.required(),
   User: DocumentReferenceOrCompatible.required(),
   groupActivity: Joi.boolean().default(false).optional(),
+  
+  // Cancellation fields (no reason needed)
+  cancelledAt: Joi.object().instance(Timestamp).optional(),
+  
+  // Refund fields (reason required when refund is requested)
+  refundReason: Joi.string().optional(),
+  refundRequestedAt: Joi.object().instance(Timestamp).optional(),
+  refundedAt: Joi.object().instance(Timestamp).optional(),
+  
   dropOffPickUp: Joi.object({
     pickedUpAt: Joi.object().instance(Timestamp).optional(),
     actualStartTime: Joi.object().instance(Timestamp).optional(),
