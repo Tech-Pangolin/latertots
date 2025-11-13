@@ -2,7 +2,7 @@ const functions = require('firebase-functions/v1');
 const { createNotification } = require('../helpers/notificationHelpers');
 const { RESERVATION_STATUS } = require('../../constants');
 
-// 1. New confirmed reservation
+// New confirmed reservation
 exports.createNewReservationNotification = functions.firestore
   .document('Reservations/{reservationId}')
   .onUpdate(async (change, context) => {
@@ -18,7 +18,7 @@ exports.createNewReservationNotification = functions.firestore
     }
   });
 
-// 2. Reservation cancellations
+// Reservation cancellation and refund request
 exports.createReservationCancellationNotification = functions.firestore
   .document('Reservations/{reservationId}')
   .onUpdate(async (change, context) => {
@@ -28,9 +28,26 @@ exports.createReservationCancellationNotification = functions.firestore
     if (before.status !== RESERVATION_STATUS.CANCELLED &&
       after.status === RESERVATION_STATUS.CANCELLED) {
       await createNotification({
-        message: `Refund requested for ${after.start > DateTime.now().toJSDate() ? "future" : "past"} reservation by user: ${after.userId}`,
+        message: `Refund requested for future reservation for ${after.title} on ${after.start.toDate().toLocaleDateString()}`,
         type: 'admin',
         isAdminMessage: true
+      });
+    }
+  });
+
+// Reservation simple refund request
+exports.createReservationSimpleRefundRequestNotification = functions.firestore
+  .document('Reservations/{reservationId}')
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+
+    if (before.status !== RESERVATION_STATUS.REFUND_REQUESTED &&
+      after.status === RESERVATION_STATUS.REFUND_REQUESTED) {
+      await createNotification({
+        message: `Refund requested for past reservation for ${after.title} on ${after.start.toDate().toLocaleDateString()}`,
+        type: 'user',
+        isAdminMessage: false
       });
     }
   });
