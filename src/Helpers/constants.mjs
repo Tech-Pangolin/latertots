@@ -15,7 +15,6 @@ export const COLLECTIONS = Object.freeze({
   ROLES: 'Roles',
   NOTIFICATIONS: 'Notifications',
   INVOICES: 'Invoices',
-  BILLING_ADJUSTMENTS: 'BillingAdjustments',
   SERVICE_PRICES: 'ServicePrices',
 })
 
@@ -40,6 +39,8 @@ export const RESERVATION_STATUS = Object.freeze({
   PICKED_UP: 'picked-up',     // Child has left, service completed
   CANCELLED: 'cancelled',     // Represents a reservation that does not require payment
   NO_SHOW: 'no-show',         // Represents a reservation that was not attended. Fees may apply.
+  REFUND_REQUESTED: 'refund-requested', // Refund has been requested, awaiting processing
+  REFUNDED: 'refunded',       // Refund has been processed
 
   // The following statuses are used for billing purposes
 
