@@ -11,6 +11,7 @@ const NotificationSchema = Joi.object({
   message: Joi.string().required(),
   type: Joi.string().valid('system', 'admin').required(),
   isAdminMessage: Joi.boolean().default(false),
+  reservationId: Joi.string().optional(), // For refund notifications to link to reservation
   createdAt: Joi.object().instance(Timestamp).required(),
   expiresAt: Joi.object().instance(Timestamp).optional()
 })
