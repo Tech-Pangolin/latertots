@@ -74,7 +74,7 @@ const ReservationActionModal = ({
   // For parent users, determine if refund reason is needed based on the available action
   // For admin users, check based on selected action
   const actionToCheck = isAdmin ? selectedAction : availableActions[0];
-  const needsRefundReason = actionToCheck === 'cancel-refund' || actionToCheck === 'refund';
+  const needsRefundReason = actionToCheck === 'refund';
 
   const handleSubmit = async () => {
     setError(null);
@@ -93,9 +93,10 @@ const ReservationActionModal = ({
       if (actionToTake === 'archive') {
         await onArchive(event.id);
       } else if (actionToTake === 'cancel-refund') {
-        await onCancel(event.id);
-        await onRefund(event.id, refundReason);
+        // Pass refund reason to cancelReservation for future reservations
+        await onCancel(event.id, refundReason);
       } else if (actionToTake === 'refund') {
+        // Use requestRefund for past services
         await onRefund(event.id, refundReason);
       }
       onClose();

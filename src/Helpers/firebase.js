@@ -1178,11 +1178,13 @@ export class FirebaseDbService {
 
   /**
    * Cancels a reservation (service not yet rendered)
+   * If refundReason is provided, sets status to REFUND_REQUESTED instead of CANCELLED
    * Only CONFIRMED reservations can be cancelled. PENDING reservations should be archived.
    * @param {string} reservationId - The ID of the reservation
+   * @param {string} refundReason - Optional refund reason. If provided, status becomes REFUND_REQUESTED
    * @returns {Promise<void>}
    */
-  cancelReservation = async (reservationId) => {
+  cancelReservation = async (reservationId, refundReason = null) => {
     await this.validateAuth();
     try {
       const reservationRef = doc(collection(db, "Reservations"), reservationId);
@@ -1196,30 +1198,29 @@ export class FirebaseDbService {
       
       // Only CONFIRMED reservations can be cancelled
       if (existingData.status !== RESERVATION_STATUS.CONFIRMED) {
-        throw new Error(`Cannot cancel reservation with status: ${existingData.status}. Only CONFIRMED reservations can be cancelled. PENDING reservations should be archived.`);
+        throw new Error(`Cannot cancel reservation with status: ${existingData.status}. Only CONFIRMED reservations can be cancelled.`);
       }
 
       const updateData = {
         ...existingData,
-        status: RESERVATION_STATUS.CANCELLED,
-        cancelledAt: Timestamp.now()
+        cancelledAt: Timestamp.now(),
+        status: RESERVATION_STATUS.CANCELLED
       };
 
       const validatedData = await ReservationSchema.validateAsync(updateData, { abortEarly: false });
       
-      await updateDoc(reservationRef, {
-        status: validatedData.status,
-        cancelledAt: validatedData.cancelledAt
+      await updateDoc(reservationRef, { 
+        ...validatedData
       });
       
-      logger.info(`Reservation ${reservationId} cancelled successfully`);
+      logger.info(`Reservation ${reservationId} cancelled and refund requested successfully`);
     } catch (error) {
       if (error.isJoi) {
         logger.error("Validation error cancelling reservation:", error.details);
-        throw new Error(`Validation failed: ${error.details.map(d => d.message).join(', ')}`);
+        throw new Error(); // Throw generic error to avoid leaking validation details
       }
       logger.error("Error cancelling reservation:", error);
-      throw error;
+      throw new Error("Failed to cancel reservation");
     }
   };
 
@@ -1274,10 +1275,10 @@ export class FirebaseDbService {
     } catch (error) {
       if (error.isJoi) {
         logger.error("Validation error requesting refund:", error.details);
-        throw new Error(`Validation failed: ${error.details.map(d => d.message).join(', ')}`);
+        throw new Error(); // Throw generic error to avoid leaking validation details
       }
       logger.error("Error requesting refund:", error);
-      throw error;
+      throw new Error("Failed to request refund");
     }
   };
 

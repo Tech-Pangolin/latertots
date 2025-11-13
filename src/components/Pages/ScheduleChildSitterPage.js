@@ -219,7 +219,7 @@ const ScheduleChildSitterPage = () => {
 
   const cancelReservationMutation = useMutation({
     mutationKey: ['cancelReservation'],
-    mutationFn: async (eventId) => dbService.cancelReservation(eventId),
+    mutationFn: async ({ eventId, reason }) => dbService.cancelReservation(eventId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries(
         ['calendarReservationsByWeek',
@@ -423,7 +423,7 @@ const ScheduleChildSitterPage = () => {
         event={selectedEvent}
         userRole={currentUser.Role}
         onArchive={(eventId) => archiveReservationMutation.mutate(eventId)}
-        onCancel={(eventId) => cancelReservationMutation.mutate(eventId)}
+        onCancel={(eventId, reason) => cancelReservationMutation.mutate({ eventId, reason })}
         onRefund={(eventId, reason) => requestRefundMutation.mutate({ eventId, reason })}
       />
     </Grid>
