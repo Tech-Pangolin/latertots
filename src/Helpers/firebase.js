@@ -1208,7 +1208,8 @@ export class FirebaseDbService {
       const validatedData = await ReservationSchema.validateAsync(updateData, { abortEarly: false });
       
       await updateDoc(reservationRef, { 
-        ...validatedData
+        ...validatedData,
+        updatedAt: Timestamp.now()
       });
       
       logger.info(`Reservation ${reservationId} cancelled and refund requested successfully`);
@@ -1264,9 +1265,8 @@ export class FirebaseDbService {
       const validatedData = await ReservationSchema.validateAsync(updateData, { abortEarly: false });
       
       await updateDoc(reservationRef, {
-        status: validatedData.status,
-        refundReason: validatedData.refundReason,
-        refundRequestedAt: validatedData.refundRequestedAt
+        ...validatedData,
+        updatedAt: Timestamp.now()
       });
       
       logger.info(`Refund requested for reservation ${reservationId}`);

@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
 import { checkAgainstBusinessHours, renderEventContent, checkFutureStartTime } from '../../Helpers/calendar';
 import UnifiedReservationModal from '../Shared/UnifiedReservationModal';
-import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS, RESERVATION_STATUS } from '../../Helpers/constants';
+import { BUSINESS_HRS, MIN_RESERVATION_DURATION_MS } from '../../Helpers/constants';
 import { getProfileIncompleteMessage } from '../../Helpers/util';
 import { useReservationsByMonthDayRQ } from '../../Hooks/query-related/useReservationsByMonthDayRQ';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -138,10 +138,10 @@ const ScheduleChildSitterPage = () => {
     mutationFn: async ({ id, newStart, newEnd }) => dbService.changeReservationTime(id, newStart, newEnd),
     onSuccess: () => {
       queryClient.invalidateQueries(
-        ['calendarReservationsByWeek'],
+        ['calendarReservationsByWeek',
         selectedDate.toUTC().day,
         selectedDate.toUTC().month - 1,
-        selectedDate.toUTC().year
+        selectedDate.toUTC().year]
       )
     },
     onError: (err) => console.error("Error changing reservation time: ", err)

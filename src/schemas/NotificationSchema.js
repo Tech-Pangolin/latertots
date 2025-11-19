@@ -13,8 +13,8 @@ const NotificationSchema = Joi.object({
   type: Joi.string().valid('system', 'admin').required(),
   isAdminMessage: Joi.boolean().default(false),
   reservationId: Joi.string().optional(), // For refund notifications to link to reservation
-  createdAt: Joi.object().required(), // Firebase Admin Timestamp
-  expiresAt: Joi.object().optional() // Firebase Admin Timestamp
+  createdAt: Joi.object().instance(Timestamp).required(), // Firebase Admin Timestamp  
+  expiresAt: Joi.object().instance(Timestamp).optional() // Firebase Admin Timestamp 
 })
 .prefs({ abortEarly: false });
 

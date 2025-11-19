@@ -4,7 +4,6 @@ import { useNotificationsRQ } from '../../Hooks/query-related/useNotificationsRQ
 import { useAuth } from '../../components/AuthProvider';
 import { NOTIFICATION_TYPES } from '../../Helpers/constants';
 import { useQuery } from '@tanstack/react-query';
-import { RESERVATION_STATUS } from '../../Helpers/constants.mjs';
 
 export default function AdminNotificationCard({ notification }) {
   const { dismissNotification, isDismissing } = useNotificationsRQ();

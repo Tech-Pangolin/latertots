@@ -73,14 +73,13 @@ const ReservationActionModal = ({
   const availableActions = getAvailableActions();
   // For parent users, determine if refund reason is needed based on the available action
   // For admin users, check based on selected action
-  const actionToCheck = isAdmin ? selectedAction : availableActions[0];
-  const needsRefundReason = actionToCheck === 'refund';
+  const actionToTake = isAdmin ? selectedAction : availableActions[0];  
+  const needsRefundReason = actionToTake === 'refund'; 
 
   const handleSubmit = async () => {
     setError(null);
 
     // Determine the action to take (for parent users, use the first available action)
-    const actionToTake = isAdmin ? selectedAction : availableActions[0];
 
     if ( actionToTake === 'refund' && (!refundReason || refundReason.trim() === '')) {
       setError('Refund reason is required');
