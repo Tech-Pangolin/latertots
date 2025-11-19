@@ -19,6 +19,7 @@ export function useNotificationsRQ() {
       return query(
         collection(db, COLLECTIONS.NOTIFICATIONS),
         where('isAdminMessage', '==', true),
+        where('archived', '==', false),
         orderBy('createdAt', 'desc')
       );
     } else {
@@ -27,6 +28,7 @@ export function useNotificationsRQ() {
         collection(db, COLLECTIONS.NOTIFICATIONS),
         where('userId', '==', currentUser.uid),
         where('isAdminMessage', '==', false),
+        where('archived', '==', false),
         orderBy('createdAt', 'desc')
       );
     }

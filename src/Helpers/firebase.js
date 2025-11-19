@@ -4,7 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from "@firebase/storage";
 import { storage } from "../config/firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { logger } from "./logger";
-import { IMAGE_UPLOAD, SERVICE_PRICE_LOOKUP_UIDS, PAYMENT_PRICING } from "./constants";
+import { IMAGE_UPLOAD, SERVICE_PRICE_LOOKUP_UIDS, PAYMENT_PRICING, RESERVATION_STATUS } from "./constants";
 import ReservationSchema from "../schemas/ReservationSchema.mjs";
 
 
@@ -1165,12 +1165,118 @@ export class FirebaseDbService {
       if (status === 'pending' || status === 'confirmed') {
         // Archive the document by updating the "archived" field
         await updateDoc(reservationRef, { archived: true });
+        // Document the archive
+        logger.info(`Reservation ${reservationId} archived successfully`);
       } else {
         throw new Error("Cannot archive reservation with status: " + status);
       }
     } catch (error) {
       logger.error("Error archiving reservation document:", error);
       throw error;
+    }
+  };
+
+  /**
+   * Cancels a reservation (service not yet rendered)
+   * Only CONFIRMED reservations can be cancelled. PENDING reservations should be archived.
+   * @param {string} reservationId - The ID of the reservation
+   * @returns {Promise<void>}
+   */
+  cancelReservation = async (reservationId) => {
+    await this.validateAuth();
+    try {
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      const reservationSnapshot = await getDoc(reservationRef);
+      
+      if (!reservationSnapshot.exists()) {
+        throw new Error(`Reservation ${reservationId} not found`);
+      }
+
+      const existingData = reservationSnapshot.data();
+      
+      // Only CONFIRMED reservations can be cancelled
+      if (existingData.status !== RESERVATION_STATUS.CONFIRMED) {
+        throw new Error(`Cannot cancel reservation with status: ${existingData.status}. Only CONFIRMED reservations can be cancelled.`);
+      }
+
+      const updateData = {
+        ...existingData,
+        cancelledAt: Timestamp.now(),
+        status: RESERVATION_STATUS.CANCELLED
+      };
+
+      const validatedData = await ReservationSchema.validateAsync(updateData, { abortEarly: false });
+      
+      await updateDoc(reservationRef, { 
+        ...validatedData,
+        updatedAt: Timestamp.now()
+      });
+      
+      logger.info(`Reservation ${reservationId} cancelled and refund requested successfully`);
+    } catch (error) {
+      if (error.isJoi) {
+        logger.error("Validation error cancelling reservation:", error.details);
+        throw new Error(); // Throw generic error to avoid leaking validation details
+      }
+      logger.error("Error cancelling reservation:", error);
+      throw new Error("Failed to cancel reservation");
+    }
+  };
+
+  /**
+   * Requests a refund for a reservation (service problem occurred)
+   * Can only be requested from CONFIRMED, PROCESSING, or PAID reservations.
+   * @param {string} reservationId - The ID of the reservation
+   * @param {string} reason - Refund reason (required - service problem details)
+   * @returns {Promise<void>}
+   */
+  requestRefund = async (reservationId, reason) => {
+    await this.validateAuth();
+    try {
+      if (!reason || typeof reason !== 'string' || reason.trim() === '') {
+        throw new Error('Refund reason is required and cannot be empty');
+      }
+
+      const reservationRef = doc(collection(db, "Reservations"), reservationId);
+      const reservationSnapshot = await getDoc(reservationRef);
+      
+      if (!reservationSnapshot.exists()) {
+        throw new Error(`Reservation ${reservationId} not found`);
+      }
+
+      const existingData = reservationSnapshot.data();
+      
+      const allowedStatuses = [
+        RESERVATION_STATUS.CONFIRMED,
+        RESERVATION_STATUS.PROCESSING,
+        RESERVATION_STATUS.PAID
+      ];
+      if (!allowedStatuses.includes(existingData.status)) {
+        throw new Error(`Cannot request refund for reservation with status: ${existingData.status}. Refunds can only be requested from CONFIRMED, PROCESSING, or PAID reservations.`);
+      }
+
+      const updateData = {
+        ...existingData,
+        status: RESERVATION_STATUS.REFUND_REQUESTED,
+        refundReason: reason.trim(),
+        refundRequestedAt: Timestamp.now()
+      };
+
+      const validatedData = await ReservationSchema.validateAsync(updateData, { abortEarly: false });
+      
+      await updateDoc(reservationRef, {
+        ...validatedData,
+        updatedAt: Timestamp.now()
+      });
+      
+      logger.info(`Refund requested for reservation ${reservationId}`);
+    } catch (error) {
+      if (error.isJoi) {
+        logger.error("Validation error requesting refund:", error.details);
+        throw new Error(); // Throw generic error to avoid leaking validation details
+      }
+      logger.error("Error requesting refund:", error);
+      throw new Error("Failed to request refund");
     }
   };
 

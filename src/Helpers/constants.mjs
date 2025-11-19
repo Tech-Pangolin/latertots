@@ -15,7 +15,6 @@ export const COLLECTIONS = Object.freeze({
   ROLES: 'Roles',
   NOTIFICATIONS: 'Notifications',
   INVOICES: 'Invoices',
-  BILLING_ADJUSTMENTS: 'BillingAdjustments',
   SERVICE_PRICES: 'ServicePrices',
 })
 
@@ -40,6 +39,8 @@ export const RESERVATION_STATUS = Object.freeze({
   PICKED_UP: 'picked-up',     // Child has left, service completed
   CANCELLED: 'cancelled',     // Represents a reservation that does not require payment
   NO_SHOW: 'no-show',         // Represents a reservation that was not attended. Fees may apply.
+  REFUND_REQUESTED: 'refund-requested', // Refund has been requested, awaiting processing
+  REFUNDED: 'refunded',       // Refund has been processed
 
   // The following statuses are used for billing purposes
 
@@ -93,7 +94,10 @@ export const INVOICE_STATUS = Object.freeze({
 export const LINE_ITEM_TAGS = Object.freeze({
   BASE: 'BASE',
   LATE_PICKUP: 'LATE_PICKUP',
-  LATE_FEE: 'LATE_FEE'
+  LATE_FEE: 'LATE_FEE',
+  MINIMUM_DEPOSIT: 'MINIMUM_DEPOSIT',    // New: for minimum payments
+  REMAINDER: 'REMAINDER',                 // New: for remainder payments
+  GROUP_ACTIVITY: 'GROUP_ACTIVITY'       // New: for group activity fees
 })
 
 export const DISCOUNT_TYPES = Object.freeze({
@@ -143,22 +147,22 @@ export const LOGGER_ERROR_MESSAGES = Object.freeze({
 })
 
 export const SERVICE_PRICE_LOOKUP_UIDS = Object.freeze({
-  TOTIVITY_NIGHT_IN_ADDITIONAL_CHILD_FLAT: 'prod_TAc8LkawAJmG3b',
-  TOTIVITY_NIGHT_IN_FIRST_CHILD_FLAT: 'prod_TAbA653bZmWGWo',
-  LATE_FEE_HOURLY: 'prod_TAc2CxkqCnOXRd',
-  STANDARD_FEE_FIRST_CHILD_HOURLY: 'prod_TAb5YS29FcZ4N4',
-  STANDARD_FEE_ADDITIONAL_CHILD_HOURLY: 'prod_TAbNO8kRNTWYDy',
-  DEALS_SATURDAY_WORKSHOPS_MONTHLY: 'prod_TAbgVKaXG3OWst',
-  DEALS_WEEKDAY_WORKSHOPS_MONTHLY: 'prod_TAbbYn4KgpqMXn',
-  DEALS_BIG_SAVER: 'prod_TAbTS3BnkYIUqe',
-  DEALS_LITTLE_SAVER: 'prod_TAbSlZJgrVKdnW',
-  DEALS_PARTY_ULTIMATE: 'prod_TAbKQEZC23Jieb',
-  DEALS_PARTY_CELEBRATION: 'prod_TAbJYrUDzvEAKM',
-  DEALS_PARTY_EXPRESS: 'prod_TAbILXTre9dqi9',
-  TOTIVITY_FUN_SATURDAY_HOURLY: 'prod_TAbHOJsTmasu0q',
-  TOTIVITY_PRE_K_HOURLY: 'prod_TAbG1y3F5tNhnK',
-  TOTIVITY_EXPLORERS_HOURLY: 'prod_TAbFDQSJWCsOC3',
-  TOTIVITY_TOT_AND_ME_FLAT: 'prod_TAbCsynUPM6BBP',
+  TOTIVITY_NIGHT_IN_ADDITIONAL_CHILD_FLAT: 'prod_TJvPLmLcl5yU1K',
+  TOTIVITY_NIGHT_IN_FIRST_CHILD_FLAT: 'prod_TJvPIvEtUtApt1',
+  LATE_FEE_HOURLY: 'prod_TJvP16xOR4eGNc',
+  STANDARD_FEE_FIRST_CHILD_HOURLY: 'prod_TJvPHwhljzqv6j',
+  STANDARD_FEE_ADDITIONAL_CHILD_HOURLY: 'prod_TJvPhuRQDe2N6F',
+  DEALS_SATURDAY_WORKSHOPS_MONTHLY: 'prod_TJvP9xJSO3iDJq',
+  DEALS_WEEKDAY_WORKSHOPS_MONTHLY: 'prod_TJvPDgyTVIwIrD',
+  DEALS_BIG_SAVER: 'prod_TJvP6cAg8Nttqj',
+  DEALS_LITTLE_SAVER: 'prod_TJvPI1qnx7ZfA0',
+  DEALS_PARTY_ULTIMATE: 'prod_TJvPZxgiAHwot2',
+  DEALS_PARTY_CELEBRATION: 'prod_TJvPqiYwxokEVa',
+  DEALS_PARTY_EXPRESS: 'prod_TJvPkYzoh7i5AC',
+  TOTIVITY_FUN_SATURDAY_HOURLY: 'prod_TJvPwKDCPOqzqN',
+  TOTIVITY_PRE_K_HOURLY: 'prod_TJvPlIf5fzrCyx',
+  TOTIVITY_EXPLORERS_HOURLY: 'prod_TJvP6gTKJY3Xhj',
+  TOTIVITY_TOT_AND_ME_FLAT: 'prod_TJvPe8aKz0XEyr',
 })
 
 export const PAYMENT_PRICING = Object.freeze({

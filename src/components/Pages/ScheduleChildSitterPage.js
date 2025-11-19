@@ -15,6 +15,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LOG_LEVELS, logger, setLogLevel } from '../../Helpers/logger';
 import { luxonDateTimeFromISOString, luxonDateTimeFromJSDate } from '../../Helpers/datetime';
 import { DateTime } from 'luxon';
+import { useAlerts } from '../../Hooks/useAlerts';
+import AlertContainer from '../Shared/AlertContainer';
+import ReservationActionModal from '../Shared/ReservationActionModal';
 
 setLogLevel(LOG_LEVELS.DEBUG); // Set log level to 'info' for debugging
 
@@ -26,6 +29,9 @@ const ScheduleChildSitterPage = () => {
   const { currentUser, dbService } = useAuth();
   const [modalOpenState, setModalOpenState] = useState(false);
   const [initialContext, setInitialContext] = useState(null);
+  const { alerts, addAlert, removeAlert } = useAlerts();
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   // Handle modal close with context reset
   const closeTheModal = () => {
@@ -132,10 +138,10 @@ const ScheduleChildSitterPage = () => {
     mutationFn: async ({ id, newStart, newEnd }) => dbService.changeReservationTime(id, newStart, newEnd),
     onSuccess: () => {
       queryClient.invalidateQueries(
-        ['calendarReservationsByWeek'],
+        ['calendarReservationsByWeek',
         selectedDate.toUTC().day,
         selectedDate.toUTC().month - 1,
-        selectedDate.toUTC().year
+        selectedDate.toUTC().year]
       )
     },
     onError: (err) => console.error("Error changing reservation time: ", err)
@@ -188,35 +194,87 @@ const ScheduleChildSitterPage = () => {
 
 
   const archiveReservationMutation = useMutation({
+    mutationKey: ['archiveReservation'],
     mutationFn: async (eventId) => dbService.archiveReservationDocument(eventId),
     onSuccess: () => {
       queryClient.invalidateQueries(
-        ['calendarReservationsByWeek'],
-        selectedDate.getUTCDate(),
-        selectedDate.getUTCMonth(),
-        selectedDate.getUTCFullYear()
-      )
+        ['calendarReservationsByWeek',
+          selectedDate.toUTC().startOf('week').day,
+          selectedDate.toUTC().month - 1,
+          selectedDate.toUTC().year
+        ]
+      );
+      queryClient.invalidateQueries(
+        ['calendarReservationsByMonth', selectedDate.month - 1, selectedDate.year]
+      );
+      setActionModalOpen(false);
+      setSelectedEvent(null);
+      addAlert('success', 'Reservation archived successfully');
     },
-    onError: (err) => console.error("Error archiving reservation: ", err)
-  })
+    onError: (err) => {
+      logger.error("Error archiving reservation:", err);
+      addAlert('danger', 'Failed to archive reservation. Please try again.');
+    }
+  });
+
+  const cancelReservationMutation = useMutation({
+    mutationKey: ['cancelReservation'],
+    mutationFn: async ( eventId ) => dbService.cancelReservation(eventId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(
+        ['calendarReservationsByWeek',
+          selectedDate.toUTC().startOf('week').day,
+          selectedDate.toUTC().month - 1,
+          selectedDate.toUTC().year
+        ]
+      );
+      queryClient.invalidateQueries(
+        ['calendarReservationsByMonth', selectedDate.month - 1, selectedDate.year]
+      );
+      setActionModalOpen(false);
+      setSelectedEvent(null);
+      addAlert('success', 'Reservation cancelled successfully');
+    },
+    onError: (err) => {
+      logger.error("Error cancelling reservation:", err);
+      addAlert('danger', 'Failed to cancel reservation. Please try again.');
+    }
+  });
+
+  const requestRefundMutation = useMutation({
+    mutationKey: ['requestReservationRefund'],
+    mutationFn: async ({ eventId, reason }) => dbService.requestRefund(eventId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries(
+        ['calendarReservationsByWeek',
+          selectedDate.toUTC().startOf('week').day,
+          selectedDate.toUTC().month - 1,
+          selectedDate.toUTC().year
+        ]
+      );
+      queryClient.invalidateQueries(
+        ['calendarReservationsByMonth', selectedDate.month - 1, selectedDate.year]
+      );
+      setActionModalOpen(false);
+      setSelectedEvent(null);
+      addAlert('success', 'Refund request submitted successfully');
+    },
+    onError: (err) => {
+      logger.error("Error requesting refund:", err);
+      addAlert('danger', 'Failed to request refund. Please try again.');
+    }
+  });
+
   const handleEventClick = useCallback(({ event }) => {
-    // Only allow deletion of children reservations that belong to the current user
-    const belongsToCurrentUser = children.some(child => child.id === event.childId);
-
-    if (currentUser.Role === 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
-      archiveReservationMutation.mutate(event.id);
+    const belongsToCurrentUser = children.some(child => child.id === event.extendedProps?.childId);
+    
+    if (currentUser.Role === 'admin' || belongsToCurrentUser) {
+      setSelectedEvent(event);
+      setActionModalOpen(true);
     }
-  }, [children, currentUser, archiveReservationMutation]);
+  }, [children, currentUser.Role]);
 
-  const handleEventClickMobile = useCallback(({ event }) => {
-    // Only allow deletion of children reservations that belong to the current user
-    const belongsToCurrentUser = children.some(child => child.id === event.childId);
-
-    if (currentUser.Role === 'admin' || (belongsToCurrentUser && window.confirm(`Are you sure you want to remove the event: ${event.title}?`))) {
-      archiveReservationMutation.mutate(event.id);
-    }
-  }, [children, currentUser, archiveReservationMutation]);
-  // Enforce rules for where events can be dropped or resized
+  // Enforce rules for where events can be resized
   const eventAllow = useCallback((dropInfo) => {
     if (!checkAgainstBusinessHours(dropInfo) || !checkFutureStartTime(dropInfo)) {
       return false;
@@ -280,6 +338,7 @@ const ScheduleChildSitterPage = () => {
     <Grid container className="schedule-child-sitter-page" style={{ minHeight: 'auto' }}>
       <Grid item xs={1} />
       <Grid item xs={10} className="main" style={{ marginTop: '15px', marginBottom: '15px' }}>
+        <AlertContainer alerts={alerts} removeAlert={removeAlert} />
         <div className='d-block d-md-none'>
           <h2 className='mb-3'>Schedule Child Sitter</h2>
           <button 
@@ -316,7 +375,7 @@ const ScheduleChildSitterPage = () => {
                   <h5 className="card-title">{event.title}</h5>
                   <p className="card-text">{formatDateTime(event.start)} - {formatDateTime(event.end)}</p>
                 </div>
-                <button className="btn btn-danger btn-sm" onClick={() => handleEventClickMobile({ event })}>Cancel</button>
+                <button className="btn btn-danger btn-sm" onClick={() => handleEventClick({ event })}>Cancel</button>
               </div>
             </div>
           ))}
@@ -354,6 +413,18 @@ const ScheduleChildSitterPage = () => {
         children={children}
         scheduleChildSitterPage_queryKey={['calendarReservationsByMonth', selectedDate.month - 1, selectedDate.year]}
         initialContext={initialContext}
+      />
+      <ReservationActionModal
+        open={actionModalOpen}
+        onClose={() => {
+          setActionModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        event={selectedEvent}
+        userRole={currentUser.Role}
+        onArchive={(eventId) => archiveReservationMutation.mutate(eventId)}
+        onCancel={(eventId) => cancelReservationMutation.mutate(eventId)}
+        onRefund={(eventId, reason) => requestRefundMutation.mutate({ eventId, reason })}
       />
     </Grid>
   );

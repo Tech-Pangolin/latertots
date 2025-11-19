@@ -1,10 +1,30 @@
-import React from 'react';
-import { Avatar, Button, Card, CardActions, CardHeader, Typography, Chip, Box } from '@mui/material';
+import React, { useState } from 'react';
+import { Avatar, Button, Card, CardActions, CardHeader, Typography, Chip, Box, Collapse, Divider } from '@mui/material';
 import { useNotificationsRQ } from '../../Hooks/query-related/useNotificationsRQ';
+import { useAuth } from '../../components/AuthProvider';
 import { NOTIFICATION_TYPES } from '../../Helpers/constants';
+import { useQuery } from '@tanstack/react-query';
 
 export default function AdminNotificationCard({ notification }) {
   const { dismissNotification, isDismissing } = useNotificationsRQ();
+  const { dbService } = useAuth();
+  const [expanded, setExpanded] = useState(false);
+  
+  // Fetch reservation data if reservationId exists
+  const { data: reservation, isLoading: isLoadingReservation } = useQuery({
+    queryKey: ['reservation', notification.reservationId],
+    queryFn: () => dbService.getReservationData(notification.reservationId),
+    enabled: !!notification.reservationId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch user data if reservation exists
+  const { data: userData, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['user', reservation?.userId],
+    queryFn: () => dbService.getUserData(reservation.userId),
+    enabled: !!reservation?.userId,
+    staleTime: 5 * 60 * 1000,
+  });
   
   const handleDismiss = () => {
     dismissNotification(notification.id);
@@ -37,6 +57,23 @@ export default function AdminNotificationCard({ notification }) {
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
+
+  const getStripePaymentIds = () => {
+    if (!reservation?.stripePayments) return [];
+    const payments = [];
+    if (reservation.stripePayments.minimum) {
+      payments.push({ type: 'Minimum Deposit', id: reservation.stripePayments.minimum });
+    }
+    if (reservation.stripePayments.remainder) {
+      payments.push({ type: 'Remainder', id: reservation.stripePayments.remainder });
+    }
+    if (reservation.stripePayments.full) {
+      payments.push({ type: 'Full Payment', id: reservation.stripePayments.full });
+    }
+    return payments;
+  };
+
+  const hasRefundDetails = notification.reservationId && reservation;
   
   return (
     <Card 
@@ -111,6 +148,73 @@ export default function AdminNotificationCard({ notification }) {
           }
         }}
       />
+      
+      {/* Refund Details Section */}
+      {hasRefundDetails && (
+        <>
+          <Divider />
+          <Box sx={{ padding: '16px 20px' }}>
+            <Button
+              size="small"
+              onClick={() => setExpanded(!expanded)}
+              sx={{ textTransform: 'none', mb: expanded ? 2 : 0 }}
+            >
+              {expanded ? 'Hide' : 'Show'} Refund Details
+            </Button>
+            <Collapse in={expanded}>
+              {isLoadingReservation || isLoadingUser ? (
+                <Typography variant="body2" color="text.secondary">
+                  Loading details...
+                </Typography>
+              ) : (
+                <Box sx={{ mt: 2 }}>
+                  {/* User Information */}
+                  {userData && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                        User Information
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Name:</strong> {userData.Name || 'N/A'}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Email:</strong> {userData.Email || 'N/A'}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Refund Reason */}
+                  {reservation.refundReason && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                        Refund Reason
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {reservation.refundReason}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Stripe Payment IDs */}
+                  {getStripePaymentIds().length > 0 && (
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                        Stripe Payment Confirmation IDs
+                      </Typography>
+                      {getStripePaymentIds().map((payment, index) => (
+                        <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          <strong>{payment.type}:</strong> {payment.id}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
+                </Box>
+              )}
+            </Collapse>
+          </Box>
+        </>
+      )}
+
       <CardActions sx={{ 
         justifyContent: 'flex-end', 
         padding: '0 20px 16px 20px',
