@@ -57,8 +57,7 @@ function EventPage() {
                     </div>
                     <div className="row content">
                         <div className="col-md-12" dataAos="fade-up">
-                            <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&ctz=UTC&bgcolor=%23C0CA33&title=Later%20Tots&src=aW5mb0BsYXRlcnRvdHNkcm9waW4uY29t&src=YWRkcmVzc2Jvb2sjY29udGFjdHNAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&src=ZW4udXNhI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%23039BE5&color=%23B39DDB" style={{ border: "solid 1px #777" }} width="100%" height="700" frameborder="0" scrolling="no"></iframe>
-
+                            <iframe src="https://calendar.google.com/calendar/embed?src=c_1c1732ecaaf7f410a35bd17215c56ce7c88961913f9fba714a0684c82d41aa59%40group.calendar.google.com&ctz=UTC" style={{ border: 0 }} width="800" height="600" frameBorder="0" scrolling="no"></iframe>
                         </div>
                     </div>
                 </section>
