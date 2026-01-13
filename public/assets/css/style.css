@@ -1757,6 +1757,15 @@ ul.meet-list li span {
   text-align: center;
 }
 
+#event-highlights {
+  background-color: #41A8C5;
+  width: 400px;
+  color: #FFF;
+  border-radius: 15px;
+  font-size: 42px;
+  text-align: center;
+}
+
 #party1,
 #party1 h3,
 #party1 h4,

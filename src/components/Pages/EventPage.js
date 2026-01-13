@@ -16,29 +16,26 @@ function EventPage() {
 
 
             </div><div>
-                <section id="about" className="container">
+                <section id="about" className="container pt-5">
                     {/* <div class="section-title events-title" dataAos="fade-up">
                     <h2>Special Days, Big Fun!</h2>
                     <p style={{ color: '#3B38DA' }}>Exciting Events at Later Tots</p>
                 </div> */}
 
-                    <div className="row content">
-                        <div className="col">
-                            <div className="event-highlights">
-                                <h5>Event Highlights</h5>
-                            </div>
-                        </div>
+                    <div className="section-title d-flex justify-content-center" dataAos="fade-up">
+                        <p id="event-highlights" className="text-center">Event Highlights</p>
                     </div>
+                    
                     <div className="row content">
 
                         <div className="col-md-8" dataAos="fade-up">
                             <div class="pink">
-                                <h3>Tots Night In </h3>
+                                <h3 >Tot & Me</h3>
                                 <p>Tot & Me is the perfect class for caregivers and little ones to explore Later Tots side by side before jumping into drop-in play. Each session is filled with songs, crafts, bubbles, and themed adventures that spark creativity and connection.
                                 </p>
                             </div>
                             <div class="blue">
-                                <h3 className="mt-5">Tot & Me</h3>
+                                <h3 className="mt-5">Tots Night In </h3>
                                 <p>Tots Night In gives caregivers a well-deserved break while little ones enjoy Later Tots after hours. With games, crafts, music, and movies, it's a night full of giggles, wiggles, and wonder.</p>
                             </div>
                             <div class="purple">
