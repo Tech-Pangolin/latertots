@@ -1757,6 +1757,35 @@ ul.meet-list li span {
   text-align: center;
 }
 
+#party-description {
+  background-color: #9D65E2;
+  max-width: 900px;
+  width: 100%;
+  color: #FFF;
+  border-radius: 15px;
+  font-size: 18px;
+  line-height: 1.7;
+  text-align: center;
+  padding: 30px 40px;
+  font-family: "Manjari", sans-serif;
+}
+
+#party1,
+#party1 h3,
+#party1 h4,
+#party1 p {
+  background-color: #BDD853;
+  color: #FFF
+}
+
+#party1 h3,
+#party2 h3,
+#party3 h3 {
+  font-family: "Snack", sans-serif;
+  text-transform: uppercase;
+  font-size: 36px;
+}
+
 #party1,
 #party1 h3,
 #party1 h4,
