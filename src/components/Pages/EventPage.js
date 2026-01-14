@@ -30,7 +30,7 @@ function EventPage() {
 
                         <div className="col-md-8" dataAos="fade-up">
                             <div class="pink">
-                                <h3 >Tot & Me</h3>
+                                <h3>Tot & Me</h3>
                                 <p>Tot & Me is the perfect class for caregivers and little ones to explore Later Tots side by side before jumping into drop-in play. Each session is filled with songs, crafts, bubbles, and themed adventures that spark creativity and connection.
                                 </p>
                             </div>
