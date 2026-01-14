@@ -964,36 +964,14 @@ Team Tots
 
 .drop-in-box p {
   color: #0066FF;
+  text-align: center;
   text-transform: uppercase;
   margin: 5px 20px;
 }
 
-.classes-box {
-  margin-top: 40px;
-  border: 5px solid #BDD853;
-  border-radius: 10px;
-  margin-left: 25%;
-  padding: 10px;
-}
-
-.classes-box h2 {
-  text-align: center;
-  color: #F8049C;
-
-}
-
-.classes-box h3 {
-  color: #F8049C;
-  text-transform: uppercase;
-}
-
-.classes-box p {
-  color: #F8049C;
-  text-transform: uppercase;
-}
-
-.classes-box .indent-class {
-  margin-left: 25%;
+.drop-in-box span {
+  color: #E61378;
+  font-weight: bold;
 }
 
 .bonus {
