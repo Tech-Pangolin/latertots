@@ -964,36 +964,14 @@ Team Tots
 
 .drop-in-box p {
   color: #0066FF;
+  text-align: center;
   text-transform: uppercase;
   margin: 5px 20px;
 }
 
-.classes-box {
-  margin-top: 40px;
-  border: 5px solid #BDD853;
-  border-radius: 10px;
-  margin-left: 25%;
-  padding: 10px;
-}
-
-.classes-box h2 {
-  text-align: center;
-  color: #F8049C;
-
-}
-
-.classes-box h3 {
-  color: #F8049C;
-  text-transform: uppercase;
-}
-
-.classes-box p {
-  color: #F8049C;
-  text-transform: uppercase;
-}
-
-.classes-box .indent-class {
-  margin-left: 25%;
+.drop-in-box span {
+  color: #E61378;
+  font-weight: bold;
 }
 
 .bonus {
@@ -1770,20 +1748,13 @@ ul.meet-list li span {
   font-family: "Manjari", sans-serif;
 }
 
-#party1,
-#party1 h3,
-#party1 h4,
-#party1 p {
-  background-color: #BDD853;
-  color: #FFF
-}
-
-#party1 h3,
-#party2 h3,
-#party3 h3 {
-  font-family: "Snack", sans-serif;
-  text-transform: uppercase;
-  font-size: 36px;
+#event-highlights {
+  background-color: #41A8C5;
+  width: 400px;
+  color: #FFF;
+  border-radius: 15px;
+  font-size: 42px;
+  text-align: center;
 }
 
 #party1,
